@@ -1,0 +1,964 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:wght@400;700&family=Lato:wght@400;700&family=Oswald:wght@400;700&family=Merriweather:wght@400;700&family=Raleway:wght@400;700&family=Ubuntu:wght@400;700&family=Nunito:wght@400;700&family=Poppins:wght@400;700&family=Crimson+Text:wght@400;700&family=Pacifico&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  @property --pos-x {
+    syntax: '<percentage>';
+    initial-value: 11.14%;
+    inherits: false;
+  }
+
+  @property --pos-y {
+    syntax: '<percentage>';
+    initial-value: 140%;
+    inherits: false;
+  }
+
+  @property --spread-x {
+    syntax: '<percentage>';
+    initial-value: 150%;
+    inherits: false;
+  }
+
+  @property --spread-y {
+    syntax: '<percentage>';
+    initial-value: 180.06%;
+    inherits: false;
+  }
+
+  @property --color-1 {
+    syntax: '<color>';
+    initial-value: #000;
+    inherits: false;
+  }
+
+  @property --color-2 {
+    syntax: '<color>';
+    initial-value: #78350f;
+    inherits: false;
+  }
+
+  @property --color-3 {
+    syntax: '<color>';
+    initial-value: #b45309;
+    inherits: false;
+  }
+
+  @property --color-4 {
+    syntax: '<color>';
+    initial-value: #d97706;
+    inherits: false;
+  }
+
+  @property --color-5 {
+    syntax: '<color>';
+    initial-value: #f59e0b;
+    inherits: false;
+  }
+
+  @property --border-angle {
+    syntax: '<angle>';
+    initial-value: 20deg;
+    inherits: true;
+  }
+
+  @property --border-color-1 {
+    syntax: '<color>';
+    initial-value: hsla(30, 75%, 60%, 0.2);
+    inherits: true;
+  }
+
+  @property --border-color-2 {
+    syntax: '<color>';
+    initial-value: hsla(30, 75%, 40%, 0.75);
+    inherits: true;
+  }
+
+  @property --stop-1 {
+    syntax: '<percentage>';
+    initial-value: 37.35%;
+    inherits: false;
+  }
+
+  @property --stop-2 {
+    syntax: '<percentage>';
+    initial-value: 61.36%;
+    inherits: false;
+  }
+
+  @property --stop-3 {
+    syntax: '<percentage>';
+    initial-value: 78.42%;
+    inherits: false;
+  }
+
+  @property --stop-4 {
+    syntax: '<percentage>';
+    initial-value: 89.52%;
+    inherits: false;
+  }
+
+  @property --stop-5 {
+    syntax: '<percentage>';
+    initial-value: 100%;
+    inherits: false;
+  }
+
+  :root {
+    --background: 40 33% 98%;
+    --foreground: 20 14% 10%;
+    --card: 40 33% 96%;
+    --card-foreground: 20 14% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14% 10%;
+    --primary: 25 65% 35%;
+    --primary-foreground: 40 33% 98%;
+    --secondary: 40 20% 90%;
+    --secondary-foreground: 20 14% 20%;
+    --muted: 40 20% 94%;
+    --muted-foreground: 20 10% 45%;
+    --accent: 25 50% 45%;
+    --accent-foreground: 40 33% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 30 15% 85%;
+    --input: 30 15% 85%;
+    --ring: 25 65% 35%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 20 14% 8%;
+    --foreground: 40 33% 98%;
+    --card: 20 14% 12%;
+    --card-foreground: 40 33% 98%;
+    --popover: 20 14% 10%;
+    --popover-foreground: 40 33% 98%;
+    --primary: 30 60% 50%;
+    --primary-foreground: 20 14% 8%;
+    --secondary: 20 14% 18%;
+    --secondary-foreground: 40 33% 98%;
+    --muted: 20 14% 20%;
+    --muted-foreground: 40 20% 60%;
+    --accent: 30 50% 45%;
+    --accent-foreground: 40 33% 98%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 20 14% 20%;
+    --input: 20 14% 20%;
+    --ring: 30 60% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Paper Patterns */
+.paper-lined {
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 31px,
+    #e5e5e5 31px,
+    #e5e5e5 32px
+  );
+  background-size: 100% 32px;
+  padding-top: 32px;
+}
+
+.paper-grid {
+  background-image: 
+    linear-gradient(#e5e5e5 1px, transparent 1px),
+    linear-gradient(90deg, #e5e5e5 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.paper-dotted {
+  background-image: radial-gradient(circle, #d4d4d4 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.paper-blank {
+  background: transparent;
+}
+
+/* Dark mode paper patterns (when global dark theme is active and no custom page color) */
+.dark .paper-lined {
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 31px,
+    rgba(255, 255, 255, 0.08) 31px,
+    rgba(255, 255, 255, 0.08) 32px
+  );
+}
+
+.dark .paper-grid {
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+}
+
+.dark .paper-dotted {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+}
+
+/* Notebook Page Styles — background is controlled by Tailwind classes or inline style */
+.notebook-page {
+  box-shadow: 
+    inset 0 0 30px rgba(0, 0, 0, 0.05),
+    0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Page Styles */
+.dark-page {
+  color: #f3f4f6 !important;
+}
+
+.dark-page .ProseMirror,
+.dark-page .ProseMirror p,
+.dark-page .ProseMirror h1,
+.dark-page .ProseMirror h2,
+.dark-page .ProseMirror h3,
+.dark-page .ProseMirror li,
+.dark-page .ProseMirror blockquote,
+.dark-page textarea,
+.dark-page input {
+  color: #f3f4f6 !important;
+}
+
+.dark-page .ProseMirror::placeholder,
+.dark-page textarea::placeholder,
+.dark-page input::placeholder {
+  color: #9ca3af !important;
+}
+
+.dark-page.paper-lined {
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 31px,
+    rgba(255, 255, 255, 0.1) 31px,
+    rgba(255, 255, 255, 0.1) 32px
+  );
+}
+
+.dark-page.paper-grid {
+  background-image: 
+    linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+}
+
+.dark-page.paper-dotted {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.2) 1px, transparent 1px);
+}
+
+/* Page Flip Animation Styles */
+.page-flip-container {
+  perspective: 2000px;
+}
+
+.page {
+  transform-style: preserve-3d;
+  transform-origin: left center;
+  transition: transform 0.6s ease-in-out;
+}
+
+.page.flipping {
+  animation: page-flip 0.6s ease-in-out forwards;
+}
+
+@keyframes page-flip {
+  0% {
+    transform: rotateY(0deg);
+  }
+  100% {
+    transform: rotateY(-180deg);
+  }
+}
+
+/* Skeleton Shimmer */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #FDF5E6 25%,
+    #F5E6D3 50%,
+    #FDF5E6 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* 3D Notebook Cover */
+.notebook-cover {
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+}
+
+.notebook-cover:hover {
+  transform: rotateY(-15deg) rotateX(5deg) translateZ(20px);
+}
+
+.notebook-spine {
+  transform: rotateY(-90deg) translateZ(10px);
+  transform-origin: left center;
+}
+
+/* Sticky Tab Styles */
+.sticky-tab {
+  position: absolute;
+  right: -20px;
+  width: 30px;
+  height: 40px;
+  border-radius: 0 4px 4px 0;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.sticky-tab:hover {
+  transform: translateX(5px);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Force LTR for contentEditable editors */
+[contenteditable="true"],
+[contenteditable="true"] * {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: bidi-override !important;
+  -webkit-writing-mode: horizontal-tb !important;
+  writing-mode: horizontal-tb !important;
+}
+
+/* Ensure all text inputs are LTR */
+input, textarea, [contenteditable] {
+  direction: ltr !important;
+}
+
+/* Tiptap Editor Styles */
+.tiptap-editor {
+  min-height: 100%;
+  outline: none;
+}
+
+.tiptap-editor p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.tiptap-editor:focus {
+  outline: none;
+}
+
+/* Mobile Vertical Scroll Mode */
+@media (max-width: 768px) {
+  .notebook-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .notebook-mobile .page {
+    transform: none !important;
+    animation: none !important;
+  }
+}
+
+/* Quill Editor Styles */
+.quill-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.quill-container .ql-container {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 14px;
+  font-family: inherit;
+  border: none !important;
+  background: transparent;
+}
+
+.quill-container .ql-editor {
+  min-height: 100%;
+  padding: 0;
+  line-height: 1.8;
+}
+
+.quill-container .ql-editor.ql-blank::before {
+  color: #d4a574;
+  font-style: normal;
+  left: 0;
+}
+
+.quill-container .ql-toolbar {
+  border: none !important;
+  border-bottom: 1px solid #e5d5c5 !important;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 8px 8px 0 0;
+  padding: 8px !important;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Dark mode toolbar */
+.dark .quill-container .ql-toolbar {
+  background: rgba(23, 23, 23, 0.85);
+  border-bottom-color: #374151 !important;
+}
+
+.dark .quill-container .ql-toolbar .ql-stroke {
+  stroke: #d97706;
+}
+
+.dark .quill-container .ql-toolbar .ql-fill {
+  fill: #d97706;
+}
+
+.dark .quill-container .ql-toolbar .ql-picker {
+  color: #d97706;
+}
+
+.dark .quill-container .ql-toolbar button:hover .ql-stroke,
+.dark .quill-container .ql-toolbar button.ql-active .ql-stroke {
+  stroke: #f59e0b !important;
+}
+
+.dark .quill-container .ql-toolbar button:hover .ql-fill,
+.dark .quill-container .ql-toolbar button.ql-active .ql-fill {
+  fill: #f59e0b !important;
+}
+
+.dark .quill-container .ql-snow .ql-picker.ql-expanded .ql-picker-options {
+  background: #1f2937;
+  border-color: #374151;
+  color: #f3f4f6;
+}
+
+.dark .quill-container .ql-snow .ql-picker-item {
+  color: #f3f4f6;
+}
+
+/* Dark mode editor text */
+.dark .quill-container .ql-editor {
+  color: #f3f4f6;
+}
+
+.dark .quill-container .ql-editor.ql-blank::before {
+  color: #6b7280;
+}
+
+.dark .quill-container .ql-editor blockquote {
+  border-left-color: #d97706;
+  color: #fbbf24;
+}
+
+.quill-container .ql-toolbar .ql-stroke {
+  stroke: #92400e;
+}
+
+.quill-container .ql-toolbar .ql-fill {
+  fill: #92400e;
+}
+
+.quill-container .ql-toolbar .ql-picker {
+  color: #92400e;
+}
+
+.quill-container .ql-toolbar button:hover,
+.quill-container .ql-toolbar button.ql-active,
+.quill-container .ql-toolbar .ql-picker-label:hover,
+.quill-container .ql-toolbar .ql-picker-item:hover {
+  color: #b45309 !important;
+}
+
+.quill-container .ql-toolbar button:hover .ql-stroke,
+.quill-container .ql-toolbar button.ql-active .ql-stroke {
+  stroke: #b45309 !important;
+}
+
+.quill-container .ql-toolbar button:hover .ql-fill,
+.quill-container .ql-toolbar button.ql-active .ql-fill {
+  fill: #b45309 !important;
+}
+
+/* Color & background picker — let Quill render swatches natively */
+.quill-container .ql-toolbar .ql-color-picker .ql-picker-label svg,
+.quill-container .ql-toolbar .ql-background .ql-picker-label svg {
+  width: 18px;
+  height: 18px;
+}
+
+.quill-container .ql-snow .ql-color-picker .ql-picker-options {
+  padding: 4px;
+  width: 192px;
+}
+
+.quill-container .ql-snow .ql-color-picker .ql-picker-item {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  margin: 2px;
+  border: 1px solid transparent;
+}
+
+.quill-container .ql-snow .ql-color-picker .ql-picker-item:hover {
+  border-color: #92400e;
+}
+
+/* Ensure color line under A icon shows the selected color */
+.quill-container .ql-snow .ql-color .ql-picker-label .ql-color-label,
+.quill-container .ql-snow .ql-background .ql-picker-label .ql-color-label {
+  opacity: 1 !important;
+}
+
+.quill-container .ql-snow .ql-picker.ql-expanded .ql-picker-options {
+  background: white;
+  border-color: #e5d5c5;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.quill-container .ql-editor img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 12px 0;
+  display: block;
+}
+
+.quill-container .ql-editor blockquote {
+  border-left: 4px solid #d97706;
+  padding-left: 16px;
+  margin: 12px 0;
+  color: #78350f;
+}
+
+.quill-container .ql-editor pre {
+  background: #1f2937;
+  color: #f3f4f6;
+  border-radius: 8px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.quill-container .ql-editor h1,
+.quill-container .ql-editor h2,
+.quill-container .ql-editor h3 {
+  color: #92400e;
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+.quill-container .ql-editor a {
+  color: #b45309;
+  text-decoration: underline;
+}
+
+.quill-container .ql-editor ul,
+.quill-container .ql-editor ol {
+  padding-left: 24px;
+}
+
+.quill-container .ql-editor li {
+  margin: 4px 0;
+}
+
+/* Quill Font Options */
+.quill-container .ql-font-sans,
+.ql-font-sans { font-family: "Inter", "Segoe UI", sans-serif; }
+
+.quill-container .ql-font-serif,
+.ql-font-serif { font-family: "Georgia", "Times New Roman", serif; }
+
+.quill-container .ql-font-mono,
+.ql-font-mono { font-family: "Fira Code", "Consolas", "Courier New", monospace; }
+
+.quill-container .ql-font-handwriting,
+.ql-font-handwriting { font-family: "Pacifico", cursive; }
+
+.quill-container .ql-font-roboto,
+.ql-font-roboto { font-family: "Roboto", sans-serif; }
+
+.quill-container .ql-font-playfair,
+.ql-font-playfair { font-family: "Playfair Display", serif; }
+
+.quill-container .ql-font-lato,
+.ql-font-lato { font-family: "Lato", sans-serif; }
+
+.quill-container .ql-font-oswald,
+.ql-font-oswald { font-family: "Oswald", sans-serif; }
+
+.quill-container .ql-font-merriweather,
+.ql-font-merriweather { font-family: "Merriweather", serif; }
+
+.quill-container .ql-font-raleway,
+.ql-font-raleway { font-family: "Raleway", sans-serif; }
+
+.quill-container .ql-font-ubuntu,
+.ql-font-ubuntu { font-family: "Ubuntu", sans-serif; }
+
+.quill-container .ql-font-nunito,
+.ql-font-nunito { font-family: "Nunito", sans-serif; }
+
+.quill-container .ql-font-poppins,
+.ql-font-poppins { font-family: "Poppins", sans-serif; }
+
+.quill-container .ql-font-crimson,
+.ql-font-crimson { font-family: "Crimson Text", serif; }
+
+/* Font dropdown labels */
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-label::before,
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-item::before { content: "Sans"; }
+
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="serif"]::before,
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="serif"]::before { content: "Serif"; }
+
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="mono"]::before,
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="mono"]::before { content: "Mono"; }
+
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="handwriting"]::before,
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="handwriting"]::before { content: "Handwriting"; font-family: "Pacifico", cursive; }
+
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="roboto"]::before,
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="roboto"]::before { content: "Roboto"; font-family: "Roboto", sans-serif; }
+
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="playfair"]::before,
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="playfair"]::before { content: "Playfair"; font-family: "Playfair Display", serif; }
+
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="lato"]::before,
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="lato"]::before { content: "Lato"; font-family: "Lato", sans-serif; }
+
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="oswald"]::before,
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="oswald"]::before { content: "Oswald"; font-family: "Oswald", sans-serif; }
+
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="merriweather"]::before,
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="merriweather"]::before { content: "Merriweather"; font-family: "Merriweather", serif; }
+
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="raleway"]::before,
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="raleway"]::before { content: "Raleway"; font-family: "Raleway", sans-serif; }
+
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="ubuntu"]::before,
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="ubuntu"]::before { content: "Ubuntu"; font-family: "Ubuntu", sans-serif; }
+
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="nunito"]::before,
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="nunito"]::before { content: "Nunito"; font-family: "Nunito", sans-serif; }
+
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="poppins"]::before,
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="poppins"]::before { content: "Poppins"; font-family: "Poppins", sans-serif; }
+
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="crimson"]::before,
+.quill-container .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="crimson"]::before { content: "Crimson"; font-family: "Crimson Text", serif; }
+
+/* Quill Image Resize Styles */
+.quill-container .ql-editor img {
+  cursor: pointer;
+  transition: outline 0.15s ease;
+}
+
+.quill-container .ql-editor img.image-selected {
+  outline: 3px solid #d97706;
+  outline-offset: 3px;
+}
+
+/* Image resize handles */
+.image-resizer {
+  position: absolute;
+  border: 1px dashed #d97706;
+}
+
+.image-resizer .resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #d97706;
+  border: 2px solid white;
+  border-radius: 50%;
+}
+
+.image-resizer .resize-handle.nw {
+  top: -6px;
+  left: -6px;
+  cursor: nw-resize;
+}
+
+.image-resizer .resize-handle.ne {
+  top: -6px;
+  right: -6px;
+  cursor: ne-resize;
+}
+
+.image-resizer .resize-handle.sw {
+  bottom: -6px;
+  left: -6px;
+  cursor: sw-resize;
+}
+
+.image-resizer .resize-handle.se {
+  bottom: -6px;
+  right: -6px;
+  cursor: se-resize;
+}
+
+.image-resizer .display-size {
+  position: absolute;
+  bottom: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #92400e;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* Gradient Button Styles */
+@layer components {
+  .gradient-button {
+    @apply relative appearance-none cursor-pointer;
+    background: radial-gradient(
+      var(--spread-x) var(--spread-y) at var(--pos-x) var(--pos-y),
+      var(--color-1) var(--stop-1),
+      var(--color-2) var(--stop-2),
+      var(--color-3) var(--stop-3),
+      var(--color-4) var(--stop-4),
+      var(--color-5) var(--stop-5)
+    );
+    transition:
+      --pos-x 0.5s,
+      --pos-y 0.5s,
+      --spread-x 0.5s,
+      --spread-y 0.5s,
+      --color-1 0.5s,
+      --color-2 0.5s,
+      --color-3 0.5s,
+      --color-4 0.5s,
+      --color-5 0.5s,
+      --border-angle 0.5s,
+      --border-color-1 0.5s,
+      --border-color-2 0.5s,
+      --stop-1 0.5s,
+      --stop-2 0.5s,
+      --stop-3 0.5s,
+      --stop-4 0.5s,
+      --stop-5 0.5s;
+  }
+
+  .gradient-button::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      var(--border-angle),
+      var(--border-color-1),
+      var(--border-color-2)
+    );
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .gradient-button:hover {
+    --pos-x: 0%;
+    --pos-y: 91.51%;
+    --spread-x: 120.24%;
+    --spread-y: 103.18%;
+    --color-1: #f59e0b;
+    --color-2: #d97706;
+    --color-3: #b45309;
+    --color-4: #78350f;
+    --color-5: #000;
+    --border-angle: 190deg;
+    --border-color-1: hsla(30, 78%, 90%, 0.1);
+    --border-color-2: hsla(30, 75%, 90%, 0.6);
+    --stop-1: 0%;
+    --stop-2: 8.8%;
+    --stop-3: 21.44%;
+    --stop-4: 71.34%;
+    --stop-5: 85.76%;
+  }
+
+  .gradient-button-variant {
+    --color-1: #000;
+    --color-2: #1a1a2e;
+    --color-3: #16213e;
+    --color-4: #0f3460;
+    --border-angle: 200deg;
+    --border-color-1: hsla(220, 75%, 90%, 0.6);
+    --border-color-2: hsla(220, 50%, 90%, 0.15);
+  }
+
+  .gradient-button-variant:hover {
+    --pos-x: 0%;
+    --pos-y: 95.51%;
+    --spread-x: 110.24%;
+    --spread-y: 110.2%;
+    --color-1: #0f3460;
+    --color-2: #16213e;
+    --color-3: #1a1a2e;
+    --color-4: #000;
+    --color-5: #000;
+    --stop-1: 0%;
+    --stop-2: 10%;
+    --stop-3: 35.44%;
+    --stop-4: 71.34%;
+    --stop-5: 90.76%;
+    --border-angle: 210deg;
+    --border-color-1: hsla(220, 75%, 90%, 0.2);
+    --border-color-2: hsla(220, 50%, 90%, 0.75);
+  }
+}
+
+/* ── TipTap Document Editor Styles ─────────────────────────────────────────── */
+.ProseMirror { outline: none; }
+.ProseMirror p { margin: 0.5em 0; line-height: 1.7; }
+.ProseMirror h1 { font-size: 2em; font-weight: 700; line-height: 1.2; margin: 0.75em 0 0.4em; }
+.ProseMirror h2 { font-size: 1.5em; font-weight: 700; line-height: 1.3; margin: 0.75em 0 0.4em; }
+.ProseMirror h3 { font-size: 1.2em; font-weight: 700; line-height: 1.4; margin: 0.75em 0 0.4em; }
+.ProseMirror strong { font-weight: 700; }
+.ProseMirror em { font-style: italic; }
+.ProseMirror u { text-decoration: underline; }
+.ProseMirror s { text-decoration: line-through; }
+.ProseMirror ul { list-style-type: disc; padding-left: 1.5em; margin: 0.5em 0; }
+.ProseMirror ol { list-style-type: decimal; padding-left: 1.5em; margin: 0.5em 0; }
+.ProseMirror li { margin: 0.25em 0; }
+.ProseMirror blockquote { border-left: 3px solid #d4a574; padding-left: 1em; margin: 0.75em 0; color: #6b7280; font-style: italic; }
+.dark .ProseMirror blockquote { border-left-color: #92400e; color: #9ca3af; }
+.ProseMirror pre { background: #f3f4f6; border-radius: 6px; padding: 0.75em 1em; font-family: 'Courier New', monospace; font-size: 0.875em; overflow-x: auto; margin: 0.75em 0; }
+.dark .ProseMirror pre { background: #1f2937; color: #e5e7eb; }
+.ProseMirror code { background: #f3f4f6; border-radius: 3px; padding: 0.1em 0.3em; font-family: 'Courier New', monospace; font-size: 0.875em; }
+.dark .ProseMirror code { background: #374151; color: #e5e7eb; }
+.ProseMirror hr { border: none; border-top: 1px solid #e5e7eb; margin: 1.5em 0; }
+.dark .ProseMirror hr { border-top-color: #374151; }
+.ProseMirror a { color: #d97706; text-decoration: underline; }
+.ProseMirror a:hover { color: #b45309; }
+.ProseMirror img { max-width: 100%; border-radius: 6px; margin: 0.5em 0; }
+.ProseMirror p.is-editor-empty:first-child::before { color: #9ca3af; content: attr(data-placeholder); float: left; height: 0; pointer-events: none; }
+
+/* ── Loading Cubes Animation Styles ─────────────────────────────────────────── */
+:root {
+  --wrapper-bg: #ffffff;
+  --cube-color: #0000;
+  --highlight-color: #00cc44;
+}
+
+.dark {
+  --wrapper-bg: #000000;
+  --cube-color: #0000;
+  --highlight-color: #00ff88;
+}
+
+.wrapper-grid {
+  display: flex;
+  gap: 0.5rem;
+  perspective: 1000px;
+}
+
+.cube {
+  position: relative;
+  width: 3rem;
+  height: 3rem;
+  transform-style: preserve-3d;
+  animation: cube-rotate 3s infinite ease-in-out;
+}
+
+.cube:nth-child(1) { animation-delay: 0s; }
+.cube:nth-child(2) { animation-delay: 0.1s; }
+.cube:nth-child(3) { animation-delay: 0.2s; }
+.cube:nth-child(4) { animation-delay: 0.3s; }
+.cube:nth-child(5) { animation-delay: 0.4s; }
+.cube:nth-child(6) { animation-delay: 0.5s; }
+.cube:nth-child(7) { animation-delay: 0.6s; }
+
+.face {
+  position: absolute;
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  background-color: var(--cube-color);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  animation: translate-z 3s infinite ease-in-out, face-color 3s infinite ease-in-out, face-glow 3s infinite ease-in-out, edge-glow 3s infinite ease-in-out;
+}
+
+.face-front  { transform: rotateY(0deg) translateZ(1.5rem); }
+.face-back   { transform: rotateY(180deg) translateZ(1.5rem); }
+.face-right  { transform: rotateY(90deg) translateZ(1.5rem); }
+.face-left   { transform: rotateY(-90deg) translateZ(1.5rem); }
+.face-top    { transform: rotateX(90deg) translateZ(1.5rem); }
+.face-bottom { transform: rotateX(-90deg) translateZ(1.5rem); }
+
+@keyframes cube-rotate {
+  0%, 100% { transform: rotateX(0deg) rotateY(0deg); }
+  25% { transform: rotateX(90deg) rotateY(90deg); }
+  50% { transform: rotateX(180deg) rotateY(180deg); }
+  75% { transform: rotateX(270deg) rotateY(270deg); }
+}
+
+@keyframes translate-z {
+  0%, 40%, 100% { transform: translateZ(-2px); }
+  30% { transform: translateZ(16px) translateY(-1px); }
+}
+
+@keyframes face-color {
+  0%, 50%, 100% { background-color: var(--cube-color); }
+  10% { background-color: var(--highlight-color); }
+}
+
+@keyframes face-glow {
+  0%, 50%, 100% { color: #fff0; filter: none; }
+  30% { color: #fff; filter: drop-shadow(0 14px 10px var(--highlight-color)); }
+}
+
+@keyframes edge-glow {
+  0%, 40%, 100% {
+    box-shadow: inset 0 0 2px 1px #0001, inset 0 0 12px 1px #fff1;
+  }
+  30% {
+    box-shadow: 0 0 2px 0px var(--highlight-color);
+  }
+}
