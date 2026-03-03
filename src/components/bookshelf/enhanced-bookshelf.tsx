@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, Filter, Sparkles, Users, Globe, Bell, UserPlus } from "lucide-react"
+import { Plus, Filter, Sparkles, Users, Globe, Bell, UserPlus, Trash2 } from "lucide-react"
 import { NotebookCard } from "./notebook-card"
 import { CreateNotebookDialog } from "./create-notebook-dialog"
 import { CubeLoaderCard } from "./cube-loader-card"
@@ -13,6 +13,16 @@ import { SyncUsersButton } from "@/components/admin/sync-users-button"
 import { useFriends, useFriendRequests, useNotifications, useSharedNotebooks, useUserSearch } from "@/hooks/useSharing"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface Notebook {
   _id: string
@@ -39,6 +49,8 @@ export function EnhancedBookshelf({ userId }: EnhancedBookshelfProps) {
   const [filter, setFilter] = useState<string>("all")
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<'my-notebooks' | 'shared' | 'friends' | 'notifications'>('my-notebooks')
+  const [showClearDialog, setShowClearDialog] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Sharing hooks
   const { friends, removeFriend } = useFriends()
@@ -54,15 +66,65 @@ export function EnhancedBookshelf({ userId }: EnhancedBookshelfProps) {
   }, [filter, activeTab])
 
   const fetchNotebooks = async () => {
+    let timeoutId: NodeJS.Timeout | null = null
+    
     try {
       setLoading(true)
-      const res = await fetch(`/api/notebooks?filter=${filter}`)
+      console.log('[FETCH NOTEBOOKS] Starting fetch with filter:', filter)
+      
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('Request timeout')), 10000)
+      })
+      
+      const fetchPromise = fetch(`/api/notebooks?filter=${filter}`)
+      
+      const res = await Promise.race([fetchPromise, timeoutPromise]) as Response
+      
+      if (timeoutId) clearTimeout(timeoutId)
+      
+      console.log('[FETCH NOTEBOOKS] Response status:', res.status)
+      
+      if (!res.ok) {
+        const errorText = await res.text()
+        console.error('[FETCH NOTEBOOKS] Error response:', errorText)
+        setNotebooks([])
+        setLoading(false)
+        return
+      }
+      
       const data = await res.json()
+      console.log('[FETCH NOTEBOOKS] Data received:', data)
       setNotebooks(data.notebooks || [])
     } catch (error) {
-      console.error("Failed to fetch notebooks:", error)
+      console.error("[FETCH NOTEBOOKS] Failed to fetch notebooks:", error)
+      setNotebooks([])
     } finally {
+      if (timeoutId) clearTimeout(timeoutId)
       setLoading(false)
+    }
+  }
+
+  const handleClearAll = async () => {
+    try {
+      setIsDeleting(true)
+      const res = await fetch('/api/notebooks/clear-all', {
+        method: 'DELETE'
+      })
+      
+      if (res.ok) {
+        const data = await res.json()
+        console.log(data.message)
+        // Refresh the notebooks list
+        await fetchNotebooks()
+        setShowClearDialog(false)
+      } else {
+        console.error('Failed to delete notebooks')
+      }
+    } catch (error) {
+      console.error('Error deleting notebooks:', error)
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -111,21 +173,34 @@ export function EnhancedBookshelf({ userId }: EnhancedBookshelfProps) {
       {activeTab === 'my-notebooks' && (
         <div className="space-y-6">
           {/* Filter Bar */}
-          <div className="flex items-center gap-4 overflow-x-auto pb-2">
-            <Filter className="h-5 w-5 text-amber-500 flex-shrink-0" />
-            {categories.map((cat) => (
+          <div className="flex items-center justify-between gap-4 overflow-x-auto pb-2">
+            <div className="flex items-center gap-4 overflow-x-auto">
+              <Filter className="h-5 w-5 text-amber-500 flex-shrink-0" />
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setFilter(cat)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                    filter === cat
+                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25"
+                      : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-300 dark:border-neutral-700"
+                  }`}
+                >
+                  {cat === "all" ? "All Notebooks" : cat}
+                </button>
+              ))}
+            </div>
+            
+            {/* Clear All Button */}
+            {notebooks.length > 0 && (
               <button
-                key={cat}
-                onClick={() => setFilter(cat)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
-                  filter === cat
-                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25"
-                    : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-300 dark:border-neutral-700"
-                }`}
+                onClick={() => setShowClearDialog(true)}
+                className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-red-500 hover:bg-red-600 text-white transition-all whitespace-nowrap shadow-lg shadow-red-500/25"
               >
-                {cat === "all" ? "All Notebooks" : cat}
+                <Trash2 className="h-4 w-4" />
+                Clear All
               </button>
-            ))}
+            )}
           </div>
 
           {/* Bookshelf Grid */}
@@ -230,6 +305,28 @@ export function EnhancedBookshelf({ userId }: EnhancedBookshelfProps) {
         onOpenChange={setIsCreateOpen}
         onCreated={fetchNotebooks}
       />
+
+      {/* Clear All Confirmation Dialog */}
+      <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete all of your notebooks ({notebooks.length} {notebooks.length === 1 ? 'notebook' : 'notebooks'}) and remove all associated pages and chapters from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleClearAll}
+              disabled={isDeleting}
+              className="bg-red-500 hover:bg-red-600 focus:ring-red-500"
+            >
+              {isDeleting ? 'Deleting...' : 'Delete All Notebooks'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

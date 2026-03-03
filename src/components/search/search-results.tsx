@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Search, FileText, Calendar, Tag, ArrowRight } from "lucide-react"
 import { useRouter } from "next/navigation"
+import TetrisLoading from "@/components/ui/tetris-loader"
 
 interface Notebook {
   _id: string
@@ -65,8 +66,12 @@ export function SearchResults({ query, userId }: SearchResultsProps) {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-500"></div>
-        <p className="text-neutral-500 mt-4">Searching notebooks...</p>
+        <TetrisLoading 
+          size="sm" 
+          speed="fast" 
+          showLoadingText={true}
+          loadingText="Searching notebooks..."
+        />
       </div>
     )
   }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { Search, Command, FileText, Book, X, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import TetrisLoading from "@/components/ui/tetris-loader"
 
 interface SearchResult {
   _id: string
@@ -126,13 +127,24 @@ export function GlobalSearch() {
 
               {/* Results */}
               <div className="max-h-[400px] overflow-y-auto">
+                {loading && query && (
+                  <div className="p-8 flex justify-center">
+                    <TetrisLoading 
+                      size="sm" 
+                      speed="fast" 
+                      showLoadingText={true}
+                      loadingText="Searching..."
+                    />
+                  </div>
+                )}
+
                 {results.length === 0 && query && !loading && (
                   <div className="p-8 text-center text-neutral-500">
                     No results found for "{query}"
                   </div>
                 )}
 
-                {results.length === 0 && !query && (
+                {results.length === 0 && !query && !loading && (
                   <div className="p-8 text-center text-neutral-500">
                     <Search className="h-12 w-12 mx-auto mb-3 opacity-50" />
                     <p>Start typing to search across all your notebooks</p>
