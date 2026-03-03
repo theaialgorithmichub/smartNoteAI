@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Type, Globe, Download, Copy, Trash2, Save, Languages,
-  ChevronDown, Keyboard, Volume2, FileText, Sparkles, ToggleLeft, ToggleRight
+  ChevronDown, Keyboard, Volume2, FileText, Sparkles, ToggleLeft, ToggleRight, Info, X
 } from "lucide-react";
 import { transliterate, supportsTransliteration } from "@/lib/transliteration";
 
@@ -160,6 +160,7 @@ export function TypewriterTemplate({ title = "TypeWriter", notebookId }: Typewri
   const [saving, setSaving] = useState(false);
   const [transliterationEnabled, setTransliterationEnabled] = useState(true);
   const [inputBuffer, setInputBuffer] = useState('');
+  const [showDocumentation, setShowDocumentation] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -368,6 +369,13 @@ export function TypewriterTemplate({ title = "TypeWriter", notebookId }: Typewri
                   Saving...
                 </span>
               )}
+              <button
+                onClick={() => setShowDocumentation(true)}
+                className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                title="Documentation"
+              >
+                <Info className="h-4 w-4" />
+              </button>
               <button
                 onClick={createDocument}
                 className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-medium hover:opacity-90"
@@ -608,6 +616,183 @@ export function TypewriterTemplate({ title = "TypeWriter", notebookId }: Typewri
           )}
         </div>
       </div>
+
+      {/* Documentation Modal */}
+      <AnimatePresence>
+        {showDocumentation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDocumentation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-purple-600 p-6 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Type className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Typewriter Guide</h2>
+                    <p className="text-blue-100 text-sm">Multi-language text editor</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">⌨️ Overview</h3>
+                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    Typewriter is a multi-language text editor supporting 9+ languages including Hindi, Tamil, Malayalam, Telugu, Kannada, Bengali, Marathi, Gujarati, and Punjabi. Features automatic transliteration, special character keyboards, and adjustable font sizes for comfortable writing in any language.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🌍 Supported Languages</h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3 text-center">
+                      <p className="font-semibold text-neutral-900 dark:text-white">हिन्दी</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Hindi</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3 text-center">
+                      <p className="font-semibold text-neutral-900 dark:text-white">தமிழ்</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Tamil</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3 text-center">
+                      <p className="font-semibold text-neutral-900 dark:text-white">മലയാളം</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Malayalam</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3 text-center">
+                      <p className="font-semibold text-neutral-900 dark:text-white">తెలుగు</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Telugu</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3 text-center">
+                      <p className="font-semibold text-neutral-900 dark:text-white">ಕನ್ನಡ</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Kannada</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3 text-center">
+                      <p className="font-semibold text-neutral-900 dark:text-white">বাংলা</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Bengali</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✨ Key Features</h3>
+                  <div className="grid gap-3">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-400 mb-1">🔤 Auto Transliteration</h4>
+                      <p className="text-sm text-blue-800 dark:text-blue-300">Type in English and automatically convert to your selected language script.</p>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-900 dark:text-purple-400 mb-1">⌨️ Special Character Keyboard</h4>
+                      <p className="text-sm text-purple-800 dark:text-purple-300">Quick access to language-specific characters with on-screen keyboard.</p>
+                    </div>
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-emerald-900 dark:text-emerald-400 mb-1">📄 Multiple Documents</h4>
+                      <p className="text-sm text-emerald-800 dark:text-emerald-300">Create and manage multiple documents in different languages.</p>
+                    </div>
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-amber-900 dark:text-amber-400 mb-1">🔍 Adjustable Font Size</h4>
+                      <p className="text-sm text-amber-800 dark:text-amber-300">Customize text size from 12px to 32px for comfortable reading and writing.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚀 How to Use</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Create a Document</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "New Document" to create a new text document.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Select Language</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click the language dropdown to choose your writing language.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Enable Transliteration</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Toggle transliteration on/off. When on, type in English to get native script.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Use Special Characters</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click keyboard icon to show special character panel for direct input.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">5</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Adjust Font Size</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Use +/- buttons to increase or decrease text size for comfortable viewing.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">6</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Export or Copy</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Download as .txt file or copy to clipboard for use elsewhere.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💡 Pro Tips</h3>
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Transliteration shortcuts</strong> - Type "namaste" to get "नमस्ते" in Hindi</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Special chars</strong> - Use on-screen keyboard for vowel marks and conjuncts</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Multiple docs</strong> - Create separate documents for different languages or topics</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Font size</strong> - Increase size for better readability of complex scripts</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Auto-save</strong> - Your work saves automatically as you type</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💾 Data Storage</h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      <strong>Your documents are automatically saved locally.</strong> All documents, content, titles, and language settings are stored in your browser's local storage. Look for the "Saving..." indicator to confirm storage.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   CalendarDays, Plus, X, Loader2, Pin, PenLine,
   StickyNote, Wand2, Languages, FileText, Check,
-  Copy, Trash2, Clock, ChevronDown,
+  Copy, Trash2, Clock, ChevronDown, Info,
 } from "lucide-react";
 import { FuturisticCalendar } from "@/components/ui/futuristic-calendar";
 
@@ -22,6 +22,8 @@ interface Meeting {
   id: string;
   name: string;
   time: string;
+  startTime: string;
+  endTime: string;
   scratchPad: string;
   writtenNotes: string;
   pinnedNotes: PinnedNote[];
@@ -67,10 +69,12 @@ const LANGUAGES = [
 
 const fmtDate = (d: Date) => d.toISOString().split("T")[0];
 const nowTime = () => new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
-const makeMeeting = (name: string): Meeting => ({
+const makeMeeting = (name: string, startTime: string = "", endTime: string = ""): Meeting => ({
   id: Date.now().toString(),
   name,
   time: nowTime(),
+  startTime: startTime || nowTime(),
+  endTime: endTime || "",
   scratchPad: "",
   writtenNotes: "",
   pinnedNotes: [],
@@ -209,6 +213,10 @@ export function MeetingNotesTemplate({ title, notebookId, participants = [] }: M
   const [pinTitle, setPinTitle] = useState("");
   const [pinContent, setPinContent] = useState("");
   const [saving, setSaving] = useState(false);
+  const [showDocumentation, setShowDocumentation] = useState(false);
+  const [editingMeetingTime, setEditingMeetingTime] = useState(false);
+  const [tempStartTime, setTempStartTime] = useState("");
+  const [tempEndTime, setTempEndTime] = useState("");
   const saveRef = useRef<NodeJS.Timeout | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -255,12 +263,25 @@ export function MeetingNotesTemplate({ title, notebookId, participants = [] }: M
   const updateDay = (meetings: Meeting[]) =>
     setDayData((prev) => ({ ...prev, [dateKey]: { date: dateKey, meetings } }));
 
-  const addMeeting = (name: string) => {
-    const m = makeMeeting(name);
+  const addMeeting = (name: string, startTime?: string, endTime?: string) => {
+    const m = makeMeeting(name, startTime, endTime);
     updateDay([...todayMeetings, m]);
     setActiveMeetingId(m.id);
     setShowDropdown(false);
     setCustomName("");
+  };
+
+  const updateMeetingTimes = () => {
+    if (!activeMeeting) return;
+    patchMeeting(activeMeeting.id, { startTime: tempStartTime, endTime: tempEndTime });
+    setEditingMeetingTime(false);
+  };
+
+  const startEditingTime = () => {
+    if (!activeMeeting) return;
+    setTempStartTime(activeMeeting.startTime);
+    setTempEndTime(activeMeeting.endTime);
+    setEditingMeetingTime(true);
   };
 
   const deleteMeeting = (id: string) => {
@@ -297,7 +318,16 @@ export function MeetingNotesTemplate({ title, notebookId, participants = [] }: M
         {/* ── Header ── */}
         <header className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <span className="text-xs uppercase tracking-[0.3em] text-emerald-300/60">Meeting Notebook</span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs uppercase tracking-[0.3em] text-emerald-300/60">Meeting Notebook</span>
+              <button
+                onClick={() => setShowDocumentation(true)}
+                className="p-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg hover:bg-emerald-500/20 transition-colors"
+                title="Know More"
+              >
+                <Info className="h-4 w-4" />
+              </button>
+            </div>
             <h1 className="text-2xl lg:text-3xl font-semibold text-white mt-1">{title}</h1>
             <p className="text-sm text-emerald-200/60 mt-0.5">
               {selectedDate.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
@@ -414,12 +444,61 @@ export function MeetingNotesTemplate({ title, notebookId, participants = [] }: M
             {/* Left: Notes area */}
             <div className="space-y-4">
               {/* Meeting name + time badge */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                   <Clock className="w-3.5 h-3.5 text-emerald-400" />
                   <span className="text-sm font-semibold text-emerald-200">{activeMeeting.name}</span>
-                  <span className="text-xs text-emerald-400/60">{activeMeeting.time}</span>
+                  <span className="text-xs text-emerald-400/60">Created: {activeMeeting.time}</span>
                 </div>
+                {!editingMeetingTime ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+                      <span className="text-xs text-cyan-400">Start:</span>
+                      <span className="text-sm font-medium text-cyan-200">{activeMeeting.startTime || "Not set"}</span>
+                      {activeMeeting.endTime && (
+                        <>
+                          <span className="text-xs text-cyan-400/60">→</span>
+                          <span className="text-xs text-cyan-400">End:</span>
+                          <span className="text-sm font-medium text-cyan-200">{activeMeeting.endTime}</span>
+                        </>
+                      )}
+                    </div>
+                    <button
+                      onClick={startEditingTime}
+                      className="px-2 py-1 text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-neutral-900 border border-neutral-700">
+                    <input
+                      type="time"
+                      value={tempStartTime}
+                      onChange={(e) => setTempStartTime(e.target.value)}
+                      className="bg-neutral-800 border border-neutral-600 rounded px-2 py-1 text-xs text-neutral-200 outline-none focus:border-emerald-500"
+                    />
+                    <span className="text-xs text-neutral-500">to</span>
+                    <input
+                      type="time"
+                      value={tempEndTime}
+                      onChange={(e) => setTempEndTime(e.target.value)}
+                      className="bg-neutral-800 border border-neutral-600 rounded px-2 py-1 text-xs text-neutral-200 outline-none focus:border-emerald-500"
+                    />
+                    <button
+                      onClick={updateMeetingTimes}
+                      className="px-2 py-1 bg-emerald-500 hover:bg-emerald-600 rounded text-white text-xs transition"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditingMeetingTime(false)}
+                      className="px-2 py-1 bg-neutral-700 hover:bg-neutral-600 rounded text-neutral-300 text-xs transition"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Tab bar */}
@@ -581,6 +660,232 @@ export function MeetingNotesTemplate({ title, notebookId, participants = [] }: M
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Documentation Modal */}
+        {showDocumentation && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="max-w-4xl w-full max-h-[90vh] overflow-y-auto bg-neutral-900 border border-neutral-700 rounded-2xl shadow-2xl"
+            >
+              <div className="sticky top-0 bg-neutral-900 border-b border-neutral-700 p-6 flex items-center justify-between z-10">
+                <h2 className="text-2xl font-bold text-white">Meeting Notes Guide</h2>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-neutral-800 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-neutral-400" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Overview */}
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                    <CalendarDays className="h-5 w-5 text-emerald-400" />
+                    Overview
+                  </h3>
+                  <p className="text-neutral-300">
+                    A powerful meeting management system with AI-powered summarization and translation. 
+                    Organize meetings by date, take structured notes, and leverage AI tools to enhance productivity.
+                  </p>
+                </div>
+
+                {/* Key Features */}
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Key Features</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                      <h4 className="font-semibold text-emerald-300 mb-2 flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        Meeting Scheduling
+                      </h4>
+                      <p className="text-sm text-neutral-400">
+                        Schedule meetings with start and end times, organize by date, and track multiple meetings per day
+                      </p>
+                    </div>
+                    <div className="p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
+                      <h4 className="font-semibold text-cyan-300 mb-2 flex items-center gap-2">
+                        <PenLine className="h-4 w-4" />
+                        Three Note Types
+                      </h4>
+                      <p className="text-sm text-neutral-400">
+                        Written Notes for formal documentation, Scratch Pad for quick ideas, and Pinned Notes for important items
+                      </p>
+                    </div>
+                    <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                      <h4 className="font-semibold text-emerald-300 mb-2 flex items-center gap-2">
+                        <Wand2 className="h-4 w-4" />
+                        AI Summarization
+                      </h4>
+                      <p className="text-sm text-neutral-400">
+                        Automatically generate meeting summaries with key points, decisions, and action items
+                      </p>
+                    </div>
+                    <div className="p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
+                      <h4 className="font-semibold text-cyan-300 mb-2 flex items-center gap-2">
+                        <Languages className="h-4 w-4" />
+                        Multi-language Translation
+                      </h4>
+                      <p className="text-sm text-neutral-400">
+                        Translate meeting notes to 40+ languages including all major Indian languages
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* How to Use */}
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">How to Use</h3>
+                  <div className="space-y-4">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                        1
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-white mb-1">Create a Meeting</h4>
+                        <p className="text-sm text-neutral-400">
+                          Click "New Meeting" and select from presets (Stand-up, Sprint Planning, etc.) or enter a custom name. 
+                          The meeting is created for the selected date.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                        2
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-white mb-1">Set Meeting Times</h4>
+                        <p className="text-sm text-neutral-400">
+                          Click "Edit" next to the meeting time badge to set start and end times. Use the time pickers to schedule your meeting.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                        3
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-white mb-1">Take Notes</h4>
+                        <p className="text-sm text-neutral-400">
+                          Use <strong>Written Notes</strong> for formal meeting documentation, <strong>Scratch Pad</strong> for quick thoughts, 
+                          and <strong>Pinned Notes</strong> to highlight important items that need follow-up.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                        4
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-white mb-1">Use AI Tools</h4>
+                        <p className="text-sm text-neutral-400">
+                          Click "Summarize" to generate a concise summary with key points and action items, or "Translate" 
+                          to convert your notes to another language.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                        5
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-white mb-1">Navigate & Organize</h4>
+                        <p className="text-sm text-neutral-400">
+                          Use the Calendar to jump to different dates. Dates with meetings are highlighted. 
+                          Switch between meetings using the tabs below the header.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pro Tips */}
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Pro Tips</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2">
+                      <Check className="h-5 w-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-neutral-300">
+                        <strong>Auto-save:</strong> All changes are automatically saved to your browser's local storage every 800ms
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="h-5 w-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-neutral-300">
+                        <strong>Meeting Presets:</strong> Use presets like "Stand-up" or "Sprint Planning" for quick meeting creation
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="h-5 w-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-neutral-300">
+                        <strong>Pinned Notes:</strong> Use pinned notes for action items that need tracking across meetings
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="h-5 w-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-neutral-300">
+                        <strong>Meeting Stats:</strong> Track word counts and note counts in the stats panel on the right
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="h-5 w-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-neutral-300">
+                        <strong>Delete Meetings:</strong> Hover over a meeting tab and click the X icon to delete it
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Data Persistence */}
+                <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                  <h3 className="text-lg font-bold text-amber-300 mb-2 flex items-center gap-2">
+                    <Info className="h-5 w-5" />
+                    Data Storage
+                  </h3>
+                  <p className="text-sm text-neutral-300">
+                    Your meeting notes are automatically saved to your browser's <strong>local storage</strong> (not a remote database). 
+                    This means your data persists across sessions but is stored locally on your device. 
+                    Clearing browser data will remove your notes.
+                  </p>
+                </div>
+
+                {/* Use Cases */}
+                <div>
+                  <h3 className="text-xl font-bold text-white mb-3">Perfect For</h3>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div className="p-3 bg-neutral-800/50 rounded-lg">
+                      <p className="text-sm font-medium text-white">🏢 Team Meetings</p>
+                      <p className="text-xs text-neutral-400 mt-1">Stand-ups, planning, retrospectives</p>
+                    </div>
+                    <div className="p-3 bg-neutral-800/50 rounded-lg">
+                      <p className="text-sm font-medium text-white">👥 1:1 Conversations</p>
+                      <p className="text-xs text-neutral-400 mt-1">Manager check-ins, mentoring sessions</p>
+                    </div>
+                    <div className="p-3 bg-neutral-800/50 rounded-lg">
+                      <p className="text-sm font-medium text-white">💼 Client Calls</p>
+                      <p className="text-xs text-neutral-400 mt-1">Requirements gathering, status updates</p>
+                    </div>
+                    <div className="p-3 bg-neutral-800/50 rounded-lg">
+                      <p className="text-sm font-medium text-white">🎯 Strategy Sessions</p>
+                      <p className="text-xs text-neutral-400 mt-1">Planning, brainstorming, decision-making</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-neutral-900 border-t border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-emerald-500 to-cyan-500 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
           </div>
         )}
       </div>

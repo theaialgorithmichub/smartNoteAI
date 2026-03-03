@@ -45,6 +45,11 @@ export interface INotebook extends Document {
   tags: string[]
   isTrashed: boolean
   trashedAt?: Date
+  // Sharing fields
+  isPublic: boolean
+  sharedWith: mongoose.Types.ObjectId[]
+  content?: any
+  pageCount: number
   createdAt: Date
   updatedAt: Date
 }
@@ -67,7 +72,7 @@ const NotebookSchema = new Schema<INotebook>(
     },
     template: {
       type: String,
-      enum: ['simple', 'meeting-notes', 'document', 'dashboard', 'code-notebook', 'planner', 'ai-research', 'diary', 'journal', 'custom', 'doodle', 'project', 'loop', 'story', 'storytelling', 'typewriter', 'n8n', 'image-prompt', 'video-prompt', 'link', 'studybook', 'flashcard', 'whiteboard', 'recipe', 'expense', 'trip', 'todo'],
+      enum: ['simple', 'meeting-notes', 'document', 'dashboard', 'code-notebook', 'planner', 'ai-research', 'diary', 'journal', 'custom', 'doodle', 'project', 'loop', 'story', 'storytelling', 'typewriter', 'n8n', 'image-prompt', 'video-prompt', 'link', 'studybook', 'flashcard', 'whiteboard', 'recipe', 'expense', 'trip', 'todo', 'sound-box', 'book-notes', 'habit-tracker', 'workout-log', 'budget-planner', 'class-notes', 'research-builder', 'grocery-list', 'expense-sharer', 'project-pipeline', 'prompt-diary', 'save-the-date', 'important-urls', 'language-translator', 'dictionary', 'meals-planner', 'games-scorecard', 'sticker-book'],
       default: 'simple',
     },
     appearance: {
@@ -100,6 +105,22 @@ const NotebookSchema = new Schema<INotebook>(
       default: false,
     },
     trashedAt: Date,
+    // Sharing fields
+    isPublic: {
+      type: Boolean,
+      default: false,
+    },
+    sharedWith: [{
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    }],
+    content: {
+      type: Schema.Types.Mixed,
+    },
+    pageCount: {
+      type: Number,
+      default: 1,
+    },
   },
   {
     timestamps: true,
@@ -111,6 +132,10 @@ NotebookSchema.index({ trashedAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 }
 
 // Compound index for user queries
 NotebookSchema.index({ userId: 1, isTrashed: 1, createdAt: -1 })
+
+// Indexes for sharing queries
+NotebookSchema.index({ isPublic: 1, isTrashed: 1 })
+NotebookSchema.index({ sharedWith: 1, isTrashed: 1 })
 
 // Delete cached model to ensure schema updates are picked up in development
 if (mongoose.models.Notebook) {

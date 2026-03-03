@@ -30,10 +30,12 @@ export function CTASection() {
         `}
       >
         <div className="text-center px-4">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 drop-shadow-lg">
-            Ready to Transform Your Note-Taking?
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 drop-shadow-lg">
+            <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(135deg, var(--theme-primary), var(--theme-accent))' }}>
+              Ready to Transform Your Note-Taking?
+            </span>
           </h2>
-          <p className="text-white/80 text-lg max-w-2xl mx-auto drop-shadow">
+          <p className="text-lg max-w-2xl mx-auto drop-shadow" style={{ color: 'var(--theme-light)' }}>
             Join thousands of users who have already discovered the power of AI-enhanced notebooks.
           </p>
         </div>

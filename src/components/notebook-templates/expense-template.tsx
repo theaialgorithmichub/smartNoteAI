@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Wallet,
   Plus,
@@ -28,7 +29,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Target,
-  AlertCircle
+  AlertCircle,
+  Info,
+  X
 } from "lucide-react";
 
 interface Transaction {
@@ -54,6 +57,29 @@ interface ExpenseTemplateProps {
   title?: string;
   notebookId?: string;
 }
+
+const CURRENCIES = [
+  { code: 'USD', symbol: '$', name: 'US Dollar' },
+  { code: 'EUR', symbol: '€', name: 'Euro' },
+  { code: 'GBP', symbol: '£', name: 'British Pound' },
+  { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
+  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
+  { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
+  { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
+  { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
+  { code: 'CHF', symbol: 'Fr', name: 'Swiss Franc' },
+  { code: 'SEK', symbol: 'kr', name: 'Swedish Krona' },
+  { code: 'NZD', symbol: 'NZ$', name: 'New Zealand Dollar' },
+  { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar' },
+  { code: 'HKD', symbol: 'HK$', name: 'Hong Kong Dollar' },
+  { code: 'NOK', symbol: 'kr', name: 'Norwegian Krone' },
+  { code: 'KRW', symbol: '₩', name: 'South Korean Won' },
+  { code: 'MXN', symbol: 'Mex$', name: 'Mexican Peso' },
+  { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
+  { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
+  { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham' },
+  { code: 'SAR', symbol: '﷼', name: 'Saudi Riyal' },
+];
 
 const CATEGORIES = {
   income: [
@@ -83,6 +109,7 @@ export function ExpenseTemplate({ title = "Expense Manager", notebookId }: Expen
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
+  const [currency, setCurrency] = useState<string>('USD');
   
   const [isAddingTransaction, setIsAddingTransaction] = useState(false);
   const [newTransaction, setNewTransaction] = useState<Partial<Transaction>>({
@@ -101,6 +128,7 @@ export function ExpenseTemplate({ title = "Expense Manager", notebookId }: Expen
   });
   
   const [saving, setSaving] = useState(false);
+  const [showDocumentation, setShowDocumentation] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const saveData = () => {
@@ -110,7 +138,7 @@ export function ExpenseTemplate({ title = "Expense Manager", notebookId }: Expen
     saveTimeoutRef.current = setTimeout(() => {
       setSaving(true);
       try {
-        localStorage.setItem(`expense-${notebookId}`, JSON.stringify({ transactions, budgets }));
+        localStorage.setItem(`expense-${notebookId}`, JSON.stringify({ transactions, budgets, currency }));
       } catch (error) {
         console.error("Failed to save:", error);
       } finally {
@@ -127,6 +155,7 @@ export function ExpenseTemplate({ title = "Expense Manager", notebookId }: Expen
         const data = JSON.parse(saved);
         setTransactions(data.transactions || []);
         setBudgets(data.budgets || []);
+        setCurrency(data.currency || 'USD');
       }
     } catch (error) {
       console.error("Failed to load:", error);
@@ -135,7 +164,7 @@ export function ExpenseTemplate({ title = "Expense Manager", notebookId }: Expen
 
   useEffect(() => {
     saveData();
-  }, [transactions, budgets]);
+  }, [transactions, budgets, currency]);
 
   // Calculate totals for selected month
   const monthlyStats = useMemo(() => {
@@ -238,6 +267,14 @@ export function ExpenseTemplate({ title = "Expense Manager", notebookId }: Expen
   };
 
   const formatCurrency = (amount: number) => {
+    const selectedCurrency = CURRENCIES.find(c => c.code === currency);
+    if (selectedCurrency) {
+      try {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency }).format(amount);
+      } catch (error) {
+        return `${selectedCurrency.symbol}${amount.toFixed(2)}`;
+      }
+    }
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
   };
 
@@ -288,6 +325,27 @@ export function ExpenseTemplate({ title = "Expense Manager", notebookId }: Expen
             </div>
             
             <div className="flex items-center gap-4">
+              {/* Currency Selector */}
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="px-3 py-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg text-sm font-medium text-neutral-900 dark:text-white hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
+                title="Select Currency"
+              >
+                {CURRENCIES.map(curr => (
+                  <option key={curr.code} value={curr.code}>
+                    {curr.symbol} {curr.code} - {curr.name}
+                  </option>
+                ))}
+              </select>
+              
+              <button
+                onClick={() => setShowDocumentation(true)}
+                className="p-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors"
+                title="Documentation"
+              >
+                <Info className="h-4 w-4" />
+              </button>
               {/* Month Selector */}
               <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg p-1">
                 <button onClick={() => changeMonth(-1)} className="p-1 hover:bg-white dark:hover:bg-neutral-700 rounded">
@@ -798,6 +856,158 @@ export function ExpenseTemplate({ title = "Expense Manager", notebookId }: Expen
           </div>
         )}
       </div>
+
+      {/* Documentation Modal */}
+      <AnimatePresence>
+        {showDocumentation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
+            onClick={() => setShowDocumentation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-emerald-500 to-teal-600 p-6 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Wallet className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Expense Manager Guide</h2>
+                    <p className="text-emerald-100 text-sm">Track income, expenses & budgets</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💰 Overview</h3>
+                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    Expense Manager is a comprehensive financial tracking tool. Track income and expenses, set category budgets, analyze spending patterns, manage recurring transactions, and monitor your financial health with detailed analytics and visualizations.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✨ Key Features</h3>
+                  <div className="grid gap-3">
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-emerald-900 dark:text-emerald-400 mb-1">💵 Income & Expense Tracking</h4>
+                      <p className="text-sm text-emerald-800 dark:text-emerald-300">Record all transactions with categories, descriptions, and dates.</p>
+                    </div>
+                    <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-teal-900 dark:text-teal-400 mb-1">🎯 Budget Management</h4>
+                      <p className="text-sm text-teal-800 dark:text-teal-300">Set spending limits per category and track budget progress.</p>
+                    </div>
+                    <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-cyan-900 dark:text-cyan-400 mb-1">🔄 Recurring Transactions</h4>
+                      <p className="text-sm text-cyan-800 dark:text-cyan-300">Set up daily, weekly, monthly, or yearly recurring transactions.</p>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-400 mb-1">📊 Analytics & Reports</h4>
+                      <p className="text-sm text-blue-800 dark:text-blue-300">View spending trends, category breakdowns, and monthly comparisons.</p>
+                    </div>
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-indigo-900 dark:text-indigo-400 mb-1">🔍 Filters & Search</h4>
+                      <p className="text-sm text-indigo-800 dark:text-indigo-300">Filter by category, type, date range, and search transactions.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚀 How to Use</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add Transactions</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "Add Transaction" to record income or expenses with category and details.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Set Budgets</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Go to Budgets tab, create category budgets with spending limits.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">View Overview</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Overview tab shows total income, expenses, balance, and savings rate.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Analyze Spending</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Analytics tab shows category breakdowns, trends, and spending patterns.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">5</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Filter & Search</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Use filters to view specific categories, dates, or transaction types.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">6</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Navigate Months</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Use month selector to view different time periods.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💡 Pro Tips</h3>
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Categorize everything</strong> - Proper categorization enables better analytics</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Set realistic budgets</strong> - Base budgets on historical spending patterns</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use recurring transactions</strong> - Automate tracking of regular bills and income</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Review monthly</strong> - Check analytics to identify spending trends</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Track small expenses</strong> - Small purchases add up over time</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Monitor budget alerts</strong> - Stay aware when approaching category limits</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💾 Data Storage</h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      <strong>Your financial data is automatically saved locally.</strong> All transactions, budgets, and settings are stored in your browser's local storage. Look for the "Saving..." indicator to confirm storage.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

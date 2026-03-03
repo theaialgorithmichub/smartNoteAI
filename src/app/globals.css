@@ -5,6 +5,14 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+  
+  * {
+    box-sizing: border-box;
+  }
   @property --pos-x {
     syntax: '<percentage>';
     initial-value: 11.14%;
@@ -961,4 +969,198 @@ input, textarea, [contenteditable] {
   30% {
     box-shadow: 0 0 2px 0px var(--highlight-color);
   }
+}
+
+/* ── Color Theme System ─────────────────────────────────────────── */
+:root {
+  --theme-primary: #8B4513;
+  --theme-secondary: #A0522D;
+  --theme-accent: #D2691E;
+  --theme-light: #DEB887;
+}
+
+[data-color-theme="leather-brown"] {
+  --theme-primary: #8B4513;
+  --theme-secondary: #A0522D;
+  --theme-accent: #D2691E;
+  --theme-light: #DEB887;
+}
+
+[data-color-theme="navy-blue"] {
+  --theme-primary: #1e3a5f;
+  --theme-secondary: #2c5282;
+  --theme-accent: #3b82f6;
+  --theme-light: #60a5fa;
+}
+
+[data-color-theme="forest-green"] {
+  --theme-primary: #2d5a3d;
+  --theme-secondary: #3d7a4d;
+  --theme-accent: #10b981;
+  --theme-light: #34d399;
+}
+
+[data-color-theme="burgundy"] {
+  --theme-primary: #722f37;
+  --theme-secondary: #8b3a42;
+  --theme-accent: #dc2626;
+  --theme-light: #f87171;
+}
+
+[data-color-theme="charcoal"] {
+  --theme-primary: #36454f;
+  --theme-secondary: #4a5c6a;
+  --theme-accent: #64748b;
+  --theme-light: #94a3b8;
+}
+
+[data-color-theme="pastel-pink"] {
+  --theme-primary: #f8b4c4;
+  --theme-secondary: #fbbfd0;
+  --theme-accent: #ec4899;
+  --theme-light: #f9a8d4;
+}
+
+[data-color-theme="pastel-blue"] {
+  --theme-primary: #a8d8ea;
+  --theme-secondary: #bde0f0;
+  --theme-accent: #0ea5e9;
+  --theme-light: #38bdf8;
+}
+
+[data-color-theme="pastel-green"] {
+  --theme-primary: #b8e0d2;
+  --theme-secondary: #c7e7dc;
+  --theme-accent: #14b8a6;
+  --theme-light: #2dd4bf;
+}
+
+[data-color-theme="light-blue"] {
+  --theme-primary: #87CEEB;
+  --theme-secondary: #9dd9f3;
+  --theme-accent: #0284c7;
+  --theme-light: #0ea5e9;
+}
+
+[data-color-theme="red"] {
+  --theme-primary: #DC143C;
+  --theme-secondary: #e63950;
+  --theme-accent: #ef4444;
+  --theme-light: #f87171;
+}
+
+[data-color-theme="green-yellow"] {
+  --theme-primary: #ADFF2F;
+  --theme-secondary: #baff52;
+  --theme-accent: #84cc16;
+  --theme-light: #a3e635;
+}
+
+[data-color-theme="silver"] {
+  --theme-primary: #C0C0C0;
+  --theme-secondary: #d0d0d0;
+  --theme-accent: #71717a;
+  --theme-light: #a1a1aa;
+}
+
+[data-color-theme="deep-sea"] {
+  --theme-primary: #01579B;
+  --theme-secondary: #0277bd;
+  --theme-accent: #0284c7;
+  --theme-light: #0ea5e9;
+}
+
+[data-color-theme="purple-haze"] {
+  --theme-primary: #7C3AED;
+  --theme-secondary: #8B5CF6;
+  --theme-accent: #A78BFA;
+  --theme-light: #C4B5FD;
+}
+
+[data-color-theme="sunset-orange"] {
+  --theme-primary: #EA580C;
+  --theme-secondary: #F97316;
+  --theme-accent: #FB923C;
+  --theme-light: #FDBA74;
+}
+
+[data-color-theme="emerald"] {
+  --theme-primary: #059669;
+  --theme-secondary: #10B981;
+  --theme-accent: #34D399;
+  --theme-light: #6EE7B7;
+}
+
+[data-color-theme="rose-gold"] {
+  --theme-primary: #BE185D;
+  --theme-secondary: #E11D48;
+  --theme-accent: #FB7185;
+  --theme-light: #FDA4AF;
+}
+
+[data-color-theme="teal"] {
+  --theme-primary: #0F766E;
+  --theme-secondary: #14B8A6;
+  --theme-accent: #2DD4BF;
+  --theme-light: #5EEAD4;
+}
+
+[data-color-theme="indigo"] {
+  --theme-primary: #4338CA;
+  --theme-secondary: #6366F1;
+  --theme-accent: #818CF8;
+  --theme-light: #A5B4FC;
+}
+
+[data-color-theme="amber"] {
+  --theme-primary: #D97706;
+  --theme-secondary: #F59E0B;
+  --theme-accent: #FBBF24;
+  --theme-light: #FCD34D;
+}
+
+[data-color-theme="cyan"] {
+  --theme-primary: #0891B2;
+  --theme-secondary: #06B6D4;
+  --theme-accent: #22D3EE;
+  --theme-light: #67E8F9;
+}
+
+[data-color-theme="violet"] {
+  --theme-primary: #6D28D9;
+  --theme-secondary: #7C3AED;
+  --theme-accent: #A78BFA;
+  --theme-light: #C4B5FD;
+}
+
+[data-color-theme="coral"] {
+  --theme-primary: #F43F5E;
+  --theme-secondary: #FB7185;
+  --theme-accent: #FDA4AF;
+  --theme-light: #FECDD3;
+}
+
+/* Apply theme colors to elements */
+.theme-primary {
+  color: var(--theme-primary) !important;
+}
+
+.theme-bg-primary {
+  background-color: var(--theme-primary) !important;
+}
+
+.theme-border-primary {
+  border-color: var(--theme-primary) !important;
+}
+
+.theme-accent {
+  color: var(--theme-accent) !important;
+}
+
+.theme-bg-accent {
+  background-color: var(--theme-accent) !important;
+}
+
+.theme-gradient {
+  background: linear-gradient(135deg, var(--theme-primary), var(--theme-accent)) !important;
 }

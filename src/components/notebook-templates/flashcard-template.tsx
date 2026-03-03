@@ -19,7 +19,8 @@ import {
   Trophy,
   Clock,
   FolderOpen,
-  Edit3
+  Edit3,
+  Info
 } from "lucide-react";
 
 interface Flashcard {
@@ -83,6 +84,7 @@ export function FlashcardTemplate({ title = "Flashcards", notebookId }: Flashcar
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   
   const [saving, setSaving] = useState(false);
+  const [showDocumentation, setShowDocumentation] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const projectsRef = useRef<FlashProject[]>([]);
   
@@ -350,6 +352,13 @@ Only return the JSON array.`,
       <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border-b border-neutral-200 dark:border-neutral-800 sticky top-0 z-40">
         <div className="max-w-5xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={() => setShowDocumentation(true)}
+              className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors ml-auto"
+              title="Documentation"
+            >
+              <Info className="h-4 w-4" />
+            </button>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center">
                 <Layers className="w-5 h-5 text-white" />
@@ -808,6 +817,158 @@ Only return the JSON array.`,
           </div>
         )}
       </div>
+
+      {/* Documentation Modal */}
+      <AnimatePresence>
+        {showDocumentation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDocumentation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-violet-500 to-purple-600 p-6 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Layers className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Flashcards Guide</h2>
+                    <p className="text-purple-100 text-sm">Study smarter with spaced repetition</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🧠 Overview</h3>
+                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    Flashcards is a powerful study tool with spaced repetition. Create multiple projects, organize cards into decks, study with flip animations, track correct/incorrect answers, generate cards with AI, and monitor your learning progress with detailed statistics.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✨ Key Features</h3>
+                  <div className="grid gap-3">
+                    <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-violet-900 dark:text-violet-400 mb-1">📚 Multi-Deck Organization</h4>
+                      <p className="text-sm text-violet-800 dark:text-violet-300">Create color-coded decks to organize cards by subject or topic.</p>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-900 dark:text-purple-400 mb-1">🔄 Interactive Study Mode</h4>
+                      <p className="text-sm text-purple-800 dark:text-purple-300">Flip cards, mark correct/incorrect, shuffle for random order.</p>
+                    </div>
+                    <div className="bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-pink-900 dark:text-pink-400 mb-1">📊 Progress Tracking</h4>
+                      <p className="text-sm text-pink-800 dark:text-pink-300">Track correct/incorrect counts, view success rates, monitor session stats.</p>
+                    </div>
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-indigo-900 dark:text-indigo-400 mb-1">🎯 Difficulty Levels</h4>
+                      <p className="text-sm text-indigo-800 dark:text-indigo-300">Mark cards as easy, medium, or hard to prioritize study time.</p>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-400 mb-1">🤖 AI Card Generation</h4>
+                      <p className="text-sm text-blue-800 dark:text-blue-300">Generate flashcards automatically from any topic using AI.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚀 How to Use</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Create a Project</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "New Project" to create a flashcard collection.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Create Decks</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Go to Manage tab, create decks to organize cards by subject.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add Cards</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "Add Card" to create cards with front (question) and back (answer).</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Study Mode</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Go to Study tab, select a deck, click cards to flip and mark correct/incorrect.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold">5</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">AI Generation</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Enter a topic and click "Generate with AI" to create cards automatically.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold">6</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Track Progress</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">View Stats tab to see success rates, deck performance, and study history.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💡 Pro Tips</h3>
+                  <div className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 border border-violet-200 dark:border-violet-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Shuffle cards</strong> - Randomize order to avoid memorizing sequences</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Mark difficulty</strong> - Focus on hard cards during review sessions</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Regular sessions</strong> - Study daily for better retention with spaced repetition</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Concise cards</strong> - Keep questions and answers brief for quick recall</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use AI wisely</strong> - Generate cards then customize for your learning style</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Track stats</strong> - Monitor progress to identify weak areas</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💾 Data Storage</h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      <strong>Your flashcards are automatically saved locally.</strong> All projects, decks, cards, difficulty levels, and study statistics are stored in your browser's local storage. Look for the "Saving..." indicator to confirm storage.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

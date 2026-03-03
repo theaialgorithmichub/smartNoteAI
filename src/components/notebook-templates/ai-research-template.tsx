@@ -6,7 +6,7 @@ import {
   Plus, Globe, FileText, Brain, Send, X, Loader2, Trash2,
   Copy, Link, Youtube, BookOpen, Pencil, ChevronDown, ChevronRight,
   Check, StickyNote, MessageSquare, FolderOpen, PanelLeft, Sparkles,
-  AlertCircle, ExternalLink, Hash,
+  AlertCircle, ExternalLink, Hash, Info,
 } from "lucide-react";
 
 //  Types 
@@ -225,6 +225,7 @@ export function AIResearchTemplate({ notebookId }: AIResearchTemplateProps) {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameVal, setRenameVal] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [showDocumentation, setShowDocumentation] = useState(false);
 
   const pageIdRef = useRef<string | null>(null);
   const saveRef = useRef<NodeJS.Timeout | null>(null);
@@ -242,22 +243,37 @@ export function AIResearchTemplate({ notebookId }: AIResearchTemplateProps) {
         const json = await res.json();
         const pages: any[] = json.pages ?? [];
         const existing = pages.find((p: any) => p.title === "__ai_research_template__");
+        console.log('[AI RESEARCH] Loading data:', { existing, content: existing?.content });
         if (existing) {
           pageIdRef.current = existing._id;
           try {
             const parsed: Research[] = JSON.parse(existing.content || "[]");
+            console.log('[AI RESEARCH] Parsed data:', parsed);
             const list = Array.isArray(parsed) ? parsed : [];
-            setResearches(list);
-            if (list.length > 0) { setActiveId(list[0].id); setActiveNoteId(list[0].notes[0]?.id ?? null); }
-          } catch {}
-        } else {
-          const cr = await fetch(`/api/notebooks/${notebookId}/pages`, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title: "__ai_research_template__", content: "[]" }),
-          });
-          const created = await cr.json();
-          pageIdRef.current = created.page?._id ?? null;
+            // Check if content is valid
+            if (existing.content && existing.content.trim() && list.length >= 0) {
+              setResearches(list);
+              if (list.length > 0) { setActiveId(list[0].id); setActiveNoteId(list[0].notes[0]?.id ?? null); }
+              setLoading(false);
+              return;
+            }
+            // If content is empty or corrupted, delete and recreate
+            console.log('[AI RESEARCH] Empty/corrupted content detected, recreating page...');
+            await fetch(`/api/notebooks/${notebookId}/pages/${existing._id}`, { method: "DELETE" });
+          } catch (err) {
+            console.error('[AI RESEARCH] Parse error:', err);
+            // Delete corrupted page
+            await fetch(`/api/notebooks/${notebookId}/pages/${existing._id}`, { method: "DELETE" });
+          }
         }
+        // Create new page
+        const cr = await fetch(`/api/notebooks/${notebookId}/pages`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: "__ai_research_template__", content: "[]" }),
+        });
+        const created = await cr.json();
+        console.log('[AI RESEARCH] Created new page:', created);
+        pageIdRef.current = created.page?._id ?? null;
       } catch (err) { console.error("Load failed:", err); }
       finally { setLoading(false); }
     })();
@@ -277,11 +293,17 @@ export function AIResearchTemplate({ notebookId }: AIResearchTemplateProps) {
     saveRef.current = setTimeout(async () => {
       const pid = pageIdRef.current; if (!pid) return;
       setSaving(true);
+      console.log('[AI RESEARCH] Saving data:', researchesRef.current);
       try {
-        await fetch(`/api/notebooks/${notebookId}/pages/${pid}`, {
+        const payload = { title: "__ai_research_template__", content: JSON.stringify(researchesRef.current) };
+        console.log('[AI RESEARCH] Save payload:', payload);
+        const response = await fetch(`/api/notebooks/${notebookId}/pages/${pid}`, {
           method: "PATCH", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: "__ai_research_template__", content: JSON.stringify(researchesRef.current) }),
+          body: JSON.stringify(payload),
         });
+        const result = await response.json();
+        console.log('[AI RESEARCH] Save response:', result);
+        console.log('[AI RESEARCH] Saved page content:', result.page?.content);
       } catch (err) { console.error("Save failed:", err); }
       finally { setSaving(false); }
     }, 1200);
@@ -549,7 +571,15 @@ export function AIResearchTemplate({ notebookId }: AIResearchTemplateProps) {
                   </button>
                 ))}
               </div>
+              <button
+                onClick={() => setShowDocumentation(true)}
+                className="p-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors flex-shrink-0"
+                title="Documentation"
+              >
+                <Info className="h-4 w-4" />
+              </button>
               {saving && <Loader2 className="w-3.5 h-3.5 animate-spin text-neutral-400 flex-shrink-0"/>}
+              {!saving && notebookId && <div className="text-xs text-emerald-600 dark:text-emerald-400">Saved</div>}
             </div>
 
             {/* SOURCES panel */}
@@ -788,6 +818,243 @@ export function AIResearchTemplate({ notebookId }: AIResearchTemplateProps) {
           </div>
         </div>
       )}
+
+      {/* Documentation Modal */}
+      <AnimatePresence>
+        {showDocumentation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDocumentation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-indigo-600 p-6 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Brain className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">AI Research Assistant Guide</h2>
+                    <p className="text-blue-100 text-sm">Organize sources, chat with AI, and take notes</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Overview */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🧠 Overview</h3>
+                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    AI Research Assistant is a powerful tool for conducting research with AI support. Add sources (YouTube videos, web articles, documents, or text), get AI-powered summaries, ask questions about your sources, and organize findings in notes.
+                  </p>
+                </div>
+
+                {/* Key Features */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✨ Key Features</h3>
+                  <div className="grid gap-3">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-400 mb-1">🌐 Multi-Source Support</h4>
+                      <p className="text-sm text-blue-800 dark:text-blue-300">Add YouTube videos, web articles, documents, or raw text. AI automatically summarizes and extracts key points.</p>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-900 dark:text-purple-400 mb-1">💬 AI Q&A Chat</h4>
+                      <p className="text-sm text-purple-800 dark:text-purple-300">Ask questions about your selected sources. AI provides answers based on the content you've gathered.</p>
+                    </div>
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-emerald-900 dark:text-emerald-400 mb-1">📝 Research Notes</h4>
+                      <p className="text-sm text-emerald-800 dark:text-emerald-300">Create multiple notes per research project. Save AI responses directly to notes with one click.</p>
+                    </div>
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-amber-900 dark:text-amber-400 mb-1">🗂️ Multiple Research Projects</h4>
+                      <p className="text-sm text-amber-800 dark:text-amber-300">Organize different research topics separately. Each project has its own sources, chat history, and notes.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* How to Use */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚀 How to Use</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Create a Research Project</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "+ New Research" in the sidebar. Give it a descriptive title and optional description.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add Sources</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Go to the "Sources" tab and click "+". Paste YouTube URLs, web links, or raw text. AI will automatically summarize.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Ask Questions</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Switch to "Chat" tab. Select which sources to include (checkboxes), then ask AI questions about the content.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Take Notes</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Create notes in the "Notes" tab. Click "Save to note" on AI responses to capture important insights.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Three Panels */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">📑 Three Main Panels</h3>
+                  <div className="space-y-3">
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white mb-2 flex items-center gap-2">
+                        <Globe className="w-4 h-4 text-blue-500" />
+                        Sources Panel
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+                        Manage your research sources:
+                      </p>
+                      <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-1 ml-4">
+                        <li>• Add YouTube videos, web articles, documents, or text</li>
+                        <li>• View AI-generated summaries and key points</li>
+                        <li>• Select/deselect sources for Q&A (checkbox)</li>
+                        <li>• Click a source to view full summary in main area</li>
+                      </ul>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white mb-2 flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-blue-500" />
+                        Chat Panel
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Ask AI questions about your selected sources. The AI will answer based on the content you've gathered. Click "Save to note" on responses to capture them.
+                      </p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white mb-2 flex items-center gap-2">
+                        <StickyNote className="w-4 h-4 text-blue-500" />
+                        Notes Panel
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Create and organize research notes. Each note has a title and content area. Perfect for summarizing findings, action items, or key insights.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Source Types */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">📚 Supported Source Types</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                      <Youtube className="w-5 h-5 text-red-500" />
+                      <div>
+                        <p className="font-semibold text-red-900 dark:text-red-400 text-sm">YouTube</p>
+                        <p className="text-xs text-red-700 dark:text-red-300">Video transcripts & summaries</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                      <Globe className="w-5 h-5 text-blue-500" />
+                      <div>
+                        <p className="font-semibold text-blue-900 dark:text-blue-400 text-sm">Web Articles</p>
+                        <p className="text-xs text-blue-700 dark:text-blue-300">Websites & blog posts</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                      <FileText className="w-5 h-5 text-amber-500" />
+                      <div>
+                        <p className="font-semibold text-amber-900 dark:text-amber-400 text-sm">Documents</p>
+                        <p className="text-xs text-amber-700 dark:text-amber-300">PDFs & text files</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                      <FileText className="w-5 h-5 text-emerald-500" />
+                      <div>
+                        <p className="font-semibold text-emerald-900 dark:text-emerald-400 text-sm">Raw Text</p>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-300">Paste any text content</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pro Tips */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💡 Pro Tips</h3>
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Select relevant sources</strong> before asking questions to get focused answers</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use descriptive research titles</strong> to easily find projects later</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Save AI responses to notes</strong> using the "Save to note" button</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Click sources to expand</strong> and view full summaries and sections</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Ask follow-up questions</strong> - the AI remembers chat history</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Create multiple notes</strong> to organize different aspects of your research</p>
+                  </div>
+                </div>
+
+                {/* Use Cases */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💼 Common Use Cases</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">📖 Academic Research</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Gather sources, summarize papers, extract insights</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">🔍 Market Research</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Analyze competitors, trends, and industry insights</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">💡 Learning & Study</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Collect learning materials, ask questions, take notes</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">📰 Content Research</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Gather sources for articles, videos, or presentations</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Data Storage */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💾 Data Storage</h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      <strong>Your research data is automatically saved to the database.</strong> All research projects, sources, summaries, chat history, and notes are persisted to the server. Look for the "Saved" indicator to confirm successful storage. Your data syncs across devices automatically.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

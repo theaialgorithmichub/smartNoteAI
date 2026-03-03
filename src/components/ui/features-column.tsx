@@ -32,10 +32,19 @@ export const FeaturesColumn = (props: {
             <React.Fragment key={index}>
               {props.features.map(({ icon, title, description }, i) => (
                 <div 
-                  className="p-8 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/50 backdrop-blur-sm shadow-lg shadow-amber-500/5 max-w-xs w-full hover:border-amber-500/50 transition-colors" 
+                  className="p-8 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/50 backdrop-blur-sm shadow-lg max-w-xs w-full transition-all hover:scale-105" 
                   key={i}
+                  style={{
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = 'var(--theme-accent)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = '';
+                  }}
                 >
-                  <div className="text-amber-500 mb-4">{icon}</div>
+                  <div className="mb-4" style={{ color: 'var(--theme-primary)' }}>{icon}</div>
                   <div className="text-xl font-semibold text-neutral-900 dark:text-neutral-100 mb-2">{title}</div>
                   <div className="text-neutral-600 dark:text-neutral-400 text-sm leading-relaxed">{description}</div>
                 </div>

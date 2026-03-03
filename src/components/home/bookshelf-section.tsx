@@ -17,10 +17,11 @@ export function BookshelfSection() {
         }}
         className="flex flex-col items-center w-full px-4 relative z-50"
       >
-        <h2 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-neutral-900 to-neutral-600 dark:from-neutral-50 dark:to-neutral-400 mb-4 text-center">
-          Your Personal Bookshelf
+        <h2 className="text-4xl md:text-5xl font-bold mb-4 text-center">
+          <span className="bg-clip-text text-transparent bg-gradient-to-b from-neutral-900 to-neutral-600 dark:from-neutral-50 dark:to-neutral-400">Your </span>
+          <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, var(--theme-primary), var(--theme-accent))' }}>Personal Bookshelf</span>
         </h2>
-        <p className="text-neutral-600 dark:text-neutral-400 text-lg mb-12 text-center max-w-xl">
+        <p className="text-lg mb-12 text-center max-w-xl" style={{ color: 'var(--theme-secondary)' }}>
           Organize your notebooks just like a real bookshelf. Click to explore different categories.
         </p>
         

@@ -17,7 +17,7 @@ import {
   List, ListOrdered, Link, Unlink, Image, Heading1, Heading2,
   Heading3, Quote, Code, Undo, Redo, Palette, Highlighter,
   Minus, Download, Printer, Type, ChevronDown, FileText,
-  Pencil, Trash2, FolderOpen, PanelLeft,
+  Pencil, Trash2, FolderOpen, PanelLeft, Info, Check,
 } from "lucide-react";
 
 const FONT_FAMILIES = [
@@ -281,6 +281,7 @@ export function DocumentTemplate({ title, notebookId }: DocumentTemplateProps) {
   const [renameVal, setRenameVal] = useState("");
   const [pageId, setPageId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showDocumentation, setShowDocumentation] = useState(false);
   const saveRef = useRef<NodeJS.Timeout | null>(null);
   const pageIdRef = useRef<string | null>(null);
   useEffect(() => { pageIdRef.current = pageId; }, [pageId]);
@@ -298,13 +299,20 @@ export function DocumentTemplate({ title, notebookId }: DocumentTemplateProps) {
         const data = await res.json();
         const pages: any[] = data.pages || [];
         const templatePage = pages.find((p: any) => p.title === "__doc_template__");
+        console.log('[DOC TEMPLATE] Loading data:', { templatePage, content: templatePage?.content });
         if (templatePage) {
           setPageId(templatePage._id);
           pageIdRef.current = templatePage._id;
           try {
             const parsed: Doc[] = JSON.parse(templatePage.content || "[]");
+            console.log('[DOC TEMPLATE] Parsed documents:', parsed);
             if (parsed.length) { setDocs(parsed); setActiveDocId(parsed[0].id); setLoading(false); return; }
-          } catch {}
+            // If content is empty, delete corrupted page and recreate
+            console.log('[DOC TEMPLATE] Empty content detected, recreating page...');
+            await fetch(`/api/notebooks/${notebookId}/pages/${templatePage._id}`, { method: "DELETE" });
+          } catch (err) {
+            console.error('[DOC TEMPLATE] Parse error:', err);
+          }
         }
         const createRes = await fetch(`/api/notebooks/${notebookId}/pages`, {
           method: "POST",
@@ -332,13 +340,19 @@ export function DocumentTemplate({ title, notebookId }: DocumentTemplateProps) {
       const pid = pageIdRef.current;
       if (!pid) return;
       setSaving(true);
+      console.log('[DOC TEMPLATE] Saving documents:', list);
       try {
-        await fetch(`/api/notebooks/${notebookId}/pages/${pid}`, {
+        const payload = { title: "__doc_template__", content: JSON.stringify(list) };
+        console.log('[DOC TEMPLATE] Save payload:', payload);
+        const response = await fetch(`/api/notebooks/${notebookId}/pages/${pid}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title: "__doc_template__", content: JSON.stringify(list) }),
+          body: JSON.stringify(payload),
         });
-      } catch (err) { console.error("Failed to save:", err); }
+        const result = await response.json();
+        console.log('[DOC TEMPLATE] Save response:', result);
+        console.log('[DOC TEMPLATE] Saved page content:', result.page?.content);
+      } catch (err) { console.error("[DOC TEMPLATE] Failed to save:", err); }
       finally { setSaving(false); }
     }, 1000);
   }, [notebookId]);
@@ -447,6 +461,14 @@ export function DocumentTemplate({ title, notebookId }: DocumentTemplateProps) {
             <PanelLeft className="w-4 h-4" />
           </button>
           <span className="text-sm text-neutral-500 dark:text-neutral-400 truncate flex-1">{activeDoc?.title || "No document selected"}</span>
+          {/* Documentation Info Button */}
+          <button
+            onClick={() => setShowDocumentation(true)}
+            className="p-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
+            title="Know More"
+          >
+            <Info className="h-4 w-4" />
+          </button>
           {saving && (
             <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
               <Loader2 className="w-3 h-3 animate-spin" /> Saving...
@@ -475,6 +497,159 @@ export function DocumentTemplate({ title, notebookId }: DocumentTemplateProps) {
             </div>
           )}
         </div>
+
+        {/* Documentation Modal */}
+        {showDocumentation && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="max-w-4xl w-full max-h-[90vh] overflow-y-auto bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-700"
+            >
+              <div className="sticky top-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-6 flex items-center justify-between z-10">
+                <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">Document Template Guide</h2>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-neutral-500" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6">
+                <div>
+                  <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-3 flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-amber-600" />
+                    Overview
+                  </h3>
+                  <p className="text-neutral-600 dark:text-neutral-400">
+                    A professional document editor with rich text formatting, multi-tab support, and cloud storage. 
+                    Create, organize, and edit multiple documents with a powerful WYSIWYG editor and comprehensive formatting tools.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-3">Key Features</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                      <h4 className="font-semibold text-amber-900 dark:text-amber-200 mb-2 flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Rich Text Editor
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Full WYSIWYG editor with bold, italic, underline, headings, lists, quotes, code blocks, and more
+                      </p>
+                    </div>
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2 flex items-center gap-2">
+                        <Type className="h-4 w-4" />
+                        Advanced Formatting
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Custom fonts, text colors, highlights, links, images, and horizontal dividers
+                      </p>
+                    </div>
+                    <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                      <h4 className="font-semibold text-amber-900 dark:text-amber-200 mb-2 flex items-center gap-2">
+                        <Plus className="h-4 w-4" />
+                        Multi-Tab Support
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Organize content with multiple tabs per document (Overview, Details, Notes, etc.)
+                      </p>
+                    </div>
+                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2 flex items-center gap-2">
+                        <Download className="h-4 w-4" />
+                        Export & Print
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Export documents as HTML files or print directly from the editor
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-3">How to Use</h3>
+                  <div className="space-y-4">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm">1</div>
+                      <div>
+                        <h4 className="font-semibold text-neutral-900 dark:text-white mb-1">Create Documents</h4>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                          Click the + button in the sidebar to create a new document. Each document starts with a default "Overview" tab.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm">2</div>
+                      <div>
+                        <h4 className="font-semibold text-neutral-900 dark:text-white mb-1">Format Content</h4>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                          Use the toolbar to apply formatting: bold, italic, underline, headings, lists, quotes, colors, highlights, links, and images.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm">3</div>
+                      <div>
+                        <h4 className="font-semibold text-neutral-900 dark:text-white mb-1">Organize with Tabs</h4>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                          Click + next to tabs to add sections. Remove tabs by hovering and clicking X (minimum 1 tab required).
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-3">Pro Tips</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-2">
+                      <Check className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                        <strong>Auto-save:</strong> All changes are automatically saved to the database after 1 second of inactivity
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                        <strong>Keyboard Shortcuts:</strong> Use Ctrl+B (bold), Ctrl+I (italic), Ctrl+Z (undo)
+                      </p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <Check className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-neutral-600 dark:text-neutral-300">
+                        <strong>Image Uploads:</strong> Images are uploaded to cloud storage (max 10MB)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                  <h3 className="text-lg font-bold text-emerald-900 dark:text-emerald-300 mb-2 flex items-center gap-2">
+                    <Info className="h-5 w-5" />
+                    Data Storage
+                  </h3>
+                  <p className="text-sm text-neutral-700 dark:text-neutral-300">
+                    Your documents are automatically saved to the <strong>database</strong> via API calls. All changes are persisted 
+                    to the server and synced across devices. The "Saved" indicator confirms successful database storage.
+                  </p>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-800 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </div>
     </div>
   );

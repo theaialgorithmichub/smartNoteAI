@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Pencil,
   Eraser,
@@ -16,7 +17,8 @@ import {
   Plus,
   FolderOpen,
   Edit3,
-  X
+  X,
+  Info
 } from "lucide-react";
 
 interface Point {
@@ -72,6 +74,7 @@ export function DoodleTemplate({ title = "Doodle Pad", notebookId }: DoodleTempl
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showDocumentation, setShowDocumentation] = useState(false);
 
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const projectsRef = useRef<DoodleProject[]>([]);
@@ -472,9 +475,14 @@ export function DoodleTemplate({ title = "Doodle Pad", notebookId }: DoodleTempl
         <div className="p-4 border-b border-neutral-200 dark:border-neutral-800">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold text-neutral-900 dark:text-white">{title}</h2>
-            <button onClick={() => setShowProjectForm(true)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-indigo-500">
-              <Plus className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setShowDocumentation(true)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-indigo-500" title="Documentation">
+                <Info className="w-4 h-4" />
+              </button>
+              <button onClick={() => setShowProjectForm(true)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-indigo-500">
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
           </div>
           
           {/* Project Form */}
@@ -545,6 +553,225 @@ export function DoodleTemplate({ title = "Doodle Pad", notebookId }: DoodleTempl
           </div>
         )}
       </div>
+
+      {/* Documentation Modal */}
+      <AnimatePresence>
+        {showDocumentation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDocumentation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-indigo-500 to-purple-600 p-6 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Pencil className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Doodle Pad Guide</h2>
+                    <p className="text-indigo-100 text-sm">Draw, sketch, and create freely</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🎨 Overview</h3>
+                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    Doodle Pad is a digital drawing canvas with full touch and mouse support. Create multiple doodle projects, draw with customizable brushes, use 16+ colors, and add notes to your artwork. Perfect for sketching, brainstorming, or visual note-taking.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✨ Key Features</h3>
+                  <div className="grid gap-3">
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-indigo-900 dark:text-indigo-400 mb-1">🖌️ Drawing Tools</h4>
+                      <p className="text-sm text-indigo-800 dark:text-indigo-300">Pen and eraser tools with 5 brush sizes (2px to 20px) for precise or bold strokes.</p>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-900 dark:text-purple-400 mb-1">🎨 16+ Colors</h4>
+                      <p className="text-sm text-purple-800 dark:text-purple-300">Preset color palette plus custom color picker for unlimited color options.</p>
+                    </div>
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-emerald-900 dark:text-emerald-400 mb-1">↩️ Undo/Redo</h4>
+                      <p className="text-sm text-emerald-800 dark:text-emerald-300">Full undo and redo support to experiment without fear of mistakes.</p>
+                    </div>
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-amber-900 dark:text-amber-400 mb-1">📁 Multiple Projects</h4>
+                      <p className="text-sm text-amber-800 dark:text-amber-300">Create separate doodle projects to organize different drawings and ideas.</p>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-400 mb-1">📝 Project Notes</h4>
+                      <p className="text-sm text-blue-800 dark:text-blue-300">Add text notes to each doodle for context, ideas, or descriptions.</p>
+                    </div>
+                    <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-rose-900 dark:text-rose-400 mb-1">💾 Download</h4>
+                      <p className="text-sm text-rose-800 dark:text-rose-300">Export your doodles as PNG images to save or share.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚀 How to Use</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Select a Tool</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Choose between Pen (draw) or Eraser (erase) from the left toolbar.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Pick Brush Size</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Select from 5 brush sizes in the toolbar. Larger sizes for bold strokes, smaller for details.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Choose a Color</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click any color in the top palette or use the color picker for custom colors.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Draw on Canvas</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click and drag on the white canvas to draw. Works with mouse or touch.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">5</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Use Undo/Redo</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click undo/redo buttons in the toolbar to step backward or forward through your strokes.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">6</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add Notes</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Use the notes area in the right sidebar to add text descriptions or ideas.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">7</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Manage Projects</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Create new projects with + button. Switch between projects in the right sidebar.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🖥️ Interface Layout</h3>
+                  <div className="space-y-3">
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white mb-2">Left Toolbar</h4>
+                      <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-1 ml-4">
+                        <li>• Pen and Eraser tools</li>
+                        <li>• 5 brush size options</li>
+                        <li>• Undo and Redo buttons</li>
+                        <li>• Clear canvas button</li>
+                        <li>• Download PNG button</li>
+                      </ul>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white mb-2">Top Color Bar</h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        16 preset colors plus a custom color picker for unlimited color choices.
+                      </p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white mb-2">Center Canvas</h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Large white drawing area with full mouse and touch support. Responsive and resizes with window.
+                      </p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white mb-2">Right Sidebar</h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Project list for switching between doodles, plus a notes area for each project.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💡 Pro Tips</h3>
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use smaller brushes</strong> for detailed work and larger for filling areas</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Experiment freely</strong> - undo/redo lets you try without consequences</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Touch support</strong> - works great on tablets and touch screens</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Download often</strong> - save your work as PNG to keep backups</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use notes</strong> - document your ideas and concepts alongside drawings</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Separate projects</strong> - keep different topics or sessions organized</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💼 Use Cases</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">💡 Brainstorming</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Sketch mind maps, diagrams, and visual ideas</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">🎨 Art & Sketching</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Create digital art and quick sketches</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">📐 Diagrams</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Draw flowcharts, wireframes, and technical diagrams</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">✏️ Visual Notes</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Annotate ideas with drawings and doodles</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💾 Data Storage</h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      <strong>Your doodles are automatically saved locally.</strong> All projects, drawings, and notes are stored in your browser's local storage. Changes save automatically as you draw. Look for the "Saving..." indicator to confirm storage.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

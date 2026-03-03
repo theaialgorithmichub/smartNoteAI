@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Image as ImageIcon, Plus, Loader2, Trash2, Edit3, X, Search, FolderOpen,
-  Upload, Sparkles, Download, Copy, Check, Grid3x3, List, Eye, Wand2
+  Upload, Sparkles, Download, Copy, Check, Grid3x3, List, Eye, Wand2, Info
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -73,6 +73,7 @@ export function ImagePromptTemplate({ title = "Image Prompts", notebookId }: Ima
   // UI state
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [showDocumentation, setShowDocumentation] = useState(false);
   
   // Persistence
   const [saving, setSaving] = useState(false);
@@ -383,6 +384,16 @@ export function ImagePromptTemplate({ title = "Image Prompts", notebookId }: Ima
                   {activeProject ? `${activeProject.prompts.length} prompts` : 'No project selected'}
                 </p>
               </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowDocumentation(true)}
+                className="p-2 bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 rounded-lg hover:bg-pink-200 dark:hover:bg-pink-900/50 transition-colors"
+                title="Documentation"
+              >
+                <Info className="h-4 w-4" />
+              </button>
             </div>
             
             <div className="flex gap-1 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
@@ -884,6 +895,157 @@ export function ImagePromptTemplate({ title = "Image Prompts", notebookId }: Ima
           </div>
         )}
       </div>
+
+      {/* Documentation Modal */}
+      <AnimatePresence>
+        {showDocumentation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDocumentation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 p-6 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <ImageIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Image Prompts Guide</h2>
+                    <p className="text-pink-100 text-sm">AI image generation & management</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🎨 Overview</h3>
+                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    Image Prompts is a comprehensive tool for managing AI image generation prompts and organizing generated images. Create projects, write detailed prompts with tags, generate images with AI, upload your own images, and build a searchable gallery.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✨ Key Features</h3>
+                  <div className="grid gap-3">
+                    <div className="bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-pink-900 dark:text-pink-400 mb-1">📁 Multi-Project Organization</h4>
+                      <p className="text-sm text-pink-800 dark:text-pink-300">Create separate projects for different themes, clients, or campaigns.</p>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-900 dark:text-purple-400 mb-1">✍️ Detailed Prompts</h4>
+                      <p className="text-sm text-purple-800 dark:text-purple-300">Write prompts with descriptions and tags for easy searching and filtering.</p>
+                    </div>
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-indigo-900 dark:text-indigo-400 mb-1">🤖 AI Generation</h4>
+                      <p className="text-sm text-indigo-800 dark:text-indigo-300">Generate images from prompts using AI (integration required).</p>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-400 mb-1">📤 Image Upload</h4>
+                      <p className="text-sm text-blue-800 dark:text-blue-300">Upload your own images to associate with prompts.</p>
+                    </div>
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-emerald-900 dark:text-emerald-400 mb-1">🖼️ Gallery View</h4>
+                      <p className="text-sm text-emerald-800 dark:text-emerald-300">Browse all images in grid or list view with search and filtering.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚀 How to Use</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-pink-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Create a Project</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "New Project" to create a project with name and description.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-pink-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add Prompts</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Switch to Prompts tab, click "New Prompt" to add prompt text, description, and tags.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-pink-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Generate Images</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "Generate" on a prompt to create AI images (requires AI integration).</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-pink-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Upload Images</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "Upload" to add your own images to prompts.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-pink-500 text-white flex items-center justify-center text-sm font-bold">5</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Browse Gallery</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Switch to Gallery tab to view all images in grid or list view.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-pink-500 text-white flex items-center justify-center text-sm font-bold">6</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Search & Filter</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Use search bar to find prompts by text or tags.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💡 Pro Tips</h3>
+                  <div className="bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 border border-pink-200 dark:border-pink-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Detailed prompts</strong> - More specific prompts generate better AI images</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use tags</strong> - Tag prompts by style, subject, or mood for easy filtering</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Organize projects</strong> - Separate projects by client, campaign, or theme</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Save variations</strong> - Upload multiple variations of the same prompt</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Copy prompts</strong> - Use the copy button to reuse successful prompts</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💾 Data Storage</h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      <strong>Your prompts and images are automatically saved locally.</strong> All projects, prompts, tags, and uploaded images are stored in your browser's local storage. Look for the "Saving..." indicator to confirm storage.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

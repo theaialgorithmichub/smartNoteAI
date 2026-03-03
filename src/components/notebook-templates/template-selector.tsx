@@ -12,7 +12,8 @@ import {
   Brain,
   Check,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Mic
 } from "lucide-react";
 import { NOTEBOOK_TEMPLATES, NotebookTemplateType } from "@/types/notebook-templates";
 
@@ -24,6 +25,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Code,
   Calendar,
   Brain,
+  Mic,
 };
 
 const colorMap: Record<string, { bg: string; border: string; text: string; gradient: string }> = {
@@ -68,6 +70,12 @@ const colorMap: Record<string, { bg: string; border: string; text: string; gradi
     border: "border-rose-200 dark:border-rose-800",
     text: "text-rose-600 dark:text-rose-400",
     gradient: "from-rose-500 to-pink-500",
+  },
+  indigo: {
+    bg: "bg-indigo-50 dark:bg-indigo-900/20",
+    border: "border-indigo-200 dark:border-indigo-800",
+    text: "text-indigo-600 dark:text-indigo-400",
+    gradient: "from-indigo-500 to-purple-500",
   },
 };
 

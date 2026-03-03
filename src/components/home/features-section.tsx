@@ -53,13 +53,15 @@ export function FeaturesSection() {
           className="flex flex-col items-center justify-center max-w-[540px] mx-auto mb-10"
         >
           <div className="flex justify-center">
-            <div className="border border-amber-500/30 bg-amber-500/10 py-1 px-4 rounded-lg text-amber-400 text-sm">
+            <div className="border py-1 px-4 rounded-lg text-sm" style={{ borderColor: 'var(--theme-primary)', backgroundColor: 'var(--theme-primary)20', color: 'var(--theme-accent)' }}>
               Features
             </div>
           </div>
 
-          <h2 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-neutral-900 to-neutral-600 dark:from-neutral-50 dark:to-neutral-400 mt-5 text-center">
-            Why SmartNote AI?
+          <h2 className="text-4xl md:text-5xl font-bold mt-5 text-center">
+            <span className="bg-clip-text text-transparent bg-gradient-to-b from-neutral-900 to-neutral-600 dark:from-neutral-50 dark:to-neutral-400">Why </span>
+            <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, var(--theme-primary), var(--theme-accent))' }}>SmartNote AI</span>
+            <span className="bg-clip-text text-transparent bg-gradient-to-b from-neutral-900 to-neutral-600 dark:from-neutral-50 dark:to-neutral-400">?</span>
           </h2>
           <p className="text-center mt-5 text-neutral-600 dark:text-neutral-400 text-lg">
             Experience the perfect blend of traditional note-taking and cutting-edge AI technology

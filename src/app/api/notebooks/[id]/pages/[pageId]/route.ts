@@ -67,7 +67,12 @@ export async function PATCH(
     if (title !== undefined) updateData.title = title
     if (content !== undefined) {
       updateData.content = content
-      updateData.contentPlainText = stripHtml(content)
+      // Only strip HTML if content looks like HTML (not JSON)
+      if (typeof content === 'string' && !content.trim().startsWith('[') && !content.trim().startsWith('{')) {
+        updateData.contentPlainText = stripHtml(content)
+      } else {
+        updateData.contentPlainText = content
+      }
     }
     if (chapterId !== undefined) updateData.chapterId = chapterId
     if (tags !== undefined) updateData.tags = tags

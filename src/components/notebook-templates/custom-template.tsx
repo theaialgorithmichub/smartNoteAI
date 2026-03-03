@@ -26,7 +26,8 @@ import {
   ChevronLeft,
   ChevronRight,
   FolderOpen,
-  Save
+  Save,
+  Info
 } from "lucide-react";
 
 type WidgetType = 'heading' | 'text' | 'blog' | 'image' | 'calendar' | 'tasks' | 'checklist' | 'document' | 'link' | 'quote' | 'code' | 'divider';
@@ -96,7 +97,8 @@ export function CustomTemplate({ title = "Custom Pages", notebookId }: CustomTem
   const [pageName, setPageName] = useState('');
   const [editingPageId, setEditingPageId] = useState<string | null>(null);
   const [confirmDeletePageId, setConfirmDeletePageId] = useState<string | null>(null);
-  
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showDocumentation, setShowDocumentation] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showWidgetMenu, setShowWidgetMenu] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
@@ -714,13 +716,22 @@ export function CustomTemplate({ title = "Custom Pages", notebookId }: CustomTem
         <div className="max-w-5xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between mb-3">
             <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">{title}</h1>
-            <button
-              onClick={() => setShowPageForm(true)}
-              className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-medium flex items-center gap-2 hover:opacity-90"
-            >
-              <Plus className="w-4 h-4" />
-              New Page
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowDocumentation(true)}
+                className="p-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors"
+                title="Documentation"
+              >
+                <Info className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setShowPageForm(true)}
+                className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-medium flex items-center gap-2 hover:opacity-90"
+              >
+                <Plus className="w-4 h-4" />
+                New Page
+              </button>
+            </div>
           </div>
 
           {/* Page Tabs */}
@@ -878,6 +889,224 @@ export function CustomTemplate({ title = "Custom Pages", notebookId }: CustomTem
           <p className="text-sm text-neutral-500">Create or select a page to start building</p>
         </div>
       )}
+
+      {/* Documentation Modal */}
+      <AnimatePresence>
+        {showDocumentation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDocumentation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-indigo-500 to-purple-600 p-6 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <FileText className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Custom Pages Guide</h2>
+                    <p className="text-indigo-100 text-sm">Build anything with flexible widgets</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🎨 Overview</h3>
+                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    Custom Pages is the ultimate flexible template that lets you build exactly what you need. Create multiple pages and add any combination of 12 different widget types - from headings and text to calendars, tasks, code blocks, and more.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">📦 12 Widget Types</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white text-sm mb-1 flex items-center gap-2">
+                        <Heading1 className="w-4 h-4 text-indigo-500" /> Heading
+                      </h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Large section titles</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white text-sm mb-1 flex items-center gap-2">
+                        <AlignLeft className="w-4 h-4 text-indigo-500" /> Text
+                      </h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Paragraph content</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white text-sm mb-1 flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-indigo-500" /> Blog Post
+                      </h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Title, author, date, content</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white text-sm mb-1 flex items-center gap-2">
+                        <ImageIcon className="w-4 h-4 text-indigo-500" /> Image
+                      </h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Upload or URL with caption</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white text-sm mb-1 flex items-center gap-2">
+                        <CalendarIcon className="w-4 h-4 text-indigo-500" /> Calendar
+                      </h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Events with dates</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white text-sm mb-1 flex items-center gap-2">
+                        <CheckSquare className="w-4 h-4 text-indigo-500" /> Tasks
+                      </h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">To-dos with due dates</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white text-sm mb-1 flex items-center gap-2">
+                        <List className="w-4 h-4 text-indigo-500" /> Checklist
+                      </h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Simple checkbox list</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white text-sm mb-1 flex items-center gap-2">
+                        <File className="w-4 h-4 text-indigo-500" /> Document
+                      </h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">File reference with description</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white text-sm mb-1 flex items-center gap-2">
+                        <LinkIcon className="w-4 h-4 text-indigo-500" /> Link
+                      </h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">External URL</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white text-sm mb-1 flex items-center gap-2">
+                        <Quote className="w-4 h-4 text-indigo-500" /> Quote
+                      </h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Blockquote styling</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white text-sm mb-1 flex items-center gap-2">
+                        <Code className="w-4 h-4 text-indigo-500" /> Code
+                      </h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Syntax-highlighted code</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white text-sm mb-1 flex items-center gap-2">
+                        <span className="w-4 h-0.5 bg-indigo-500" /> Divider
+                      </h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Visual section break</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚀 How to Use</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Create a Page</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "New Page" to create a custom page. Give it a descriptive name.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add Widgets</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "Add Widget" and choose from 12 widget types. Add as many as you need.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Drag to Reorder</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Hover over widgets to see the grip icon. Drag widgets to rearrange them.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Fill Content</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click into each widget to add content. Different widgets have different fields.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">5</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Manage Pages</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Switch between pages using tabs. Edit page names or delete pages via hover buttons.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💡 Pro Tips</h3>
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Mix widgets freely</strong> - Combine any widgets to create custom layouts</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use dividers</strong> - Separate sections visually for better organization</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Create templates</strong> - Build reusable page structures for common needs</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Drag to reorder</strong> - Reorganize widgets anytime by dragging</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Multiple pages</strong> - Create separate pages for different projects or topics</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💼 Use Cases</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">📋 Project Dashboard</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Tasks, calendar, notes, links in one place</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">📝 Meeting Notes</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Agenda, attendees, action items, decisions</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">📚 Study Guide</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Headings, text, code examples, checklists</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">🎯 Goal Tracker</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Tasks, progress checklists, motivational quotes</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💾 Data Storage</h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      <strong>Your custom pages are automatically saved locally.</strong> All pages, widgets, and content are stored in your browser's local storage. Changes save automatically as you type. Look for the "Saving..." indicator to confirm storage.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

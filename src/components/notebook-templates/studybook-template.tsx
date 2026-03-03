@@ -8,7 +8,7 @@ import {
   Lightbulb, Target, CheckCircle2, Circle, Layers, Zap, RefreshCw,
   Plus, ChevronLeft, ChevronDown, ChevronUp, Pencil, X,
   BookMarked, FlaskConical, Timer, Star, Award, BarChart3,
-  FolderOpen, Hash, AlignLeft, Copy, Check,
+  FolderOpen, Hash, AlignLeft, Copy, Check, Info,
 } from "lucide-react";
 
 //  Types 
@@ -126,6 +126,7 @@ export function StudyBookTemplate({ title = "Study Book", notebookId }: StudyBoo
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showDocumentation, setShowDocumentation] = useState(false);
 
   // Project form
   const [showProjectForm, setShowProjectForm] = useState(false);
@@ -701,6 +702,13 @@ REQUIREMENTS:
               </div>
             )}
             {!activeProject && <h1 className="font-bold text-neutral-900 dark:text-white flex-1">{title}</h1>}
+            <button
+              onClick={() => setShowDocumentation(true)}
+              className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+              title="Documentation"
+            >
+              <Info className="h-4 w-4" />
+            </button>
             <div className="flex gap-1 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
               {([
                 ["courses", "My Courses", BookOpen],
@@ -1256,6 +1264,158 @@ REQUIREMENTS:
           )}
         </div>
       </div>
+
+      {/* Documentation Modal */}
+      <AnimatePresence>
+        {showDocumentation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDocumentation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 p-6 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <GraduationCap className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Study Book Guide</h2>
+                    <p className="text-blue-100 text-sm">AI-powered learning platform</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🎓 Overview</h3>
+                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    Study Book is a comprehensive AI-powered learning platform. Generate complete courses on any topic, search for YouTube tutorials, take video notes with timestamps, practice coding in the playground, and track your learning progress with detailed chapters, lessons, and hands-on projects.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✨ Key Features</h3>
+                  <div className="grid gap-3">
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-400 mb-1">🤖 AI Course Generation</h4>
+                      <p className="text-sm text-blue-800 dark:text-blue-300">Generate complete courses with chapters, lessons, examples, and exercises on any topic.</p>
+                    </div>
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-indigo-900 dark:text-indigo-400 mb-1">🔍 YouTube Course Search</h4>
+                      <p className="text-sm text-indigo-800 dark:text-indigo-300">Find relevant YouTube tutorials and courses with AI recommendations.</p>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-900 dark:text-purple-400 mb-1">📝 Video Notes</h4>
+                      <p className="text-sm text-purple-800 dark:text-purple-300">Extract summaries, key points, and timestamps from YouTube videos.</p>
+                    </div>
+                    <div className="bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-pink-900 dark:text-pink-400 mb-1">💻 Code Playground</h4>
+                      <p className="text-sm text-pink-800 dark:text-pink-300">Write and analyze code with AI assistance.</p>
+                    </div>
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-emerald-900 dark:text-emerald-400 mb-1">📊 Progress Tracking</h4>
+                      <p className="text-sm text-emerald-800 dark:text-emerald-300">Track completed lessons, projects, and overall course progress.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚀 How to Use</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Create a Project</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "New Project" to create a study project with name and description.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Generate AI Course</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Go to "My Courses" tab, enter a topic, and click "Generate Course" for a complete curriculum.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Study Lessons</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Expand chapters, click lessons to view explanations, examples, and exercises.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Search YouTube</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Go to "Find Courses" tab, search for topics to get AI-recommended YouTube tutorials.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">5</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Take Video Notes</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Go to "Video Notes" tab, paste YouTube URL to extract summary and timestamps.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold">6</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Code Playground</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Go to "Code Lab" tab, write code and click "Analyze Code" for AI feedback.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💡 Pro Tips</h3>
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Specific topics</strong> - Generate better courses with specific topics like "React Hooks" vs "React"</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Mark completion</strong> - Check off lessons and projects to track your progress</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Video timestamps</strong> - Use extracted timestamps to jump to specific topics</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Practice exercises</strong> - Complete exercises in lessons to reinforce learning</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Code playground</strong> - Test concepts immediately in the built-in code editor</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Multiple projects</strong> - Organize different learning topics into separate projects</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💾 Data Storage</h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      <strong>Your study data is automatically saved to the server.</strong> All projects, courses, chapters, lessons, video notes, and code are stored in the database and synced across devices. Look for the "Saving..." indicator to confirm storage.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

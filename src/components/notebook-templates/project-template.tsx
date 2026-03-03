@@ -8,7 +8,7 @@ import {
   ChevronRight, Pencil, AlertCircle, CheckCircle2, Circle,
   ArrowUp, ArrowDown, Minus, MessageSquare, Paperclip, Image,
   GripVertical, ChevronDown, ChevronUp, Tag, Clock, Star,
-  Upload, Download, Eye, MoreHorizontal, Layers, Zap,
+  Upload, Download, Eye, MoreHorizontal, Layers, Zap, Info,
 } from "lucide-react";
 
 //  Types 
@@ -434,6 +434,7 @@ export function ProjectTemplate({ title = "Project Hub", notebookId }: ProjectTe
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview"|"kanban"|"documents"|"team">("overview");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showDocumentation, setShowDocumentation] = useState(false);
 
   // Project form
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -782,9 +783,14 @@ export function ProjectTemplate({ title = "Project Hub", notebookId }: ProjectTe
                   </div>
                   <span className="font-bold text-sm text-neutral-900 dark:text-white">{title}</span>
                 </div>
-                <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400">
-                  <ChevronLeft className="w-4 h-4"/>
-                </button>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setShowDocumentation(true)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-indigo-500" title="Documentation">
+                    <Info className="w-4 h-4"/>
+                  </button>
+                  <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400">
+                    <ChevronLeft className="w-4 h-4"/>
+                  </button>
+                </div>
               </div>
               <button onClick={() => { setFormData(blankProject()); setShowCreateForm(true); }}
                 className="w-full flex items-center justify-center gap-2 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-sm font-medium transition-colors">
@@ -1347,6 +1353,162 @@ export function ProjectTemplate({ title = "Project Hub", notebookId }: ProjectTe
           )}
         </div>
       </div>
+
+      {/* Documentation Modal */}
+      <AnimatePresence>
+        {showDocumentation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDocumentation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-indigo-500 to-purple-600 p-6 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <FolderKanban className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Project Hub Guide</h2>
+                    <p className="text-indigo-100 text-sm">Agile project management platform</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">📊 Overview</h3>
+                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    Project Hub is a complete agile project management system. Create projects, manage sprints, track tickets with a Kanban board, collaborate with your team, and maintain project documentation - all in one place.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✨ Key Features</h3>
+                  <div className="grid gap-3">
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-indigo-900 dark:text-indigo-400 mb-1">🎯 Multi-Project Management</h4>
+                      <p className="text-sm text-indigo-800 dark:text-indigo-300">Create and manage multiple projects with unique keys, descriptions, and status tracking.</p>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-900 dark:text-purple-400 mb-1">📋 Kanban Board</h4>
+                      <p className="text-sm text-purple-800 dark:text-purple-300">Drag-and-drop tickets across Backlog, To Do, In Progress, Review, and Done columns.</p>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-400 mb-1">🎫 Rich Ticket System</h4>
+                      <p className="text-sm text-blue-800 dark:text-blue-300">Tasks, bugs, features, improvements with priorities, story points, labels, comments, and attachments.</p>
+                    </div>
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-emerald-900 dark:text-emerald-400 mb-1">🏃 Sprint Management</h4>
+                      <p className="text-sm text-emerald-800 dark:text-emerald-300">Create sprints with goals, dates, and assign tickets to organize work into iterations.</p>
+                    </div>
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-amber-900 dark:text-amber-400 mb-1">👥 Team Collaboration</h4>
+                      <p className="text-sm text-amber-800 dark:text-amber-300">Add team members with roles, assign tickets, track individual progress and completion rates.</p>
+                    </div>
+                    <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-rose-900 dark:text-rose-400 mb-1">📄 Project Documents</h4>
+                      <p className="text-sm text-rose-800 dark:text-rose-300">Create README, specs, notes, and API docs with rich text and embedded images.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚀 How to Use</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Create a Project</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "New Project" in the sidebar. Add name, key (e.g., SNA), description, and status.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add Team Members</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Go to Team tab, add members with names and roles. They'll get color-coded avatars.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Create Sprints</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">In Kanban view, create sprints with names, goals, start/end dates to organize work.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add Tickets</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click + in any Kanban column. Set type (task/bug/feature), priority, title, and details.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">5</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Manage Tickets</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click tickets to add descriptions, comments, attachments, labels, assign members, set story points.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">6</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Track Progress</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Drag tickets across board columns. View Overview for stats, Team tab for individual progress.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💡 Pro Tips</h3>
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use project keys</strong> - Short 3-5 letter codes make ticket IDs readable (e.g., SNA-1234)</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Label everything</strong> - Tags help filter and organize tickets across sprints</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Story points</strong> - Estimate effort to track velocity and plan capacity</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Sprint goals</strong> - Clear objectives keep teams focused and aligned</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use documents</strong> - Keep specs and notes in Docs tab for easy reference</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Comment actively</strong> - Discussion in tickets keeps context and decisions visible</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💾 Data Storage</h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      <strong>Your projects are automatically saved to the database.</strong> All projects, tickets, sprints, team members, documents, comments, and attachments are persisted to the server. Look for the "Saving..." indicator to confirm storage. Your work syncs across devices automatically.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

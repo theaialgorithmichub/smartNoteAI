@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2, Upload, X, ImageIcon, BookOpen, Users, FileText, LayoutDashboard, Code, Calendar, Brain, Check, CalendarDays, PenTool, Blocks, Pencil, FolderKanban, LayoutGrid, BookText, GraduationCap, Layers, PenLine, ChefHat, Wallet, Plane, CheckSquare, Film, Workflow, Video, Link, Type } from "lucide-react"
+import { Loader2, Upload, X, ImageIcon, BookOpen, Users, FileText, LayoutDashboard, Code, Calendar, Brain, Check, CalendarDays, PenTool, Blocks, Pencil, FolderKanban, LayoutGrid, BookText, GraduationCap, Layers, PenLine, ChefHat, Wallet, Plane, CheckSquare, Film, Workflow, Video, Link, Type, Mic, Target, Dumbbell, DollarSign, ShoppingCart, MessageSquare, Bell, Languages, Search, UtensilsCrossed, Trophy, StickyNote } from "lucide-react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 
@@ -49,6 +49,24 @@ const templates = [
   { id: "expense", name: "Expense Manager", icon: Wallet, color: "from-emerald-500 to-teal-600" },
   { id: "trip", name: "Trip Planner", icon: Plane, color: "from-sky-500 to-blue-600" },
   { id: "todo", name: "Advanced To-Do", icon: CheckSquare, color: "from-indigo-500 to-purple-600" },
+  { id: "sound-box", name: "Sound Box", icon: Mic, color: "from-indigo-500 to-purple-500" },
+  { id: "book-notes", name: "Book Reading Notes", icon: BookOpen, color: "from-amber-500 to-orange-500" },
+  { id: "habit-tracker", name: "Habit Tracker", icon: Target, color: "from-emerald-500 to-teal-500" },
+  { id: "workout-log", name: "Workout Log", icon: Dumbbell, color: "from-orange-500 to-red-500" },
+  { id: "budget-planner", name: "Budget Planner", icon: DollarSign, color: "from-blue-500 to-cyan-500" },
+  { id: "class-notes", name: "Class Notes", icon: GraduationCap, color: "from-purple-500 to-pink-500" },
+  { id: "research-builder", name: "Research Builder", icon: Brain, color: "from-violet-500 to-purple-600" },
+  { id: "grocery-list", name: "Grocery List", icon: ShoppingCart, color: "from-green-500 to-emerald-500" },
+  { id: "expense-sharer", name: "Expense Sharer", icon: Users, color: "from-teal-500 to-cyan-500" },
+  { id: "project-pipeline", name: "Project Pipeline", icon: Workflow, color: "from-cyan-500 to-blue-500" },
+  { id: "prompt-diary", name: "Prompt Diary", icon: MessageSquare, color: "from-indigo-500 to-purple-500" },
+  { id: "save-the-date", name: "Save the Date", icon: Bell, color: "from-rose-500 to-pink-500" },
+  { id: "important-urls", name: "Important URLs", icon: Link, color: "from-red-500 to-pink-500" },
+  { id: "language-translator", name: "Language Translator", icon: Languages, color: "from-sky-500 to-blue-500" },
+  { id: "dictionary", name: "Dictionary", icon: Search, color: "from-slate-500 to-gray-500" },
+  { id: "meals-planner", name: "Meals Planner", icon: UtensilsCrossed, color: "from-orange-500 to-amber-500" },
+  { id: "games-scorecard", name: "Games Scorecard", icon: Trophy, color: "from-yellow-500 to-amber-500" },
+  { id: "sticker-book", name: "Sticker Book", icon: StickyNote, color: "from-lime-500 to-green-500" },
 ]
 
 const themeColors = [
@@ -60,6 +78,21 @@ const themeColors = [
   { name: "Pastel Pink", value: "#f8b4c4" },
   { name: "Pastel Blue", value: "#a8d8ea" },
   { name: "Pastel Green", value: "#b8e0d2" },
+  { name: "Light Blue", value: "#87CEEB" },
+  { name: "Red", value: "#DC143C" },
+  { name: "Green Yellow", value: "#ADFF2F" },
+  { name: "Silver", value: "#C0C0C0" },
+  { name: "Deep Sea", value: "#01579B" },
+  { name: "Purple Haze", value: "#7C3AED" },
+  { name: "Sunset Orange", value: "#EA580C" },
+  { name: "Emerald", value: "#059669" },
+  { name: "Rose Gold", value: "#BE185D" },
+  { name: "Teal", value: "#0F766E" },
+  { name: "Indigo", value: "#4338CA" },
+  { name: "Amber", value: "#D97706" },
+  { name: "Cyan", value: "#0891B2" },
+  { name: "Violet", value: "#6D28D9" },
+  { name: "Coral", value: "#F43F5E" },
 ]
 
 const categories = ["Personal", "Work", "School", "Research"]

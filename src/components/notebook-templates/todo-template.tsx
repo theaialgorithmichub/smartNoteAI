@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckSquare,
   Plus,
@@ -30,7 +31,8 @@ import {
   X,
   ArrowUp,
   ArrowDown,
-  Repeat
+  Repeat,
+  Info
 } from "lucide-react";
 
 interface SubTask {
@@ -122,6 +124,7 @@ export function TodoTemplate({ title = "Advanced To-Do", notebookId }: TodoTempl
   const [expandedTasks, setExpandedTasks] = useState<Set<string>>(new Set());
   
   const [saving, setSaving] = useState(false);
+  const [showDocumentation, setShowDocumentation] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const allTags = useMemo(() => [...new Set([...DEFAULT_TAGS, ...customTags])], [customTags]);
@@ -595,8 +598,16 @@ export function TodoTemplate({ title = "Advanced To-Do", notebookId }: TodoTempl
               </div>
             </div>
             
-            <div className="flex gap-1 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
-              {[
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setShowDocumentation(true)}
+                className="p-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors"
+                title="Documentation"
+              >
+                <Info className="h-4 w-4" />
+              </button>
+              <div className="flex gap-1 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
+                {[
                 { id: 'tasks', label: 'All Tasks', icon: ListTodo },
                 { id: 'today', label: 'Today', icon: Target },
                 { id: 'upcoming', label: 'Upcoming', icon: CalendarDays },
@@ -618,6 +629,7 @@ export function TodoTemplate({ title = "Advanced To-Do", notebookId }: TodoTempl
                   )}
                 </button>
               ))}
+              </div>
             </div>
           </div>
         </div>
@@ -1006,6 +1018,158 @@ export function TodoTemplate({ title = "Advanced To-Do", notebookId }: TodoTempl
           </div>
         )}
       </div>
+
+      {/* Documentation Modal */}
+      <AnimatePresence>
+        {showDocumentation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDocumentation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-indigo-500 to-purple-600 p-6 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <CheckSquare className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Advanced To-Do Guide</h2>
+                    <p className="text-indigo-100 text-sm">Powerful task management</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✅ Overview</h3>
+                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    Advanced To-Do is a comprehensive task management system. Organize tasks by projects, set priorities and due dates, add subtasks, use tags for categorization, track recurring tasks, estimate time, and analyze productivity with detailed analytics.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✨ Key Features</h3>
+                  <div className="grid gap-3">
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-indigo-900 dark:text-indigo-400 mb-1">📋 Project Organization</h4>
+                      <p className="text-sm text-indigo-800 dark:text-indigo-300">Group tasks into color-coded projects for better organization.</p>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-900 dark:text-purple-400 mb-1">🎯 Priority Levels</h4>
+                      <p className="text-sm text-purple-800 dark:text-purple-300">Set low, medium, high, or urgent priorities with visual indicators.</p>
+                    </div>
+                    <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-violet-900 dark:text-violet-400 mb-1">📅 Due Dates & Times</h4>
+                      <p className="text-sm text-violet-800 dark:text-violet-300">Schedule tasks with specific dates and times.</p>
+                    </div>
+                    <div className="bg-fuchsia-50 dark:bg-fuchsia-900/20 border border-fuchsia-200 dark:border-fuchsia-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-fuchsia-900 dark:text-fuchsia-400 mb-1">🔄 Recurring Tasks</h4>
+                      <p className="text-sm text-fuchsia-800 dark:text-fuchsia-300">Set daily, weekly, or monthly recurring tasks.</p>
+                    </div>
+                    <div className="bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-pink-900 dark:text-pink-400 mb-1">📊 Analytics Dashboard</h4>
+                      <p className="text-sm text-pink-800 dark:text-pink-300">Track completion rates, productivity trends, and project progress.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚀 How to Use</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Create Projects</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "Add Project" to create color-coded project categories.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add Tasks</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "Add Task" and fill in title, description, priority, due date, and tags.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add Subtasks</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Break down complex tasks into smaller subtasks for better tracking.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Use Tags</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Tag tasks with categories like work, personal, health, learning, etc.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">5</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">View Today & Upcoming</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Use Today and Upcoming tabs to focus on time-sensitive tasks.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-bold">6</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Track Analytics</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Analytics tab shows completion rates and productivity insights.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💡 Pro Tips</h3>
+                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Prioritize ruthlessly</strong> - Use urgent priority sparingly for truly critical tasks</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Break down big tasks</strong> - Use subtasks to make large projects manageable</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Review daily</strong> - Check Today tab each morning to plan your day</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use recurring tasks</strong> - Automate repetitive tasks like weekly reviews</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Estimate time</strong> - Add time estimates to better plan your schedule</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Tag consistently</strong> - Use tags to quickly filter and find related tasks</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💾 Data Storage</h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      <strong>Your tasks are automatically saved locally.</strong> All tasks, projects, tags, and settings are stored in your browser's local storage. Look for the "Saving..." indicator to confirm storage.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

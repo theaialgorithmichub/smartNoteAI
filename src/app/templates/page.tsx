@@ -15,6 +15,39 @@ import { DashboardTemplate } from "@/components/notebook-templates/dashboard-tem
 import { CodeNotebookTemplate } from "@/components/notebook-templates/code-notebook-template";
 import { PlannerTemplate } from "@/components/notebook-templates/planner-template";
 import { AIResearchTemplate } from "@/components/notebook-templates/ai-research-template";
+import { DiaryTemplate } from "@/components/notebook-templates/diary-template";
+import { DoodleTemplate } from "@/components/notebook-templates/doodle-template";
+import { ExpenseTemplate } from "@/components/notebook-templates/expense-template";
+import { FlashcardTemplate } from "@/components/notebook-templates/flashcard-template";
+import { JournalTemplate } from "@/components/notebook-templates/journal-template";
+import { LinkTemplate } from "@/components/notebook-templates/link-template";
+import { LoopTemplate } from "@/components/notebook-templates/loop-template";
+import { ProjectTemplate } from "@/components/notebook-templates/project-template";
+import { RecipeTemplate } from "@/components/notebook-templates/recipe-template";
+import { StoryTemplate } from "@/components/notebook-templates/story-template";
+import { StudyBookTemplate } from "@/components/notebook-templates/studybook-template";
+import { TodoTemplate } from "@/components/notebook-templates/todo-template";
+import { TripTemplate } from "@/components/notebook-templates/trip-template";
+import { TypewriterTemplate } from "@/components/notebook-templates/typewriter-template";
+import { WhiteboardTemplate } from "@/components/notebook-templates/whiteboard-template";
+import { SoundBox } from "@/components/ui/sound-box";
+import { BookNotesTemplate } from "@/components/notebook-templates/book-notes-template";
+import { HabitTrackerTemplate } from "@/components/notebook-templates/habit-tracker-template";
+import { WorkoutLogTemplate } from "@/components/notebook-templates/workout-log-template";
+import { BudgetPlannerTemplate } from "@/components/notebook-templates/budget-planner-template";
+import { ClassNotesTemplate } from "@/components/notebook-templates/class-notes-template";
+import { ResearchBuilderTemplate } from "@/components/notebook-templates/research-builder-template";
+import { GroceryListTemplate } from "@/components/notebook-templates/grocery-list-template";
+import { ExpenseSharerTemplate } from "@/components/notebook-templates/expense-sharer-template";
+import { ProjectPipelineTemplate } from "@/components/notebook-templates/project-pipeline-template";
+import { PromptDiaryTemplate } from "@/components/notebook-templates/prompt-diary-template";
+import { SaveTheDateTemplate } from "@/components/notebook-templates/save-the-date-template";
+import { ImportantUrlsTemplate } from "@/components/notebook-templates/important-urls-template";
+import { LanguageTranslatorTemplate } from "@/components/notebook-templates/language-translator-template";
+import { DictionaryTemplate } from "@/components/notebook-templates/dictionary-template";
+import { MealsPlannerTemplate } from "@/components/notebook-templates/meals-planner-template";
+import { GamesScoreCardTemplate } from "@/components/notebook-templates/games-scorecard-template";
+import { StickerBookTemplate } from "@/components/notebook-templates/sticker-book-template";
 import { NotebookTemplateType } from "@/types/notebook-templates";
 
 export default function TemplatesPage() {
@@ -39,6 +72,72 @@ export default function TemplatesPage() {
         return <PlannerTemplate title="Interview: AI Use Cases In Design 🎨" />;
       case 'ai-research':
         return <AIResearchTemplate />;
+      case 'diary':
+        return <DiaryTemplate title="My Daily Diary" />;
+      case 'doodle':
+        return <DoodleTemplate title="Creative Doodles" />;
+      case 'expense':
+        return <ExpenseTemplate title="Monthly Expenses" />;
+      case 'flashcard':
+        return <FlashcardTemplate title="Study Flashcards" />;
+      case 'journal':
+        return <JournalTemplate title="Personal Journal" />;
+      case 'link':
+        return <LinkTemplate title="Bookmarks & Links" />;
+      case 'loop':
+        return <LoopTemplate title="Loop Notes" />;
+      case 'project':
+        return <ProjectTemplate title="Project Planning" />;
+      case 'recipe':
+        return <RecipeTemplate title="Recipe Collection" />;
+      case 'story':
+        return <StoryTemplate title="Story Writing" />;
+      case 'studybook':
+        return <StudyBookTemplate title="Study Notes" />;
+      case 'todo':
+        return <TodoTemplate title="Task List" />;
+      case 'trip':
+        return <TripTemplate title="Travel Planning" />;
+      case 'typewriter':
+        return <TypewriterTemplate title="Typewriter Notes" />;
+      case 'whiteboard':
+        return <WhiteboardTemplate title="Whiteboard" />;
+      case 'sound-box':
+        return <SoundBox />;
+      case 'book-notes':
+        return <BookNotesTemplate title="Book Reading Notes" />;
+      case 'habit-tracker':
+        return <HabitTrackerTemplate title="Habit Tracker" />;
+      case 'workout-log':
+        return <WorkoutLogTemplate title="Workout Log" />;
+      case 'budget-planner':
+        return <BudgetPlannerTemplate title="Budget Planner" />;
+      case 'class-notes':
+        return <ClassNotesTemplate title="Class Notes" />;
+      case 'research-builder':
+        return <ResearchBuilderTemplate title="Research Builder" />;
+      case 'grocery-list':
+        return <GroceryListTemplate title="Grocery List" />;
+      case 'expense-sharer':
+        return <ExpenseSharerTemplate title="Expense Sharer" />;
+      case 'project-pipeline':
+        return <ProjectPipelineTemplate title="Project Pipeline" />;
+      case 'prompt-diary':
+        return <PromptDiaryTemplate title="Prompt Diary" />;
+      case 'save-the-date':
+        return <SaveTheDateTemplate title="Save the Date" />;
+      case 'important-urls':
+        return <ImportantUrlsTemplate title="Important URLs" />;
+      case 'language-translator':
+        return <LanguageTranslatorTemplate title="Language Translator" />;
+      case 'dictionary':
+        return <DictionaryTemplate title="Dictionary" />;
+      case 'meals-planner':
+        return <MealsPlannerTemplate title="Meals Planner" />;
+      case 'games-scorecard':
+        return <GamesScoreCardTemplate title="Games Scorecard" />;
+      case 'sticker-book':
+        return <StickerBookTemplate title="Sticker Book" />;
       default:
         return (
           <div className="flex items-center justify-center h-full">

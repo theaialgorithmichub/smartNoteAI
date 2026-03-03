@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText, Clock, Target, Plus, X, Loader2, Trash2,
   ChevronLeft, ChevronRight, CalendarDays, CheckCircle2,
-  Circle, Pencil, AlarmClock, Flag, StickyNote,
+  Circle, Pencil, AlarmClock, Flag, StickyNote, Info,
 } from "lucide-react";
 
 //  Types 
@@ -199,6 +199,7 @@ export function PlannerTemplate({ title = "Untitled Plan", notebookId }: Planner
   const [newPriority, setNewPriority] = useState<"low"|"medium"|"high">("medium");
   const [addingGoal, setAddingGoal] = useState(false);
   const [newGoal, setNewGoal] = useState("");
+  const [showDocumentation, setShowDocumentation] = useState(false);
 
   const saveRef = useRef<NodeJS.Timeout|null>(null);
   const pageIdRef = useRef<string|null>(null);
@@ -212,17 +213,35 @@ export function PlannerTemplate({ title = "Untitled Plan", notebookId }: Planner
         const json = await res.json();
         const pages: any[] = json.pages ?? [];
         const existing = pages.find((p:any) => p.title === "__planner_template__");
+        console.log('[PLANNER] Loading data:', { existing, content: existing?.content });
         if (existing) {
           pageIdRef.current = existing._id;
-          try { const parsed = JSON.parse(existing.content || "{}"); setData({ ...defaultData(), ...parsed }); } catch {}
-        } else {
-          const cr = await fetch(`/api/notebooks/${notebookId}/pages`, {
-            method: "POST", headers: {"Content-Type":"application/json"},
-            body: JSON.stringify({ title: "__planner_template__", content: "{}" }),
-          });
-          const created = await cr.json();
-          pageIdRef.current = created.page?._id ?? null;
+          try {
+            const parsed = JSON.parse(existing.content || "{}");
+            console.log('[PLANNER] Parsed data:', parsed);
+            // Check if content is valid
+            if (existing.content && existing.content.trim() && Object.keys(parsed).length > 0) {
+              setData({ ...defaultData(), ...parsed });
+              setLoading(false);
+              return;
+            }
+            // If content is empty or corrupted, delete and recreate
+            console.log('[PLANNER] Empty/corrupted content detected, recreating page...');
+            await fetch(`/api/notebooks/${notebookId}/pages/${existing._id}`, { method: "DELETE" });
+          } catch (err) {
+            console.error('[PLANNER] Parse error:', err);
+            // Delete corrupted page
+            await fetch(`/api/notebooks/${notebookId}/pages/${existing._id}`, { method: "DELETE" });
+          }
         }
+        // Create new page
+        const cr = await fetch(`/api/notebooks/${notebookId}/pages`, {
+          method: "POST", headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ title: "__planner_template__", content: JSON.stringify(defaultData()) }),
+        });
+        const created = await cr.json();
+        console.log('[PLANNER] Created new page:', created);
+        pageIdRef.current = created.page?._id ?? null;
       } catch (err) { console.error("Failed to load planner:", err); }
       finally { setLoading(false); }
     })();
@@ -235,11 +254,17 @@ export function PlannerTemplate({ title = "Untitled Plan", notebookId }: Planner
     saveRef.current = setTimeout(async () => {
       const pid = pageIdRef.current; if (!pid) return;
       setSaving(true);
+      console.log('[PLANNER] Saving data:', d);
       try {
-        await fetch(`/api/notebooks/${notebookId}/pages/${pid}`, {
+        const payload = { title: "__planner_template__", content: JSON.stringify(d) };
+        console.log('[PLANNER] Save payload:', payload);
+        const response = await fetch(`/api/notebooks/${notebookId}/pages/${pid}`, {
           method: "PATCH", headers: {"Content-Type":"application/json"},
-          body: JSON.stringify({ title: "__planner_template__", content: JSON.stringify(d) }),
+          body: JSON.stringify(payload),
         });
+        const result = await response.json();
+        console.log('[PLANNER] Save response:', result);
+        console.log('[PLANNER] Saved page content:', result.page?.content);
       } catch (err) { console.error("Failed to save:", err); }
       finally { setSaving(false); }
     }, 1000);
@@ -296,7 +321,15 @@ export function PlannerTemplate({ title = "Untitled Plan", notebookId }: Planner
               {tab}
             </button>
           ))}
+          <button
+            onClick={() => setShowDocumentation(true)}
+            className="p-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
+            title="Documentation"
+          >
+            <Info className="h-4 w-4" />
+          </button>
           {saving && <div className="flex items-center gap-1.5 text-xs text-neutral-400"><Loader2 className="w-3 h-3 animate-spin"/>Saving...</div>}
+          {!saving && notebookId && <div className="text-xs text-emerald-600 dark:text-emerald-400">Saved</div>}
         </div>
       </header>
 
@@ -516,6 +549,237 @@ export function PlannerTemplate({ title = "Untitled Plan", notebookId }: Planner
           )}
         </div>
       </div>
+
+      {/* Documentation Modal */}
+      <AnimatePresence>
+        {showDocumentation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDocumentation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-amber-500 to-orange-500 p-6 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <CalendarDays className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Planner Template Guide</h2>
+                    <p className="text-amber-100 text-sm">Organize your day, week, or project</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Overview */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">📅 Overview</h3>
+                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    The Planner Template is a comprehensive tool for organizing your schedule, setting goals, and tracking progress. Perfect for daily planning, meeting preparation, project management, or interview prep.
+                  </p>
+                </div>
+
+                {/* Key Features */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✨ Key Features</h3>
+                  <div className="grid gap-3">
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-amber-900 dark:text-amber-400 mb-1">📆 Interactive Calendar</h4>
+                      <p className="text-sm text-amber-800 dark:text-amber-300">Navigate through dates with a visual calendar. Dates with scheduled items are marked for easy identification.</p>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-400 mb-1">⏰ Time-Based Agenda</h4>
+                      <p className="text-sm text-blue-800 dark:text-blue-300">Schedule items with start/end times, set priorities (high, medium, low), and mark tasks as complete.</p>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-900 dark:text-purple-400 mb-1">🎯 Goal Tracking</h4>
+                      <p className="text-sm text-purple-800 dark:text-purple-300">Set goals for your session or project and track completion with checkboxes.</p>
+                    </div>
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-emerald-900 dark:text-emerald-400 mb-1">📝 Notes & Summary</h4>
+                      <p className="text-sm text-emerald-800 dark:text-emerald-300">Take session notes, add day-specific notes, and view comprehensive summaries with statistics.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* How to Use */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚀 How to Use</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Set Context</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Fill in the plan type (e.g., "Meeting", "Interview"), duration, and background information in the left sidebar.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Define Goals</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Add goals you want to achieve. Check them off as you complete them.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Schedule Agenda Items</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click a date on the calendar, then "Add Item" to create scheduled tasks with times, priorities, and details.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Take Notes & Review</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Use the "Notes" tab for session notes and "Summary" tab to view progress statistics.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Three Tabs */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">📑 Three Main Tabs</h3>
+                  <div className="space-y-3">
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white mb-2 flex items-center gap-2">
+                        <CalendarDays className="w-4 h-4 text-amber-500" />
+                        Agenda Tab
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+                        Your main workspace for scheduling and managing daily items:
+                      </p>
+                      <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-1 ml-4">
+                        <li>• View and manage items for the selected date</li>
+                        <li>• Add start/end times and set priority levels</li>
+                        <li>• Expand items to add descriptions and notes</li>
+                        <li>• Add day-specific notes in the sticky note area</li>
+                        <li>• See upcoming items from future dates</li>
+                      </ul>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white mb-2 flex items-center gap-2">
+                        <StickyNote className="w-4 h-4 text-amber-500" />
+                        Notes Tab
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        A free-form text area for session notes, observations, action items, and follow-up questions. Perfect for meeting minutes or interview notes.
+                      </p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white mb-2 flex items-center gap-2">
+                        <Target className="w-4 h-4 text-amber-500" />
+                        Summary Tab
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        View statistics and progress: total items, completed items, goal completion rate, and a complete list of all agenda items across all dates.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Priority System */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚦 Priority System</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                      <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                      <div>
+                        <p className="font-semibold text-red-900 dark:text-red-400 text-sm">High Priority</p>
+                        <p className="text-xs text-red-700 dark:text-red-300">Critical tasks that must be completed</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                      <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                      <div>
+                        <p className="font-semibold text-amber-900 dark:text-amber-400 text-sm">Medium Priority</p>
+                        <p className="text-xs text-amber-700 dark:text-amber-300">Important tasks with some flexibility</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                      <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                      <div>
+                        <p className="font-semibold text-emerald-900 dark:text-emerald-400 text-sm">Low Priority</p>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-300">Nice-to-have tasks or optional items</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Use Cases */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💼 Common Use Cases</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">📋 Meeting Prep</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Set agenda, define goals, take notes</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">💼 Interview Planning</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Prepare questions, track responses</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">📅 Daily Planning</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Organize tasks, set priorities, track time</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">🎯 Project Milestones</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Track deliverables and deadlines</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pro Tips */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💡 Pro Tips</h3>
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use time blocks</strong> to allocate specific durations for each task</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Set realistic goals</strong> - 3-5 goals per session is ideal</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Expand agenda items</strong> to add detailed notes and action items</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use day notes</strong> for quick observations specific to each date</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Check the Summary tab</strong> regularly to track your progress</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Mark items complete</strong> as you finish them for satisfaction!</p>
+                  </div>
+                </div>
+
+                {/* Data Storage */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💾 Data Storage</h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      <strong>Your planner data is automatically saved to the database.</strong> All agenda items, goals, notes, and context are persisted to the server. Look for the "Saved" indicator in the header to confirm successful storage. Your data syncs across devices automatically.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

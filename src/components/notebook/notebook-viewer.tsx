@@ -49,6 +49,24 @@ import { RecipeTemplate } from "@/components/notebook-templates/recipe-template"
 import { ExpenseTemplate } from "@/components/notebook-templates/expense-template"
 import { TripTemplate } from "@/components/notebook-templates/trip-template"
 import { TodoTemplate } from "@/components/notebook-templates/todo-template"
+import { SoundBox } from "@/components/ui/sound-box"
+import { BookNotesTemplate } from "@/components/notebook-templates/book-notes-template"
+import { HabitTrackerTemplate } from "@/components/notebook-templates/habit-tracker-template"
+import { WorkoutLogTemplate } from "@/components/notebook-templates/workout-log-template"
+import { BudgetPlannerTemplate } from "@/components/notebook-templates/budget-planner-template"
+import { ClassNotesTemplate } from "@/components/notebook-templates/class-notes-template"
+import { ResearchBuilderTemplate } from "@/components/notebook-templates/research-builder-template"
+import { GroceryListTemplate } from "@/components/notebook-templates/grocery-list-template"
+import { ExpenseSharerTemplate } from "@/components/notebook-templates/expense-sharer-template"
+import { ProjectPipelineTemplate } from "@/components/notebook-templates/project-pipeline-template"
+import { PromptDiaryTemplate } from "@/components/notebook-templates/prompt-diary-template"
+import { SaveTheDateTemplate } from "@/components/notebook-templates/save-the-date-template"
+import { ImportantUrlsTemplate } from "@/components/notebook-templates/important-urls-template"
+import { LanguageTranslatorTemplate } from "@/components/notebook-templates/language-translator-template"
+import { DictionaryTemplate } from "@/components/notebook-templates/dictionary-template"
+import { MealsPlannerTemplate } from "@/components/notebook-templates/meals-planner-template"
+import { GamesScoreCardTemplate } from "@/components/notebook-templates/games-scorecard-template"
+import { StickerBookTemplate } from "@/components/notebook-templates/sticker-book-template"
 import { LoadingCubes } from "@/components/ui/loading-cubes"
 
 interface Page {
@@ -95,6 +113,24 @@ type NotebookTemplateType =
   | 'expense'
   | 'trip'
   | 'todo'
+  | 'sound-box'
+  | 'book-notes'
+  | 'habit-tracker'
+  | 'workout-log'
+  | 'budget-planner'
+  | 'class-notes'
+  | 'research-builder'
+  | 'grocery-list'
+  | 'expense-sharer'
+  | 'project-pipeline'
+  | 'prompt-diary'
+  | 'save-the-date'
+  | 'important-urls'
+  | 'language-translator'
+  | 'dictionary'
+  | 'meals-planner'
+  | 'games-scorecard'
+  | 'sticker-book'
 
 interface Notebook {
   _id: string
@@ -513,6 +549,42 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
           return <TripTemplate title={notebook.title} notebookId={notebookId} />
         case 'todo':
           return <TodoTemplate title={notebook.title} notebookId={notebookId} />
+        case 'sound-box':
+          return <SoundBox />
+        case 'book-notes':
+          return <BookNotesTemplate title={notebook.title} notebookId={notebookId} />
+        case 'habit-tracker':
+          return <HabitTrackerTemplate title={notebook.title} notebookId={notebookId} />
+        case 'workout-log':
+          return <WorkoutLogTemplate title={notebook.title} notebookId={notebookId} />
+        case 'budget-planner':
+          return <BudgetPlannerTemplate title={notebook.title} notebookId={notebookId} />
+        case 'class-notes':
+          return <ClassNotesTemplate title={notebook.title} notebookId={notebookId} />
+        case 'research-builder':
+          return <ResearchBuilderTemplate title={notebook.title} notebookId={notebookId} />
+        case 'grocery-list':
+          return <GroceryListTemplate title={notebook.title} notebookId={notebookId} />
+        case 'expense-sharer':
+          return <ExpenseSharerTemplate title={notebook.title} notebookId={notebookId} />
+        case 'project-pipeline':
+          return <ProjectPipelineTemplate title={notebook.title} notebookId={notebookId} />
+        case 'prompt-diary':
+          return <PromptDiaryTemplate title={notebook.title} notebookId={notebookId} />
+        case 'save-the-date':
+          return <SaveTheDateTemplate title={notebook.title} notebookId={notebookId} />
+        case 'important-urls':
+          return <ImportantUrlsTemplate title={notebook.title} notebookId={notebookId} />
+        case 'language-translator':
+          return <LanguageTranslatorTemplate title={notebook.title} notebookId={notebookId} />
+        case 'dictionary':
+          return <DictionaryTemplate title={notebook.title} notebookId={notebookId} />
+        case 'meals-planner':
+          return <MealsPlannerTemplate title={notebook.title} notebookId={notebookId} />
+        case 'games-scorecard':
+          return <GamesScoreCardTemplate title={notebook.title} notebookId={notebookId} />
+        case 'sticker-book':
+          return <StickerBookTemplate title={notebook.title} notebookId={notebookId} />
         default:
           return null
       }
