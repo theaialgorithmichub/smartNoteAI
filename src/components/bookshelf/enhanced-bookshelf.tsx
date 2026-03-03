@@ -189,7 +189,7 @@ export function EnhancedBookshelf({ userId }: EnhancedBookshelfProps) {
         <SharedNotebooksView
           publicNotebooks={publicNotebooks}
           sharedWithMe={sharedWithMe}
-          onOpenNotebook={(id) => window.location.href = `/notebook/${id}`}
+          onOpenNotebook={(id) => window.location.href = `/dashboard/notebook/${id}`}
         />
       )}
 
