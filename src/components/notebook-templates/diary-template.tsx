@@ -6,7 +6,7 @@ import {
   Calendar, ChevronLeft, ChevronRight, Plus, Loader2,
   Sun, Cloud, CloudRain, Snowflake, Heart, Smile, Frown, Meh,
   Palette, Image as ImageIcon, Pencil, Trash2, X, Check,
-  Eraser, Download, Upload,
+  Eraser, Download, Upload, Info,
 } from "lucide-react";
 
 //  Types 
@@ -259,6 +259,7 @@ export function DiaryTemplate({ title = "My Diary", notebookId }: DiaryTemplateP
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [activeTab, setActiveTab] = useState<"write"|"images"|"draw">("write");
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [showDocumentation, setShowDocumentation] = useState(false);
 
   const pageIdRef = useRef<string | null>(null);
   const saveRef = useRef<NodeJS.Timeout | null>(null);
@@ -440,11 +441,18 @@ export function DiaryTemplate({ title = "My Diary", notebookId }: DiaryTemplateP
               <span className="text-xl">{t.emoji}</span>
               <h2 className={`text-base font-bold ${t.text}`}>{title}</h2>
             </div>
-            <button onClick={() => setShowThemePicker(v => !v)}
-              className={`p-2 rounded-xl transition-colors ${showThemePicker ? "bg-white/20" : "hover:bg-white/10"} ${t.subtext}`}
-              title="Change theme">
-              <Palette className="w-4 h-4"/>
-            </button>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setShowDocumentation(true)}
+                className={`p-2 rounded-xl transition-colors hover:bg-white/10 ${t.subtext}`}
+                title="Documentation">
+                <Info className="w-4 h-4"/>
+              </button>
+              <button onClick={() => setShowThemePicker(v => !v)}
+                className={`p-2 rounded-xl transition-colors ${showThemePicker ? "bg-white/20" : "hover:bg-white/10"} ${t.subtext}`}
+                title="Change theme">
+                <Palette className="w-4 h-4"/>
+              </button>
+            </div>
           </div>
 
           {/* Theme picker */}
@@ -671,6 +679,244 @@ export function DiaryTemplate({ title = "My Diary", notebookId }: DiaryTemplateP
           )}
         </div>
       </div>
+
+      {/* Documentation Modal */}
+      <AnimatePresence>
+        {showDocumentation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDocumentation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-amber-500 to-orange-500 p-6 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Calendar className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Classic Diary Guide</h2>
+                    <p className="text-amber-100 text-sm">Your personal digital journal</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Overview */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">📖 Overview</h3>
+                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    Classic Diary is a beautiful digital journal template that helps you capture your daily thoughts, feelings, and memories. With mood tracking, weather logging, gratitude journaling, image uploads, and a drawing canvas, it's your complete personal diary solution.
+                  </p>
+                </div>
+
+                {/* Key Features */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✨ Key Features</h3>
+                  <div className="grid gap-3">
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-amber-900 dark:text-amber-400 mb-1">📅 Interactive Calendar</h4>
+                      <p className="text-sm text-amber-800 dark:text-amber-300">Navigate through months and dates with an intuitive calendar. Dates with entries are marked with dots for easy identification.</p>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-400 mb-1">😊 Mood & Weather Tracking</h4>
+                      <p className="text-sm text-blue-800 dark:text-blue-300">Track your daily mood (happy, neutral, sad) and weather conditions (sunny, cloudy, rainy, snowy) with one click.</p>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-900 dark:text-purple-400 mb-1">✍️ Rich Writing Experience</h4>
+                      <p className="text-sm text-purple-800 dark:text-purple-300">Write freely with a clean, distraction-free editor. Add titles and detailed entries for each day.</p>
+                    </div>
+                    <div className="bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-pink-900 dark:text-pink-400 mb-1">❤️ Gratitude Journal</h4>
+                      <p className="text-sm text-pink-800 dark:text-pink-300">List things you're grateful for each day. Studies show gratitude journaling improves mental well-being.</p>
+                    </div>
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-emerald-900 dark:text-emerald-400 mb-1">🖼️ Image Uploads</h4>
+                      <p className="text-sm text-emerald-800 dark:text-emerald-300">Upload photos from your day. Add captions to remember the context of each image.</p>
+                    </div>
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-indigo-900 dark:text-indigo-400 mb-1">🎨 Drawing Canvas</h4>
+                      <p className="text-sm text-indigo-800 dark:text-indigo-300">Sketch, doodle, or draw with a full-featured canvas. Choose colors, adjust brush size, and save your artwork.</p>
+                    </div>
+                    <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-orange-900 dark:text-orange-400 mb-1">🎨 8 Beautiful Themes</h4>
+                      <p className="text-sm text-orange-800 dark:text-orange-300">Choose from Classic, Jungle, Ocean, Satellite, Astronomer, Desert, Arctic, and Cherry Blossom themes.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* How to Use */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚀 How to Use</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Select a Date</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click on any date in the calendar or use the navigation arrows. Click "Today" to jump to the current date.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Set Mood & Weather</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click the emoji that represents your mood and the icon that matches the weather for that day.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Write Your Entry</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Give your day a title and write about your experiences, thoughts, and feelings in the "Write" tab.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add Gratitude</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click the + button in the Gratitude section to add things you're thankful for.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold">5</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Upload Images</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Switch to the "Images" tab and click to upload photos. Add captions to describe each image.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold">6</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Draw & Sketch</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Use the "Draw" tab to create sketches. Choose colors, adjust brush size, and use the eraser tool.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Three Tabs */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">📑 Three Content Tabs</h3>
+                  <div className="space-y-3">
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white mb-2 flex items-center gap-2">
+                        <Pencil className="w-4 h-4 text-amber-500" />
+                        Write Tab
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Your main writing space with a free-form text editor and gratitude journal section. Perfect for daily reflections and thoughts.
+                      </p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white mb-2 flex items-center gap-2">
+                        <ImageIcon className="w-4 h-4 text-amber-500" />
+                        Images Tab
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Upload and organize photos from your day. Add captions to each image to preserve memories and context.
+                      </p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white mb-2 flex items-center gap-2">
+                        <Palette className="w-4 h-4 text-amber-500" />
+                        Draw Tab
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Express yourself visually with a drawing canvas. Choose from 9 colors, adjust brush size, and download your artwork.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Themes */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🎨 Available Themes</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="flex items-center gap-2 p-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                      <div className="w-4 h-4 rounded bg-amber-500"></div>
+                      <span className="text-sm text-neutral-700 dark:text-neutral-300">Classic (Default)</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                      <div className="w-4 h-4 rounded bg-green-600"></div>
+                      <span className="text-sm text-neutral-700 dark:text-neutral-300">Jungle</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                      <div className="w-4 h-4 rounded bg-sky-600"></div>
+                      <span className="text-sm text-neutral-700 dark:text-neutral-300">Ocean</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                      <div className="w-4 h-4 rounded bg-slate-700"></div>
+                      <span className="text-sm text-neutral-700 dark:text-neutral-300">Satellite</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                      <div className="w-4 h-4 rounded bg-indigo-700"></div>
+                      <span className="text-sm text-neutral-700 dark:text-neutral-300">Astronomer</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                      <div className="w-4 h-4 rounded bg-orange-600"></div>
+                      <span className="text-sm text-neutral-700 dark:text-neutral-300">Desert</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                      <div className="w-4 h-4 rounded bg-blue-600"></div>
+                      <span className="text-sm text-neutral-700 dark:text-neutral-300">Arctic</span>
+                    </div>
+                    <div className="flex items-center gap-2 p-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg">
+                      <div className="w-4 h-4 rounded bg-pink-600"></div>
+                      <span className="text-sm text-neutral-700 dark:text-neutral-300">Cherry Blossom</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pro Tips */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💡 Pro Tips</h3>
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Write consistently</strong> - Even a few sentences daily builds a valuable record</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use gratitude journaling</strong> - Listing 3-5 things you're grateful for boosts happiness</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Add photos</strong> - Visual memories help you recall details years later</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Track mood patterns</strong> - Review past entries to identify what makes you happy</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Change themes</strong> - Match your diary's look to your mood or season</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use the drawing canvas</strong> - Sometimes a sketch expresses more than words</p>
+                  </div>
+                </div>
+
+                {/* Data Storage */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💾 Data Storage</h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      <strong>Your diary entries are automatically saved to the database.</strong> All entries, moods, weather, gratitude lists, images, and drawings are persisted to the server. Look for the "Saving..." indicator to confirm storage. Your diary syncs across devices automatically.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

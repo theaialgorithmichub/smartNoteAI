@@ -20,7 +20,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" dir="ltr" suppressHydrationWarning>
-        <body className={inter.className}>
+        <body className={`${inter.className} overflow-x-hidden`}>
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"

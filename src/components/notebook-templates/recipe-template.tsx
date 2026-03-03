@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ChefHat,
   Plus,
@@ -18,7 +18,9 @@ import {
   ChevronRight,
   Timer,
   UtensilsCrossed,
-  Scale
+  Scale,
+  Info,
+  X
 } from "lucide-react";
 
 interface Ingredient {
@@ -63,6 +65,7 @@ export function RecipeTemplate({ title = "Recipe Book", notebookId }: RecipeTemp
   const [activeTab, setActiveTab] = useState<'recipes' | 'shopping' | 'generate'>('recipes');
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [showDocumentation, setShowDocumentation] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCuisine, setFilterCuisine] = useState<string>('all');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
@@ -94,22 +97,6 @@ export function RecipeTemplate({ title = "Recipe Book", notebookId }: RecipeTemp
     hard: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
   };
 
-  const saveData = () => {
-    if (!notebookId) return;
-    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    
-    saveTimeoutRef.current = setTimeout(() => {
-      setSaving(true);
-      try {
-        localStorage.setItem(`recipe-${notebookId}`, JSON.stringify({ recipes }));
-      } catch (error) {
-        console.error("Failed to save:", error);
-      } finally {
-        setSaving(false);
-      }
-    }, 1000);
-  };
-
   useEffect(() => {
     if (!notebookId) return;
     try {
@@ -123,9 +110,25 @@ export function RecipeTemplate({ title = "Recipe Book", notebookId }: RecipeTemp
     }
   }, [notebookId]);
 
+  const saveData = useCallback(() => {
+    if (!notebookId) return;
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    
+    saveTimeoutRef.current = setTimeout(() => {
+      setSaving(true);
+      try {
+        localStorage.setItem(`recipe-${notebookId}`, JSON.stringify({ recipes }));
+      } catch (error) {
+        console.error("Failed to save:", error);
+      } finally {
+        setSaving(false);
+      }
+    }, 500);
+  }, [notebookId, recipes]);
+
   useEffect(() => {
     saveData();
-  }, [recipes]);
+  }, [saveData]);
 
   const addIngredient = () => {
     setNewRecipe({
@@ -353,6 +356,13 @@ Only return the JSON.`,
                 <h1 className="font-bold text-neutral-900 dark:text-white">{title}</h1>
                 <p className="text-xs text-neutral-500">{recipes.length} recipes</p>
               </div>
+              <button
+                onClick={() => setShowDocumentation(true)}
+                className="p-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
+                title="Documentation"
+              >
+                <Info className="h-4 w-4" />
+              </button>
             </div>
             
             <div className="flex gap-1 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
@@ -792,6 +802,158 @@ Only return the JSON.`,
           </div>
         )}
       </div>
+
+      {/* Documentation Modal */}
+      <AnimatePresence>
+        {showDocumentation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDocumentation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-red-600 p-6 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <ChefHat className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Recipe Book Guide</h2>
+                    <p className="text-orange-100 text-sm">Your digital cookbook</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">👨‍🍳 Overview</h3>
+                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    Recipe Book is your comprehensive digital cookbook. Store recipes, generate new ones with AI, manage shopping lists, track cooking steps, rate favorites, and organize by cuisine. Perfect for home cooks, food enthusiasts, and anyone who loves to cook.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✨ Key Features</h3>
+                  <div className="grid gap-3">
+                    <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-orange-900 dark:text-orange-400 mb-1">🤖 AI Recipe Generation</h4>
+                      <p className="text-sm text-orange-800 dark:text-orange-300">Generate complete recipes from simple prompts using AI.</p>
+                    </div>
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-red-900 dark:text-red-400 mb-1">📝 Recipe Management</h4>
+                      <p className="text-sm text-red-800 dark:text-red-300">Store unlimited recipes with ingredients, steps, and cooking times.</p>
+                    </div>
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-amber-900 dark:text-amber-400 mb-1">🛒 Shopping Lists</h4>
+                      <p className="text-sm text-amber-800 dark:text-amber-300">Automatic shopping list generation from recipe ingredients.</p>
+                    </div>
+                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-yellow-900 dark:text-yellow-400 mb-1">⭐ Ratings & Favorites</h4>
+                      <p className="text-sm text-yellow-800 dark:text-yellow-300">Rate recipes and mark favorites for quick access.</p>
+                    </div>
+                    <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-rose-900 dark:text-rose-400 mb-1">🔍 Search & Filter</h4>
+                      <p className="text-sm text-rose-800 dark:text-rose-300">Find recipes by name, cuisine type, or favorites.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚀 How to Use</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add Recipes</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Create recipes manually or generate them with AI prompts.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add Ingredients</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">List all ingredients with amounts and units for each recipe.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Write Steps</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Add detailed cooking instructions step by step.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Track While Cooking</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Check off steps as you cook and mark ingredients as purchased.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-bold">5</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Rate & Favorite</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Give ratings and mark your best recipes as favorites.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-bold">6</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Use Shopping List</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">View all needed ingredients across recipes in one shopping list.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💡 Pro Tips</h3>
+                  <div className="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use AI generation</strong> - Get instant recipes from simple ingredient lists</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Add prep/cook times</strong> - Plan your cooking schedule effectively</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Organize by cuisine</strong> - Filter recipes by cuisine type for variety</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Rate after cooking</strong> - Remember which recipes worked best</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use shopping tab</strong> - Consolidate ingredients before grocery trips</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Add notes</strong> - Record modifications and personal touches</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💾 Data Storage</h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      <strong>Your recipe data is automatically saved locally.</strong> All recipes, ingredients, steps, ratings, and favorites are stored in your browser's local storage. Look for the "Saving..." indicator to confirm storage.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -116,6 +116,25 @@ async function reviewCode(code: string, language: string): Promise<AIReview> {
   return { summary: data.response ?? "Review complete.", issues: [], suggestions: [], score: 80 };
 }
 
+//  AI Snippet Generation 
+
+async function generateSnippet(prompt: string, language: string): Promise<string> {
+  const res = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      mode: "code_generation",
+      message: `Generate ${language} code for: ${prompt}\n\nProvide only the code without explanations. Use proper syntax and best practices.`,
+      context: [],
+    }),
+  });
+  const data = await res.json();
+  const text: string = data.response ?? data.message ?? "";
+  // Extract code from markdown code blocks if present
+  const codeMatch = text.match(/```[\w]*\n([\s\S]*?)```/);
+  return codeMatch ? codeMatch[1].trim() : text.trim();
+}
+
 //  Copy Button 
 
 function CopyButton({ text }: { text: string }) {
@@ -313,6 +332,10 @@ export function CodeNotebookTemplate({ title = "Untitled Notebook", notebookId }
   const [newWsName, setNewWsName] = useState("");
   const [addingSection, setAddingSection] = useState(false);
   const [newSectionName, setNewSectionName] = useState("");
+  const [showDocumentation, setShowDocumentation] = useState(false);
+  const [showAISnippet, setShowAISnippet] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [generatingSnippet, setGeneratingSnippet] = useState(false);
 
   const saveRef = useRef<NodeJS.Timeout | null>(null);
   const pageIdRef = useRef<string | null>(null);
@@ -421,6 +444,24 @@ export function CodeNotebookTemplate({ title = "Untitled Notebook", notebookId }
     if (!activeWs || !activeSection) return;
     const b = makeBlock(activeWs.language);
     updateWs({ sections: activeWs.sections.map(s => s.id === activeSectionId ? { ...s, codeBlocks: [...s.codeBlocks, b] } : s) });
+  };
+
+  const handleGenerateSnippet = async () => {
+    if (!aiPrompt.trim() || !activeWs) return;
+    setGeneratingSnippet(true);
+    try {
+      const code = await generateSnippet(aiPrompt, activeWs.language);
+      const b = makeBlock(activeWs.language);
+      b.code = code;
+      b.title = aiPrompt.slice(0, 50) + (aiPrompt.length > 50 ? "..." : "");
+      updateWs({ sections: activeWs.sections.map(s => s.id === activeSectionId ? { ...s, codeBlocks: [...s.codeBlocks, b] } : s) });
+      setShowAISnippet(false);
+      setAiPrompt("");
+    } catch (err) {
+      console.error("Failed to generate snippet:", err);
+    } finally {
+      setGeneratingSnippet(false);
+    }
   };
 
   const updateBlock = (b: CodeBlock) => {
@@ -576,10 +617,20 @@ export function CodeNotebookTemplate({ title = "Untitled Notebook", notebookId }
           ) : (
             <h1 className="text-base font-bold text-white flex-1">{title}</h1>
           )}
+          <button
+            onClick={() => setShowDocumentation(true)}
+            className="p-1.5 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
+            title="Documentation"
+          >
+            <Info className="h-4 w-4" />
+          </button>
           {saving && (
             <div className="flex items-center gap-1.5 text-xs text-slate-500 bg-slate-800 px-3 py-1.5 rounded-full">
               <Loader2 className="w-3 h-3 animate-spin"/> Saving...
             </div>
+          )}
+          {!saving && notebookId && (
+            <div className="text-xs text-emerald-400">Saved</div>
           )}
         </div>
 
@@ -616,14 +667,284 @@ export function CodeNotebookTemplate({ title = "Untitled Notebook", notebookId }
                 </AnimatePresence>
               </div>
 
-              <button onClick={addBlock}
-                className="mt-6 flex items-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-slate-700 text-slate-500 hover:border-amber-500/50 hover:text-amber-500 transition-all text-sm font-medium">
-                <Plus className="w-4 h-4"/> Add Code Block
-              </button>
+              <div className="mt-6 flex gap-3">
+                <button onClick={addBlock}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-slate-700 text-slate-500 hover:border-amber-500/50 hover:text-amber-500 transition-all text-sm font-medium">
+                  <Plus className="w-4 h-4"/> Add Code Block
+                </button>
+                <button onClick={() => setShowAISnippet(true)}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:opacity-90 transition-opacity text-sm font-medium">
+                  <Sparkles className="w-4 h-4"/> Ask AI to Write Code
+                </button>
+              </div>
             </>
           )}
         </div>
       </div>
+
+      {/* AI Snippet Generation Modal */}
+      <AnimatePresence>
+        {showAISnippet && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => !generatingSnippet && setShowAISnippet(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden"
+            >
+              <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Sparkles className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-2xl font-bold text-white">AI Code Generator</h2>
+                    <p className="text-amber-100 text-sm">Describe what you want and AI will write the code</p>
+                  </div>
+                  <button
+                    onClick={() => !generatingSnippet && setShowAISnippet(false)}
+                    disabled={generatingSnippet}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    <X className="h-5 w-5 text-white" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    What code do you need? <span className="text-amber-400">*</span>
+                  </label>
+                  <textarea
+                    value={aiPrompt}
+                    onChange={e => setAiPrompt(e.target.value)}
+                    placeholder={`Examples:\n• Create a React component with a form that has name and email fields\n• Write a Java function to find the largest number in an array\n• Generate a Python script to read CSV files\n• Build a TypeScript interface for a user profile`}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-slate-200 placeholder-slate-500 outline-none focus:border-amber-500 transition-colors resize-none"
+                    rows={6}
+                    disabled={generatingSnippet}
+                  />
+                </div>
+
+                <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <Lightbulb className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-slate-300 mb-1">Tips for better results:</p>
+                      <ul className="text-xs text-slate-400 space-y-1">
+                        <li>• Be specific about what you want the code to do</li>
+                        <li>• Mention the language/framework (will use workspace language: <span className="text-amber-400 font-medium">{activeWs?.language}</span>)</li>
+                        <li>• Include any specific requirements or constraints</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => setShowAISnippet(false)}
+                    disabled={generatingSnippet}
+                    className="flex-1 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-medium transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleGenerateSnippet}
+                    disabled={!aiPrompt.trim() || generatingSnippet}
+                    className="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-90 text-white rounded-lg font-medium transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {generatingSnippet ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        Generate Code
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Documentation Modal */}
+      <AnimatePresence>
+        {showDocumentation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDocumentation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-amber-500 to-orange-500 p-6 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Code2 className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Code Notebook Guide</h2>
+                    <p className="text-amber-100 text-sm">Organize and manage your code snippets</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Overview */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">📚 Overview</h3>
+                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    Code Notebook is a powerful template for organizing code snippets across multiple programming languages. Create workspaces for different projects, organize code into sections, and leverage AI to review and generate code snippets.
+                  </p>
+                </div>
+
+                {/* Key Features */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✨ Key Features</h3>
+                  <div className="grid gap-3">
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-amber-900 dark:text-amber-400 mb-1">🗂️ Multi-Workspace Organization</h4>
+                      <p className="text-sm text-amber-800 dark:text-amber-300">Create separate workspaces for different projects or languages. Each workspace can have its own primary language and multiple sections.</p>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-400 mb-1">🤖 AI Code Review</h4>
+                      <p className="text-sm text-blue-800 dark:text-blue-300">Get instant AI-powered code reviews with quality scores, issue detection, and improvement suggestions.</p>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-900 dark:text-purple-400 mb-1">✨ AI Snippet Generation</h4>
+                      <p className="text-sm text-purple-800 dark:text-purple-300">Describe what you need and let AI write the code for you. Perfect for boilerplate, common patterns, or learning new concepts.</p>
+                    </div>
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-emerald-900 dark:text-emerald-400 mb-1">🎨 60+ Languages Supported</h4>
+                      <p className="text-sm text-emerald-800 dark:text-emerald-300">From React and Python to Rust and Solidity. Each language has syntax highlighting and color coding.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* How to Use */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚀 How to Use</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Create a Workspace</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "New Workspace" in the sidebar. Give it a name and set the primary language.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Organize with Sections</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Add sections to categorize your code (e.g., "API Calls", "Utilities", "Components").</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add Code Blocks</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "Add Code Block" to manually add snippets, or use "Ask AI to Write Code" for AI generation.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Review & Refine</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Use the "AI Review" button to get feedback on your code quality and suggestions for improvement.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AI Features */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🤖 AI Features</h3>
+                  <div className="space-y-3">
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white mb-2 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-amber-500" />
+                        AI Code Generation
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">Examples of what you can ask:</p>
+                      <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-1 ml-4">
+                        <li>• "Create a React component with a form that has name and email fields"</li>
+                        <li>• "Write a Java function to find the largest number in an array"</li>
+                        <li>• "Generate a Python script to read and parse CSV files"</li>
+                        <li>• "Build a TypeScript interface for a user profile with validation"</li>
+                      </ul>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white mb-2 flex items-center gap-2">
+                        <Bot className="w-4 h-4 text-blue-500" />
+                        AI Code Review
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Get instant feedback with quality scores (0-100), issue detection (errors, warnings, info), and actionable suggestions to improve your code.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pro Tips */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💡 Pro Tips</h3>
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use descriptive titles</strong> for code blocks to easily find them later</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Add notes</strong> to explain context, use cases, or important details</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Set workspace language</strong> to match your project for better AI suggestions</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Override language per block</strong> if you need mixed languages in one workspace</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Copy code quickly</strong> using the copy button in each block header</p>
+                  </div>
+                </div>
+
+                {/* Data Storage */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💾 Data Storage</h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      <strong>Your code snippets are automatically saved to the database.</strong> All workspaces, sections, and code blocks are persisted to the server and synced across devices. Look for the "Saved" indicator in the header to confirm successful storage.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-slate-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

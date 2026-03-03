@@ -7,7 +7,7 @@ import {
   Utensils, Car, Camera, ShoppingBag, CheckCircle2, Circle,
   ChevronDown, ChevronUp, Sparkles, Globe, Users, AlertCircle,
   ExternalLink, Pencil, X, Check, Star, DollarSign, List,
-  ChevronLeft, ChevronRight, Luggage, Train,
+  ChevronLeft, ChevronRight, Luggage, Train, Info,
 } from "lucide-react";
 
 //  Types 
@@ -218,6 +218,7 @@ export function TripTemplate({ title = "Trip Planner", notebookId }: TripTemplat
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showDocumentation, setShowDocumentation] = useState(false);
   const [activeTab, setActiveTab] = useState<"overview"|"itinerary"|"packing"|"budget"|"flights"|"hotels"|"restaurants"|"trains">("overview");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -317,6 +318,33 @@ export function TripTemplate({ title = "Trip Planner", notebookId }: TripTemplat
     }, 1200);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saveVersion, notebookId]);
+
+  // Save immediately on unmount to prevent data loss on navigation
+  useEffect(() => {
+    return () => {
+      const pid = pageIdRef.current;
+      if (pid && notebookId && tripsRef.current.length > 0) {
+        // Clear any pending timeout
+        if (saveRef.current) clearTimeout(saveRef.current);
+        // Save immediately using navigator.sendBeacon for reliability during unmount
+        const data = JSON.stringify({
+          title: "__trip_template__",
+          content: JSON.stringify({ trips: tripsRef.current, activeId: activeIdRef.current }),
+        });
+        // Try fetch with keepalive flag first
+        fetch(`/api/notebooks/${notebookId}/pages/${pid}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: data,
+          keepalive: true,
+        }).catch(() => {
+          // Fallback to sendBeacon if fetch fails
+          const blob = new Blob([data], { type: 'application/json' });
+          navigator.sendBeacon(`/api/notebooks/${notebookId}/pages/${pid}`, blob);
+        });
+      }
+    };
+  }, [notebookId]);
 
   const setAndSave = useCallback((list: Trip[]) => {
     setTrips(list); tripsRef.current = list; bumpSave();
@@ -594,9 +622,18 @@ export function TripTemplate({ title = "Trip Planner", notebookId }: TripTemplat
                   </div>
                   <span className="font-bold text-sm text-neutral-900 dark:text-white">{title}</span>
                 </div>
-                <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400">
-                  <ChevronLeft className="w-4 h-4"/>
-                </button>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setShowDocumentation(true)}
+                    className="p-1.5 rounded-lg hover:bg-sky-100 dark:hover:bg-sky-900/30 text-sky-600 dark:text-sky-400 transition-colors"
+                    title="Documentation"
+                  >
+                    <Info className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => setSidebarOpen(false)} className="p-1.5 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400">
+                    <ChevronLeft className="w-4 h-4"/>
+                  </button>
+                </div>
               </div>
               <button onClick={() => { setFormData(blankTrip()); setShowCreateForm(true); }}
                 className="w-full flex items-center justify-center gap-2 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl text-sm font-medium transition-colors">
@@ -1502,6 +1539,158 @@ export function TripTemplate({ title = "Trip Planner", notebookId }: TripTemplat
           )}
         </div>
       </div>
+
+      {/* Documentation Modal */}
+      <AnimatePresence>
+        {showDocumentation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDocumentation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-sky-500 to-blue-600 p-6 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <Plane className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Trip Planner Guide</h2>
+                    <p className="text-sky-100 text-sm">Plan your perfect journey</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✈️ Overview</h3>
+                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    Trip Planner is a comprehensive travel planning tool. Create detailed itineraries, manage packing lists, track expenses, get AI-powered flight and hotel suggestions, discover restaurants, plan train journeys, and organize all aspects of your trip in one place.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✨ Key Features</h3>
+                  <div className="grid gap-3">
+                    <div className="bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-sky-900 dark:text-sky-400 mb-1">📅 Day-by-Day Itinerary</h4>
+                      <p className="text-sm text-sky-800 dark:text-sky-300">Plan activities with times, locations, costs, and booking status.</p>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-400 mb-1">🧳 Packing List</h4>
+                      <p className="text-sm text-blue-800 dark:text-blue-300">Organize items by category and track what's packed.</p>
+                    </div>
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-indigo-900 dark:text-indigo-400 mb-1">💰 Budget Tracking</h4>
+                      <p className="text-sm text-indigo-800 dark:text-indigo-300">Track expenses by category and monitor spending vs budget.</p>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-900 dark:text-purple-400 mb-1">🤖 AI Suggestions</h4>
+                      <p className="text-sm text-purple-800 dark:text-purple-300">Get flight, hotel, restaurant, and train recommendations with AI.</p>
+                    </div>
+                    <div className="bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-pink-900 dark:text-pink-400 mb-1">🌍 Multi-Currency</h4>
+                      <p className="text-sm text-pink-800 dark:text-pink-300">Support for 15+ currencies for international travel.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚀 How to Use</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-sky-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Create a Trip</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "New Trip" and enter destination, dates, budget, and travelers.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-sky-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Plan Itinerary</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Go to Itinerary tab, add activities for each day with times and costs.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-sky-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Create Packing List</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Packing tab lets you add items by category and check them off.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-sky-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Track Expenses</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Budget tab shows spending breakdown and tracks against your budget.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-sky-500 text-white flex items-center justify-center text-sm font-bold">5</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Get AI Suggestions</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Use Flights, Hotels, Restaurants, and Trains tabs for AI recommendations.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-sky-500 text-white flex items-center justify-center text-sm font-bold">6</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Generate Itinerary</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "Generate Day Plan" for AI-powered daily itinerary suggestions.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💡 Pro Tips</h3>
+                  <div className="bg-gradient-to-r from-sky-50 to-blue-50 dark:from-sky-900/20 dark:to-blue-900/20 border border-sky-200 dark:border-sky-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Book early</strong> - Mark activities as "booked" to track reservations</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Buffer time</strong> - Add travel time between activities in your itinerary</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Pack smart</strong> - Use AI to generate packing list based on destination</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Track everything</strong> - Log all expenses to stay within budget</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Save links</strong> - Add booking URLs to activities for quick access</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Multiple trips</strong> - Plan multiple trips simultaneously in separate projects</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💾 Data Storage</h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      <strong>Your trip data is automatically saved to the server.</strong> All trips, itineraries, packing lists, expenses, and AI suggestions are stored in the database and synced across devices. Look for the "Saving..." indicator to confirm storage.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

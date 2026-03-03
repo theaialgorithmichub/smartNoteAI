@@ -60,6 +60,12 @@ const config: Config = {
           white: "#FAFAFA",
           aged: "#F5E6D3",
         },
+        theme: {
+          primary: "var(--theme-primary)",
+          secondary: "var(--theme-secondary)",
+          accent: "var(--theme-accent)",
+          light: "var(--theme-light)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

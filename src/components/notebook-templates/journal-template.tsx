@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   BookOpen,
   Plus,
@@ -11,7 +11,8 @@ import {
   Search,
   Filter,
   Clock,
-  Trash2
+  Trash2,
+  Info
 } from "lucide-react";
 
 interface JournalEntry {
@@ -36,6 +37,7 @@ export function JournalTemplate({ title = "My Journal", notebookId }: JournalTem
   const [saving, setSaving] = useState(false);
   const [newTag, setNewTag] = useState("");
   const [isAddingTag, setIsAddingTag] = useState(false);
+  const [showDocumentation, setShowDocumentation] = useState(false);
 
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -160,12 +162,21 @@ export function JournalTemplate({ title = "My Journal", notebookId }: JournalTem
               <BookOpen className="w-5 h-5" />
               {title}
             </h2>
-            <button
-              onClick={createEntry}
-              className="p-2 bg-stone-600 hover:bg-stone-700 text-white rounded-lg"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowDocumentation(true)}
+                className="p-2 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-400 rounded-lg"
+                title="Documentation"
+              >
+                <Info className="w-4 h-4" />
+              </button>
+              <button
+                onClick={createEntry}
+                className="p-2 bg-stone-600 hover:bg-stone-700 text-white rounded-lg"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Search */}
@@ -355,6 +366,242 @@ Let your mind flow freely. This is your private space to reflect, explore ideas,
           </div>
         )}
       </div>
+
+      {/* Documentation Modal */}
+      <AnimatePresence>
+        {showDocumentation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDocumentation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-stone-600 to-stone-700 p-6 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <BookOpen className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Journal Template Guide</h2>
+                    <p className="text-stone-100 text-sm">Organize your thoughts and ideas</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Overview */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">📝 Overview</h3>
+                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    The Journal Template is a streamlined writing space for capturing your thoughts, ideas, and reflections. With powerful search, tag organization, and a clean interface, it's perfect for daily journaling, note-taking, and idea management.
+                  </p>
+                </div>
+
+                {/* Key Features */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✨ Key Features</h3>
+                  <div className="grid gap-3">
+                    <div className="bg-stone-50 dark:bg-stone-900/20 border border-stone-200 dark:border-stone-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-stone-900 dark:text-stone-400 mb-1">📚 Entry Management</h4>
+                      <p className="text-sm text-stone-800 dark:text-stone-300">Create unlimited journal entries with titles and rich text content. Each entry is automatically timestamped.</p>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-400 mb-1">🔍 Powerful Search</h4>
+                      <p className="text-sm text-blue-800 dark:text-blue-300">Instantly search through all your entries by title or content. Find what you need in seconds.</p>
+                    </div>
+                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-900 dark:text-purple-400 mb-1">🏷️ Tag Organization</h4>
+                      <p className="text-sm text-purple-800 dark:text-purple-300">Add multiple tags to each entry for easy categorization. Filter entries by tag with one click.</p>
+                    </div>
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-emerald-900 dark:text-emerald-400 mb-1">⏱️ Automatic Timestamps</h4>
+                      <p className="text-sm text-emerald-800 dark:text-emerald-300">Track when entries were created and last updated. Never lose track of your timeline.</p>
+                    </div>
+                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-amber-900 dark:text-amber-400 mb-1">💾 Auto-Save</h4>
+                      <p className="text-sm text-amber-800 dark:text-amber-300">Your work is automatically saved as you type. Never worry about losing your thoughts.</p>
+                    </div>
+                    <div className="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-rose-900 dark:text-rose-400 mb-1">🗑️ Easy Deletion</h4>
+                      <p className="text-sm text-rose-800 dark:text-rose-300">Remove entries you no longer need with a simple click. Keep your journal clean and organized.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* How to Use */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚀 How to Use</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-stone-600 text-white flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Create a New Entry</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click the + button in the sidebar header to create a new journal entry.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-stone-600 text-white flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add a Title</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Give your entry a descriptive title at the top of the editor. This helps you find it later.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-stone-600 text-white flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Write Your Content</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Use the large text area to write your thoughts, ideas, or reflections. The editor auto-saves as you type.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-stone-600 text-white flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add Tags</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "+ Add tag" to categorize your entry. Add multiple tags like #personal, #work, #ideas, etc.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-stone-600 text-white flex items-center justify-center text-sm font-bold">5</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Search & Filter</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Use the search bar to find entries by title or content. Click tag buttons to filter by category.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-stone-600 text-white flex items-center justify-center text-sm font-bold">6</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Manage Entries</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click any entry in the sidebar to view and edit it. Hover over entries to reveal the delete button.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Interface Layout */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🖥️ Interface Layout</h3>
+                  <div className="space-y-3">
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white mb-2 flex items-center gap-2">
+                        <BookOpen className="w-4 h-4 text-stone-600" />
+                        Left Sidebar
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
+                        Your entry list with search and filtering:
+                      </p>
+                      <ul className="text-sm text-neutral-600 dark:text-neutral-400 space-y-1 ml-4">
+                        <li>• Search bar for quick entry lookup</li>
+                        <li>• Tag filter buttons (All, #tag1, #tag2...)</li>
+                        <li>• List of all entries with previews</li>
+                        <li>• Entry timestamps and tag counts</li>
+                        <li>• Delete button (appears on hover)</li>
+                      </ul>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white mb-2 flex items-center gap-2">
+                        <Tag className="w-4 h-4 text-stone-600" />
+                        Main Editor
+                      </h4>
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        The writing space where you create and edit entries. Includes title input, timestamp display, tag management, and a large text area for your content.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tags System */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🏷️ Using Tags Effectively</h3>
+                  <div className="bg-gradient-to-r from-stone-50 to-neutral-50 dark:from-stone-900/20 dark:to-neutral-900/20 border border-stone-200 dark:border-stone-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300"><strong>Categories:</strong> Use tags like #work, #personal, #ideas to separate different types of entries</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300"><strong>Projects:</strong> Tag entries by project name like #project-alpha, #website-redesign</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300"><strong>Topics:</strong> Add topic tags like #productivity, #health, #learning for thematic organization</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300"><strong>Status:</strong> Track progress with tags like #todo, #in-progress, #completed</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300"><strong>Multiple Tags:</strong> Add as many tags as needed - entries can have multiple categories</p>
+                  </div>
+                </div>
+
+                {/* Pro Tips */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💡 Pro Tips</h3>
+                  <div className="bg-gradient-to-r from-stone-50 to-amber-50 dark:from-stone-900/20 dark:to-amber-900/20 border border-stone-200 dark:border-stone-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use descriptive titles</strong> - Makes searching and browsing much easier</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Tag consistently</strong> - Stick to a naming convention for your tags</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Write freely</strong> - Don't worry about perfection, just capture your thoughts</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Review regularly</strong> - Use search to revisit old entries and track your progress</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Combine with search</strong> - Use tags to narrow down, then search within filtered results</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Date in titles</strong> - Consider adding dates to titles for time-based entries</p>
+                  </div>
+                </div>
+
+                {/* Use Cases */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💼 Common Use Cases</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">📔 Daily Journaling</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Capture daily thoughts, reflections, and experiences</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">💡 Idea Collection</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Store and organize creative ideas and inspirations</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">📝 Meeting Notes</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Document meetings, decisions, and action items</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">🎯 Goal Tracking</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Track progress on personal and professional goals</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-900/20 dark:to-red-900/20 border border-rose-200 dark:border-rose-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">📚 Learning Log</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Document what you learn and key takeaways</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-indigo-50 to-violet-50 dark:from-indigo-900/20 dark:to-violet-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">🔬 Research Notes</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Organize research findings and references</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Data Storage */}
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💾 Data Storage</h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      <strong>Your journal entries are automatically saved locally.</strong> All entries, titles, content, tags, and timestamps are stored in your browser's local storage. Changes are saved automatically as you type, so you never lose your work. Look for the "Saving..." indicator to confirm storage.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-stone-600 to-stone-700 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

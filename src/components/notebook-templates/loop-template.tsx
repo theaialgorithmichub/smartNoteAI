@@ -7,7 +7,7 @@ import {
   ChevronDown, MessageSquare, Hash, Trash2, GripVertical, X,
   Image, Code, Quote, List, ListOrdered, Minus, Link2,
   Upload, ChevronLeft, ChevronRight, Pencil, Copy, Check,
-  AlignLeft, Heading1, Heading2, Heading3,
+  AlignLeft, Heading1, Heading2, Heading3, Info,
 } from "lucide-react";
 
 //  Types 
@@ -487,6 +487,7 @@ export function LoopTemplate({ title = "Loop Workspace", notebookId }: LoopTempl
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showDocumentation, setShowDocumentation] = useState(false);
 
   // Workspace form
   const [showWsForm, setShowWsForm] = useState(false);
@@ -679,9 +680,14 @@ export function LoopTemplate({ title = "Loop Workspace", notebookId }: LoopTempl
                   </div>
                   <span className="font-bold text-sm text-neutral-900 dark:text-white">{title}</span>
                 </div>
-                <button onClick={() => setSidebarOpen(false)} className="p-1 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-400">
-                  <ChevronLeft className="w-4 h-4"/>
-                </button>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setShowDocumentation(true)} className="p-1 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-800 text-purple-500" title="Documentation">
+                    <Info className="w-4 h-4"/>
+                  </button>
+                  <button onClick={() => setSidebarOpen(false)} className="p-1 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-800 text-neutral-400">
+                    <ChevronLeft className="w-4 h-4"/>
+                  </button>
+                </div>
               </div>
               <button onClick={() => { setWsFormName(""); setWsFormIcon(""); setShowWsForm(true); }}
                 className="w-full flex items-center justify-center gap-2 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-xl text-sm font-medium transition-colors">
@@ -874,6 +880,230 @@ export function LoopTemplate({ title = "Loop Workspace", notebookId }: LoopTempl
           </div>
         )}
       </div>
+
+      {/* Documentation Modal */}
+      <AnimatePresence>
+        {showDocumentation && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDocumentation(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            >
+              <div className="sticky top-0 bg-gradient-to-r from-purple-500 to-pink-500 p-6 flex items-center justify-between z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                    <LayoutGrid className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">Loop Workspace Guide</h2>
+                    <p className="text-purple-100 text-sm">Build rich, flexible pages with blocks</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                  <X className="h-5 w-5 text-white" />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">📝 Overview</h3>
+                  <p className="text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                    Loop Workspace is a Notion-like block-based editor. Create multiple workspaces with customizable headers, then build rich pages using 15+ block types including text, headings, lists, images, code, tables, polls, and more. Perfect for documentation, notes, wikis, and collaborative spaces.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🧩 15+ Block Types</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">📄 Basic Blocks</h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Text, H1, H2, H3</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">📋 Lists</h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Bullet, Numbered, Checklist</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">💬 Content</h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Quote, Callout, Toggle</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">🎨 Media</h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Image, Code, Embed</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <h4 className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">⚡ Advanced</h4>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Table, Poll, Divider</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">✨ Key Features</h3>
+                  <div className="grid gap-3">
+                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-purple-900 dark:text-purple-400 mb-1">🎨 Custom Headers</h4>
+                      <p className="text-sm text-purple-800 dark:text-purple-300">Upload cover images or choose gradient colors. Add workspace icons for visual organization.</p>
+                    </div>
+                    <div className="bg-pink-50 dark:bg-pink-900/20 border border-pink-200 dark:border-pink-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-pink-900 dark:text-pink-400 mb-1">🔄 Drag & Drop</h4>
+                      <p className="text-sm text-pink-800 dark:text-pink-300">Reorder blocks by dragging. Organize content exactly how you want it.</p>
+                    </div>
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-indigo-900 dark:text-indigo-400 mb-1">💡 Smart Callouts</h4>
+                      <p className="text-sm text-indigo-800 dark:text-indigo-300">Info, warning, success, and error callouts with color-coded styling.</p>
+                    </div>
+                    <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-emerald-900 dark:text-emerald-400 mb-1">📊 Interactive Elements</h4>
+                      <p className="text-sm text-emerald-800 dark:text-emerald-300">Editable tables, voting polls with live results, collapsible toggles.</p>
+                    </div>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <h4 className="font-semibold text-blue-900 dark:text-blue-400 mb-1">💻 Code Blocks</h4>
+                      <p className="text-sm text-blue-800 dark:text-blue-300">Syntax highlighting for 14+ languages with copy-to-clipboard functionality.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🚀 How to Use</h3>
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Create a Workspace</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "New Workspace" in sidebar. Choose a name and icon emoji.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Customize Header</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Hover over header to upload cover image or change gradient color.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold">3</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add Page Title</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click "Untitled" below the workspace icon to add your page title.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold">4</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Add Blocks</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click + button or "Add block" to choose from 15+ block types.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold">5</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Edit Content</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Click into blocks to edit. Each block type has unique editing features.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-shrink-0 w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center text-sm font-bold">6</div>
+                      <div>
+                        <p className="font-semibold text-neutral-900 dark:text-white">Reorder & Delete</p>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-400">Hover blocks to see drag handle and delete button. Drag to reorder.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">🎯 Block Highlights</h3>
+                  <div className="space-y-2">
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <p className="text-sm"><strong className="text-purple-600">Checklist:</strong> Add items with + button, check off completed tasks</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <p className="text-sm"><strong className="text-purple-600">Toggle:</strong> Collapsible sections - click arrow to expand/collapse content</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <p className="text-sm"><strong className="text-purple-600">Code:</strong> Select language from dropdown, click Copy to copy code</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <p className="text-sm"><strong className="text-purple-600">Table:</strong> Edit headers and cells inline, add rows with + button</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <p className="text-sm"><strong className="text-purple-600">Poll:</strong> Add options, click vote buttons to cast votes, see live percentages</p>
+                    </div>
+                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-3">
+                      <p className="text-sm"><strong className="text-purple-600">Callout:</strong> Switch between info/warning/success/error types for different contexts</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💡 Pro Tips</h3>
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4 space-y-2">
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Use headings</strong> - Structure content with H1, H2, H3 for clear hierarchy</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Combine blocks</strong> - Mix text, images, code, and tables for rich documentation</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Toggles for organization</strong> - Hide detailed content in collapsible sections</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Callouts for emphasis</strong> - Highlight important notes with colored callouts</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Multiple workspaces</strong> - Separate topics into different workspaces</p>
+                    <p className="text-sm text-neutral-700 dark:text-neutral-300">✅ <strong>Custom headers</strong> - Visual identity with cover images and colors</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💼 Use Cases</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">📚 Documentation</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Technical docs, API references, user guides</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">📝 Knowledge Base</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Team wikis, process documentation</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">📖 Study Notes</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Lecture notes, research summaries</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                      <p className="font-semibold text-neutral-900 dark:text-white text-sm mb-1">📋 Project Pages</p>
+                      <p className="text-xs text-neutral-600 dark:text-neutral-400">Project overviews, specifications, roadmaps</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-3">💾 Data Storage</h3>
+                  <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg p-4">
+                    <p className="text-sm text-emerald-800 dark:text-emerald-300 leading-relaxed">
+                      <strong>Your workspaces are automatically saved to the database.</strong> All workspaces, blocks, content, images, and settings are persisted to the server. Look for the "Saving..." indicator to confirm storage. Your work syncs across devices automatically.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                <button
+                  onClick={() => setShowDocumentation(false)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:opacity-90 transition-opacity font-medium"
+                >
+                  Got it!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

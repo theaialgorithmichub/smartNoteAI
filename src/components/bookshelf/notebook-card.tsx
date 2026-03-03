@@ -3,9 +3,11 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { Trash2, Clock, BookOpen, AlertCircle } from "lucide-react"
+import { Trash2, Clock, BookOpen, AlertCircle, Share2, Users, X } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 import { GlareCard } from "@/components/ui/glare-card"
+import { ShareNotebookModal } from "@/components/sharing/ShareNotebookModal"
+import { useShareNotebook, useFriends } from "@/hooks/useSharing"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,6 +34,8 @@ interface NotebookCardProps {
     tags: string[]
     pageCount: number
     updatedAt: string
+    isPublic?: boolean
+    sharedWith?: any[]
   }
   onUpdate: () => void
 }
@@ -40,6 +44,29 @@ export function NotebookCard({ notebook, onUpdate }: NotebookCardProps) {
   const router = useRouter()
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  
+  const { shareNotebook } = useShareNotebook()
+  const { friends } = useFriends()
+
+  const handleRevoke = async (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirm('Remove all sharing for this notebook?')) return
+    
+    try {
+      await fetch(`/api/notebooks/${notebook._id}/unshare`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds: [] })
+      })
+      onUpdate()
+    } catch (error) {
+      console.error('Failed to revoke sharing:', error)
+    }
+  }
+
+  const sharedCount = notebook.sharedWith?.length || 0
+  const isShared = notebook.isPublic || sharedCount > 0
 
   const handleOpen = () => {
     router.push(`/dashboard/notebook/${notebook._id}`)
@@ -71,21 +98,35 @@ export function NotebookCard({ notebook, onUpdate }: NotebookCardProps) {
 
   return (
     <div className="relative group">
-      {/* Delete button with AlertDialog confirmation */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogTrigger asChild>
-          <button
-            disabled={isDeleting}
-            className="absolute top-2 right-2 z-50 p-2 bg-black/60 backdrop-blur-sm rounded-full hover:bg-red-500 transition-all opacity-0 group-hover:opacity-100 disabled:opacity-50"
-            title="Delete notebook"
-          >
-            {isDeleting ? (
-              <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <Trash2 className="h-4 w-4 text-white" />
-            )}
-          </button>
-        </AlertDialogTrigger>
+      {/* Action buttons */}
+      <div className="absolute top-2 right-2 z-50 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Share button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowShareModal(true);
+          }}
+          className="p-2 bg-black/60 backdrop-blur-sm rounded-full hover:bg-blue-500 transition-all"
+          title="Share notebook"
+        >
+          <Share2 className="h-4 w-4 text-white" />
+        </button>
+
+        {/* Delete button with AlertDialog confirmation */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogTrigger asChild>
+            <button
+              disabled={isDeleting}
+              className="p-2 bg-black/60 backdrop-blur-sm rounded-full hover:bg-red-500 transition-all disabled:opacity-50"
+              title="Delete notebook"
+            >
+              {isDeleting ? (
+                <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4 text-white" />
+              )}
+            </button>
+          </AlertDialogTrigger>
         <AlertDialogContent>
           <div className="flex flex-col gap-2 max-sm:items-center sm:flex-row sm:gap-4">
             <div
@@ -112,7 +153,26 @@ export function NotebookCard({ notebook, onUpdate }: NotebookCardProps) {
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+        </AlertDialog>
+      </div>
+
+      {/* Share Notebook Modal */}
+      <ShareNotebookModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        notebookId={notebook._id}
+        notebookTitle={notebook.title}
+        currentSharing={{
+          isPublic: false,
+          sharedWith: []
+        }}
+        friends={friends}
+        onShare={async (shareData) => {
+          await shareNotebook(notebook._id, shareData);
+          setShowShareModal(false);
+          onUpdate();
+        }}
+      />
 
       <div onClick={handleOpen} className="cursor-pointer">
         <GlareCard className="relative">
@@ -169,6 +229,35 @@ export function NotebookCard({ notebook, onUpdate }: NotebookCardProps) {
                   <span>{formatDate(notebook.updatedAt)}</span>
                 </div>
               </div>
+              
+              {/* Sharing info */}
+              {isShared && (
+                <div 
+                  className="mt-2 flex items-center justify-between"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center gap-1 text-white/90 text-xs bg-white/10 backdrop-blur-sm px-2 py-1 rounded">
+                    {notebook.isPublic ? (
+                      <>
+                        <Share2 className="h-3 w-3" />
+                        <span>Public</span>
+                      </>
+                    ) : (
+                      <>
+                        <Users className="h-3 w-3" />
+                        <span>Shared with {sharedCount} friend{sharedCount !== 1 ? 's' : ''}</span>
+                      </>
+                    )}
+                  </div>
+                  <button
+                    onClick={handleRevoke}
+                    className="p-1 bg-red-500/80 hover:bg-red-500 rounded text-white transition-colors z-10"
+                    title="Revoke all sharing"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </GlareCard>
