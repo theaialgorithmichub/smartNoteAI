@@ -77,6 +77,54 @@ const colorMap: Record<string, { bg: string; border: string; text: string; gradi
     text: "text-indigo-600 dark:text-indigo-400",
     gradient: "from-indigo-500 to-purple-500",
   },
+  green: {
+    bg: "bg-green-50 dark:bg-green-900/20",
+    border: "border-green-200 dark:border-green-800",
+    text: "text-green-600 dark:text-green-400",
+    gradient: "from-green-500 to-emerald-500",
+  },
+  teal: {
+    bg: "bg-teal-50 dark:bg-teal-900/20",
+    border: "border-teal-200 dark:border-teal-800",
+    text: "text-teal-600 dark:text-teal-400",
+    gradient: "from-teal-500 to-cyan-500",
+  },
+  cyan: {
+    bg: "bg-cyan-50 dark:bg-cyan-900/20",
+    border: "border-cyan-200 dark:border-cyan-800",
+    text: "text-cyan-600 dark:text-cyan-400",
+    gradient: "from-cyan-500 to-blue-500",
+  },
+  violet: {
+    bg: "bg-violet-50 dark:bg-violet-900/20",
+    border: "border-violet-200 dark:border-violet-800",
+    text: "text-violet-600 dark:text-violet-400",
+    gradient: "from-violet-500 to-purple-500",
+  },
+  sky: {
+    bg: "bg-sky-50 dark:bg-sky-900/20",
+    border: "border-sky-200 dark:border-sky-800",
+    text: "text-sky-600 dark:text-sky-400",
+    gradient: "from-sky-500 to-blue-500",
+  },
+  red: {
+    bg: "bg-red-50 dark:bg-red-900/20",
+    border: "border-red-200 dark:border-red-800",
+    text: "text-red-600 dark:text-red-400",
+    gradient: "from-red-500 to-rose-500",
+  },
+  yellow: {
+    bg: "bg-yellow-50 dark:bg-yellow-900/20",
+    border: "border-yellow-200 dark:border-yellow-800",
+    text: "text-yellow-600 dark:text-yellow-400",
+    gradient: "from-yellow-500 to-orange-500",
+  },
+  lime: {
+    bg: "bg-lime-50 dark:bg-lime-900/20",
+    border: "border-lime-200 dark:border-lime-800",
+    text: "text-lime-600 dark:text-lime-400",
+    gradient: "from-lime-500 to-green-500",
+  },
 };
 
 interface TemplateSelectorProps {
@@ -101,7 +149,7 @@ export function TemplateSelector({ onSelect, selectedTemplate }: TemplateSelecto
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {NOTEBOOK_TEMPLATES.map((template) => {
           const Icon = iconMap[template.icon];
-          const colors = colorMap[template.color];
+          const colors = colorMap[template.color] || colorMap.amber; // Fallback to amber if color not found
           const isSelected = selectedTemplate === template.id;
           const isHovered = hoveredTemplate === template.id;
 
