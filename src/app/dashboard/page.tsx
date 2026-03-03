@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { EnhancedBookshelf } from "@/components/bookshelf/enhanced-bookshelf"
 import { DashboardSearch } from "@/components/bookshelf/dashboard-search"
 import NotebookDock from "@/components/ui/minimal-dock"
-import { connectToDatabase } from "@/lib/db"
+import connectDB from "@/lib/db/mongodb"
 import { Notebook } from "@/lib/models/notebook"
 
 export default async function DashboardPage() {
@@ -14,7 +14,7 @@ export default async function DashboardPage() {
   }
 
   // Fetch user's latest 5 notebooks for the dock
-  await connectToDatabase()
+  await connectDB()
   const recentNotebooks = await Notebook.find({ userId, isTrashed: false })
     .sort({ updatedAt: -1 })
     .limit(5)

@@ -62,7 +62,7 @@ const sharedTransition = {
 }
 
 export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
-  ({ className, items, activeItem, onItemClick, ...props }, ref) => {
+  ({ className, items, activeItem, onItemClick }, ref) => {
     const { theme } = useTheme()
     const isDarkTheme = theme === "dark"
 
@@ -75,7 +75,6 @@ export const MenuBar = React.forwardRef<HTMLDivElement, MenuBarProps>(
         )}
         initial="initial"
         whileHover="hover"
-        {...props}
       >
         <motion.div
           className={`absolute -inset-2 bg-gradient-radial from-transparent ${

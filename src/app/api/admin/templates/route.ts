@@ -24,7 +24,7 @@ export async function GET() {
 // Create new template (admin only)
 export async function POST(request: NextRequest) {
   const { error, user } = await requireAdmin();
-  if (error) return NextResponse.json({ error }, { status: 401 });
+  if (error || !user) return NextResponse.json({ error: error || 'Unauthorized' }, { status: 401 });
 
   try {
     await connectDB();

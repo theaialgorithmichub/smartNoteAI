@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/db"
+import connectDB from "@/lib/db/mongodb"
 import { Notebook, Chapter } from "@/lib/models"
 
 // GET /api/notebooks/[id]/chapters - Get all chapters for notebook
@@ -14,7 +14,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    await connectToDatabase()
+    await connectDB()
 
     // Verify notebook ownership
     const notebook = await Notebook.findOne({ _id: params.id, userId })
@@ -47,7 +47,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    await connectToDatabase()
+    await connectDB()
 
     // Verify notebook ownership
     const notebook = await Notebook.findOne({ _id: params.id, userId })

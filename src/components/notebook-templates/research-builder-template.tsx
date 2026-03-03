@@ -446,7 +446,7 @@ export function ResearchBuilderTemplate({ title, notebookId }: ResearchBuilderTe
                                 ? 'text-green-600'
                                 : 'text-neutral-300 dark:text-neutral-600'
                             }`}
-                            onClick={() => updateChapterStatus(selectedTopic, chapter.id, chapter.status === 'completed' ? 'in-progress' : 'completed')}
+                            onClick={() => selectedTopic && updateChapterStatus(selectedTopic, chapter.id, chapter.status === 'completed' ? 'in-progress' : 'completed')}
                           />
                           <h4 className="font-bold text-neutral-900 dark:text-white">{chapter.title}</h4>
                         </div>
@@ -461,7 +461,7 @@ export function ResearchBuilderTemplate({ title, notebookId }: ResearchBuilderTe
                       
                       <textarea
                         value={chapter.content}
-                        onChange={(e) => updateChapterContent(selectedTopic, chapter.id, e.target.value)}
+                        onChange={(e) => selectedTopic && updateChapterContent(selectedTopic, chapter.id, e.target.value)}
                         placeholder="Write content for this chapter..."
                         className="w-full h-32 p-3 bg-white dark:bg-neutral-800 border border-purple-200 dark:border-purple-700 rounded-lg text-sm text-neutral-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
                       />

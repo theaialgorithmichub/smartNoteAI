@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/db"
+import connectDB from "@/lib/db/mongodb"
 import { Notebook, Page } from "@/lib/models"
 
 // GET /api/notebooks/[id]/pages/[pageId] - Get single page
@@ -14,7 +14,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    await connectToDatabase()
+    await connectDB()
 
     // Verify notebook ownership
     const notebook = await Notebook.findOne({ _id: params.id, userId })
@@ -52,7 +52,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    await connectToDatabase()
+    await connectDB()
 
     // Verify notebook ownership
     const notebook = await Notebook.findOne({ _id: params.id, userId })
@@ -112,7 +112,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    await connectToDatabase()
+    await connectDB()
 
     // Verify notebook ownership
     const notebook = await Notebook.findOne({ _id: params.id, userId })

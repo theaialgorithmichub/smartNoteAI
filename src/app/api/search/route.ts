@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/db"
+import connectDB from "@/lib/db/mongodb"
 import { Notebook, Page } from "@/lib/models"
 
 // GET /api/search - Global search across all notebooks
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    await connectToDatabase()
+    await connectDB()
 
     const { searchParams } = new URL(req.url)
     const query = searchParams.get("q")

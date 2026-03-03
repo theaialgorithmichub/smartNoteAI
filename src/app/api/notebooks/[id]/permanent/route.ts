@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/db"
+import connectDB from "@/lib/db/mongodb"
 import { Notebook, Page, Chapter } from "@/lib/models"
 
 // DELETE /api/notebooks/[id]/permanent - Permanently delete notebook
@@ -14,7 +14,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    await connectToDatabase()
+    await connectDB()
 
     // Verify ownership and that it's in trash
     const notebook = await Notebook.findOne({

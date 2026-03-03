@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/db"
+import connectDB from "@/lib/db/mongodb"
 import { Notebook, Page } from "@/lib/models"
 
 // GET /api/notebooks - List all notebooks for user
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    await connectToDatabase()
+    await connectDB()
 
     const { searchParams } = new URL(req.url)
     const filter = searchParams.get("filter") || "all"
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    await connectToDatabase()
+    await connectDB()
 
     const body = await req.json()
     const { title, category, appearance, template } = body

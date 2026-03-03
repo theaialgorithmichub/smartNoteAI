@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextRequest, NextResponse } from "next/server"
-import { connectToDatabase } from "@/lib/db"
+import connectDB from "@/lib/db/mongodb"
 import { Notebook } from "@/lib/models"
 
 // POST /api/notebooks/[id]/restore - Restore notebook from trash
@@ -14,7 +14,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    await connectToDatabase()
+    await connectDB()
 
     const notebook = await Notebook.findOneAndUpdate(
       { _id: params.id, userId, isTrashed: true },
