@@ -68,6 +68,7 @@ import { MealsPlannerTemplate } from "@/components/notebook-templates/meals-plan
 import { GamesScoreCardTemplate } from "@/components/notebook-templates/games-scorecard-template"
 import { StickerBookTemplate } from "@/components/notebook-templates/sticker-book-template"
 import { LoadingCubes } from "@/components/ui/loading-cubes"
+import { SimpleTemplate } from "@/components/notebook-templates/simple-template"
 
 interface Page {
   _id: string
@@ -493,8 +494,21 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
     )
   }
 
-  // Render template-specific views for non-simple notebooks
-  if (notebook.template && notebook.template !== 'simple') {
+  // Render SimpleTemplate for simple notebooks
+  if (notebook.template === 'simple') {
+    return (
+      <SimpleTemplate
+        notebookId={notebookId}
+        pages={pages}
+        onUpdate={fetchNotebookData}
+        onAddPage={addNewPage}
+        appearance={notebook.appearance}
+      />
+    )
+  }
+
+  // Render template-specific views for other templates
+  if (notebook.template) {
     const renderTemplateView = () => {
       switch (notebook.template) {
         case 'meeting-notes':
