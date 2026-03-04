@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 import {
   GraduationCap, Search, Youtube, Loader2, BookOpen, Play, Clock,
   Sparkles, ChevronRight, ExternalLink, FileText, Trash2, Code,
@@ -594,13 +596,19 @@ REQUIREMENTS:
 
 
   if (loading) return (
-    <div className="flex items-center justify-center h-full min-h-[400px]">
-      <Loader2 className="w-8 h-8 animate-spin text-blue-500"/>
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-neutral-950">
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500"/>
+      </div>
+      <TemplateFooter />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-neutral-950 flex overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-neutral-950 flex flex-col">
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex overflow-hidden">
       {saving && (
         <div className="fixed top-4 right-4 z-50 flex items-center gap-2 text-xs px-3 py-2 bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700">
           <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500"/> Saving...
@@ -1416,6 +1424,8 @@ REQUIREMENTS:
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

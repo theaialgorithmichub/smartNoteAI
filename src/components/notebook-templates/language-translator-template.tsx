@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { Languages, Mic, Volume2, Copy, ArrowLeftRight, Info, X, Check, Trash2, XCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 
 interface LanguageTranslatorTemplateProps {
   title: string;
@@ -211,20 +213,22 @@ export function LanguageTranslatorTemplate({ title }: LanguageTranslatorTemplate
   };
 
   return (
-    <div className="h-full bg-gradient-to-br from-sky-50 to-blue-50 dark:from-neutral-900 dark:to-neutral-800 p-8 overflow-y-auto">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
-              {title}
-            </h1>
-            <button
-              onClick={() => setShowDocumentation(true)}
-              className="p-2 bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-lg hover:bg-sky-200 dark:hover:bg-sky-900/50 transition-colors"
-              title="Know More"
-            >
-              <Info className="h-5 w-5" />
-            </button>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-neutral-900 dark:to-neutral-800">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-5xl mx-auto space-y-6">
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">
+                {title}
+              </h1>
+              <button
+                onClick={() => setShowDocumentation(true)}
+                className="p-2 bg-sky-100 dark:bg-sky-900/30 text-sky-600 dark:text-sky-400 rounded-lg hover:bg-sky-200 dark:hover:bg-sky-900/50 transition-colors"
+                title="Know More"
+              >
+                <Info className="h-5 w-5" />
+              </button>
           </div>
           <p className="text-neutral-600 dark:text-neutral-400">Translate text and voice instantly</p>
         </div>
@@ -233,13 +237,18 @@ export function LanguageTranslatorTemplate({ title }: LanguageTranslatorTemplate
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <div className="flex items-center justify-between mb-3">
-                <select
-                  value={sourceLang}
-                  onChange={(e) => setSourceLang(e.target.value)}
-                  className="px-4 py-2 bg-sky-100 dark:bg-sky-900/30 border-2 border-sky-300 dark:border-sky-700 rounded-lg font-medium text-neutral-900 dark:text-white"
-                >
-                  {languages.map(lang => <option key={lang}>{lang}</option>)}
-                </select>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-sky-600 dark:text-sky-400">
+                    Source Language:
+                  </label>
+                  <select
+                    value={sourceLang}
+                    onChange={(e) => setSourceLang(e.target.value)}
+                    className="px-4 py-2 bg-sky-100 dark:bg-sky-900/30 border-2 border-sky-300 dark:border-sky-700 rounded-lg font-medium text-neutral-900 dark:text-white"
+                  >
+                    {languages.map(lang => <option key={lang}>{lang}</option>)}
+                  </select>
+                </div>
                 <button 
                   onClick={handleVoiceInput}
                   disabled={isRecording}
@@ -257,7 +266,7 @@ export function LanguageTranslatorTemplate({ title }: LanguageTranslatorTemplate
                 <textarea
                   value={sourceText}
                   onChange={(e) => setSourceText(e.target.value)}
-                  placeholder="Type or speak to translate..."
+                  placeholder={`Write or paste your text in ${sourceLang} here...`}
                   className="w-full h-48 p-4 pr-10 bg-neutral-50 dark:bg-neutral-700 border-2 border-neutral-200 dark:border-neutral-600 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-sky-500 text-neutral-900 dark:text-white"
                 />
                 {sourceText && (
@@ -304,13 +313,18 @@ export function LanguageTranslatorTemplate({ title }: LanguageTranslatorTemplate
               </button>
               
               <div className="flex items-center justify-between mb-3">
-                <select
-                  value={targetLang}
-                  onChange={(e) => setTargetLang(e.target.value)}
-                  className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 border-2 border-blue-300 dark:border-blue-700 rounded-lg font-medium text-neutral-900 dark:text-white"
-                >
-                  {languages.map(lang => <option key={lang}>{lang}</option>)}
-                </select>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                    Target Language:
+                  </label>
+                  <select
+                    value={targetLang}
+                    onChange={(e) => setTargetLang(e.target.value)}
+                    className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 border-2 border-blue-300 dark:border-blue-700 rounded-lg font-medium text-neutral-900 dark:text-white"
+                  >
+                    {languages.map(lang => <option key={lang}>{lang}</option>)}
+                  </select>
+                </div>
                 <button 
                   onClick={() => handleCopy(translatedText)}
                   disabled={!translatedText}
@@ -576,7 +590,9 @@ export function LanguageTranslatorTemplate({ title }: LanguageTranslatorTemplate
             </Card>
           </div>
         )}
+        </div>
       </div>
+      <TemplateFooter />
     </div>
   );
 }

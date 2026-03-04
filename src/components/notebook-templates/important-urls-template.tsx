@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, Plus, Youtube, Instagram, Video, ExternalLink, Trash2, Search, Info, X, Check, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 import { Button } from '@/components/ui/button';
 
 interface ImportantUrlsTemplateProps {
@@ -184,20 +186,22 @@ export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTempla
   };
 
   return (
-    <div className="h-full bg-gradient-to-br from-red-50 to-pink-50 dark:from-neutral-900 dark:to-neutral-800 p-8 overflow-y-auto">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
-              {title}
-            </h1>
-            <button
-              onClick={() => setShowDocumentation(true)}
-              className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
-              title="Know More"
-            >
-              <Info className="h-5 w-5" />
-            </button>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-neutral-900 dark:to-neutral-800">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-5xl mx-auto space-y-6">
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+                {title}
+              </h1>
+              <button
+                onClick={() => setShowDocumentation(true)}
+                className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                title="Know More"
+              >
+                <Info className="h-5 w-5" />
+              </button>
           </div>
           <p className="text-neutral-600 dark:text-neutral-400">Save your favorite video content</p>
         </div>
@@ -531,7 +535,9 @@ export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTempla
             </Card>
           </div>
         )}
+        </div>
       </div>
+      <TemplateFooter />
     </div>
   );
 }

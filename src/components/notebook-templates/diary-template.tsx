@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 import {
   Calendar, ChevronLeft, ChevronRight, Plus, Loader2,
   Sun, Cloud, CloudRain, Snowflake, Heart, Smile, Frown, Meh,
@@ -260,6 +262,7 @@ export function DiaryTemplate({ title = "My Diary", notebookId }: DiaryTemplateP
   const [activeTab, setActiveTab] = useState<"write"|"images"|"draw">("write");
   const [uploadingImage, setUploadingImage] = useState(false);
   const [showDocumentation, setShowDocumentation] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; date: string | null }>({ show: false, date: null });
 
   const pageIdRef = useRef<string | null>(null);
   const saveRef = useRef<NodeJS.Timeout | null>(null);
@@ -382,6 +385,28 @@ export function DiaryTemplate({ title = "My Diary", notebookId }: DiaryTemplateP
     upsert({ images: current.images.filter(img => img.id !== imgId) });
   };
 
+  const deleteDiaryEntry = (date: string) => {
+    setDeleteConfirm({ show: true, date });
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirm.date) {
+      const updated = entriesRef.current.filter(e => e.date !== deleteConfirm.date);
+      setEntries(updated);
+      entriesRef.current = updated;
+      bumpSave();
+      // If we deleted the current entry, go to today
+      if (deleteConfirm.date === selectedDate) {
+        setSelectedDate(todayStr);
+      }
+    }
+    setDeleteConfirm({ show: false, date: null });
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm({ show: false, date: null });
+  };
+
   //  Calendar helpers 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear(), month = date.getMonth();
@@ -414,13 +439,19 @@ export function DiaryTemplate({ title = "My Diary", notebookId }: DiaryTemplateP
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center h-full min-h-[400px]">
-      <Loader2 className="w-8 h-8 animate-spin text-amber-500"/>
+    <div className="min-h-screen flex flex-col">
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-amber-500"/>
+      </div>
+      <TemplateFooter />
     </div>
   );
 
   return (
-    <div className={`min-h-screen flex overflow-hidden ${t.bg}`}>
+    <div className={`min-h-screen flex flex-col ${t.bg}`}>
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex overflow-hidden">
       {/* Hidden file input */}
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
         onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); e.target.value = ""; }}/>
@@ -539,6 +570,13 @@ export function DiaryTemplate({ title = "My Diary", notebookId }: DiaryTemplateP
                   className={`px-3 py-1.5 rounded-xl text-xs font-medium hover:bg-white/10 ${t.subtext}`}>Today</button>
                 <button onClick={() => { const d = new Date(selectedDate); d.setDate(d.getDate()+1); setSelectedDate(toDateStr(d)); setCurrentMonth(new Date(d.getFullYear(), d.getMonth())); }}
                   className={`p-2 rounded-xl hover:bg-white/10 ${t.subtext}`}><ChevronRight className="w-4 h-4"/></button>
+                {hasEntry(new Date(selectedDate)) && (
+                  <button onClick={() => deleteDiaryEntry(selectedDate)}
+                    className={`p-2 rounded-xl hover:bg-red-500/20 ${t.subtext} hover:text-red-500 transition-colors`}
+                    title="Delete this entry">
+                    <Trash2 className="w-4 h-4"/>
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -917,6 +955,52 @@ export function DiaryTemplate({ title = "My Diary", notebookId }: DiaryTemplateP
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deleteConfirm.show && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white dark:bg-neutral-800 rounded-2xl p-6 max-w-md w-full shadow-2xl"
+            >
+              <div className="text-center">
+                <div className="mx-auto w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
+                  <Trash2 className="h-6 w-6 text-red-600" />
+                </div>
+                <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">Delete Diary Entry?</h3>
+                <p className="text-neutral-600 dark:text-neutral-400 mb-6">
+                  Are you sure you want to delete this diary entry from {deleteConfirm.date ? formatDisplayDate(deleteConfirm.date) : ''}? This action cannot be undone.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={cancelDelete}
+                    className="flex-1 px-4 py-2 bg-neutral-200 dark:bg-neutral-700 text-neutral-900 dark:text-white rounded-lg hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

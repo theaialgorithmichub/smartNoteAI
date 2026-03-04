@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 import {
   Plus, X, Loader2, Trash2, Pencil, Bot, ChevronDown,
   Code2, FolderOpen, PanelLeft, Copy, Check, Sparkles, AlertCircle,
@@ -475,13 +477,19 @@ export function CodeNotebookTemplate({ title = "Untitled Notebook", notebookId }
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center h-full min-h-[400px] bg-slate-950">
-      <Loader2 className="w-8 h-8 animate-spin text-amber-500"/>
+    <div className="min-h-screen flex flex-col bg-slate-950">
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-amber-500"/>
+      </div>
+      <TemplateFooter />
     </div>
   );
 
   return (
-    <div className="flex h-full min-h-screen bg-slate-950 overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-slate-950">
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex overflow-hidden">
 
       {/*  Sidebar  */}
       <AnimatePresence initial={false}>
@@ -945,6 +953,8 @@ export function CodeNotebookTemplate({ title = "Untitled Notebook", notebookId }
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

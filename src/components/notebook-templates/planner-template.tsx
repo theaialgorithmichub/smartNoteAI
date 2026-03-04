@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 import {
   FileText, Clock, Target, Plus, X, Loader2, Trash2,
   ChevronLeft, ChevronRight, CalendarDays, CheckCircle2,
@@ -296,13 +298,19 @@ export function PlannerTemplate({ title = "Untitled Plan", notebookId }: Planner
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center h-full min-h-[400px] bg-amber-50/50 dark:bg-neutral-950">
-      <Loader2 className="w-8 h-8 animate-spin text-amber-500"/>
+    <div className="min-h-screen flex flex-col bg-amber-50/50 dark:bg-neutral-950">
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-amber-500"/>
+      </div>
+      <TemplateFooter />
     </div>
   );
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex flex-col">
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex flex-col overflow-hidden">
       {/* Header */}
       <header className="bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 px-6 py-3.5 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
@@ -780,6 +788,8 @@ export function PlannerTemplate({ title = "Untitled Plan", notebookId }: Planner
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

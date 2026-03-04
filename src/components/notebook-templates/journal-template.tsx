@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 import { 
   BookOpen,
   Plus,
@@ -12,7 +14,16 @@ import {
   Filter,
   Clock,
   Trash2,
-  Info
+  Info,
+  Star,
+  Download,
+  Smile,
+  Meh,
+  Frown,
+  Heart,
+  TrendingUp,
+  FileText,
+  Calendar
 } from "lucide-react";
 
 interface JournalEntry {
@@ -20,6 +31,9 @@ interface JournalEntry {
   title: string;
   content: string;
   tags: string[];
+  category: string;
+  mood: 'happy' | 'neutral' | 'sad' | null;
+  isFavorite: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,6 +52,9 @@ export function JournalTemplate({ title = "My Journal", notebookId }: JournalTem
   const [newTag, setNewTag] = useState("");
   const [isAddingTag, setIsAddingTag] = useState(false);
   const [showDocumentation, setShowDocumentation] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -85,6 +102,9 @@ export function JournalTemplate({ title = "My Journal", notebookId }: JournalTem
       title: 'Untitled Entry',
       content: '',
       tags: [],
+      category: 'Personal',
+      mood: null,
+      isFavorite: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -122,8 +142,21 @@ export function JournalTemplate({ title = "My Journal", notebookId }: JournalTem
     updateEntry({ tags: selectedEntry.tags.filter(t => t !== tag) });
   };
 
-  // Get all unique tags
+  // Get all unique tags and categories
   const allTags = [...new Set(entries.flatMap(e => e.tags))];
+  const allCategories = [...new Set(entries.map(e => e.category).filter(Boolean))];
+  
+  // Calculate statistics
+  const totalWords = entries.reduce((sum, e) => sum + e.content.split(/\s+/).filter(w => w.length > 0).length, 0);
+  const totalEntries = entries.length;
+  const favoriteCount = entries.filter(e => e.isFavorite).length;
+  const currentWordCount = selectedEntry ? selectedEntry.content.split(/\s+/).filter(w => w.length > 0).length : 0;
+  
+  const moodIcons = {
+    happy: <Smile className="w-4 h-4 text-green-500" />,
+    neutral: <Meh className="w-4 h-4 text-yellow-500" />,
+    sad: <Frown className="w-4 h-4 text-blue-500" />
+  };
 
   // Filter entries
   const filteredEntries = entries.filter(entry => {
@@ -131,8 +164,30 @@ export function JournalTemplate({ title = "My Journal", notebookId }: JournalTem
       entry.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       entry.content.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesTag = filterTag === null || entry.tags.includes(filterTag);
-    return matchesSearch && matchesTag;
+    const matchesCategory = filterCategory === null || entry.category === filterCategory;
+    const matchesFavorite = !showFavoritesOnly || entry.isFavorite;
+    return matchesSearch && matchesTag && matchesCategory && matchesFavorite;
   });
+  
+  const exportToMarkdown = () => {
+    const markdown = entries.map(entry => {
+      const tags = entry.tags.map(t => `#${t}`).join(' ');
+      return `# ${entry.title}\n\n**Created:** ${formatDate(entry.createdAt)}\n**Category:** ${entry.category}\n**Tags:** ${tags}\n**Mood:** ${entry.mood || 'N/A'}\n\n${entry.content}\n\n---\n\n`;
+    }).join('');
+    
+    const blob = new Blob([markdown], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `journal-export-${new Date().toISOString().split('T')[0]}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  
+  const toggleFavorite = () => {
+    if (!selectedEntry) return;
+    updateEntry({ isFavorite: !selectedEntry.isFavorite });
+  };
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -145,7 +200,9 @@ export function JournalTemplate({ title = "My Journal", notebookId }: JournalTem
   };
 
   return (
-    <div className="min-h-screen bg-stone-50 dark:bg-neutral-950 flex">
+    <div className="min-h-screen bg-stone-50 dark:bg-neutral-950 flex flex-col">
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex overflow-hidden">
       {saving && (
         <div className="fixed top-20 right-6 flex items-center gap-2 text-sm text-neutral-500 bg-white dark:bg-neutral-800 px-3 py-2 rounded-lg shadow-lg z-50">
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -163,6 +220,20 @@ export function JournalTemplate({ title = "My Journal", notebookId }: JournalTem
               {title}
             </h2>
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowStats(!showStats)}
+                className="p-2 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-400 rounded-lg"
+                title="Statistics"
+              >
+                <TrendingUp className="w-4 h-4" />
+              </button>
+              <button
+                onClick={exportToMarkdown}
+                className="p-2 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-400 rounded-lg"
+                title="Export to Markdown"
+              >
+                <Download className="w-4 h-4" />
+              </button>
               <button
                 onClick={() => setShowDocumentation(true)}
                 className="p-2 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-600 dark:text-stone-400 rounded-lg"
@@ -191,35 +262,90 @@ export function JournalTemplate({ title = "My Journal", notebookId }: JournalTem
             />
           </div>
 
-          {/* Tag Filter */}
-          {allTags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
+          {/* Filters */}
+          <div className="space-y-2">
+            {/* Favorites & Category Filter */}
+            <div className="flex items-center gap-2">
               <button
-                onClick={() => setFilterTag(null)}
-                className={`px-2 py-1 rounded text-xs ${
-                  filterTag === null
-                    ? 'bg-stone-600 text-white'
+                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${
+                  showFavoritesOnly
+                    ? 'bg-amber-500 text-white'
                     : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
                 }`}
               >
-                All
+                <Star className="w-3 h-3" />
+                Favorites
               </button>
-              {allTags.map(tag => (
+              {allCategories.length > 0 && (
+                <select
+                  value={filterCategory || ''}
+                  onChange={(e) => setFilterCategory(e.target.value || null)}
+                  className="flex-1 px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded text-xs outline-none"
+                >
+                  <option value="">All Categories</option>
+                  {allCategories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              )}
+            </div>
+            
+            {/* Tag Filter */}
+            {allTags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
                 <button
-                  key={tag}
-                  onClick={() => setFilterTag(tag)}
+                  onClick={() => setFilterTag(null)}
                   className={`px-2 py-1 rounded text-xs ${
-                    filterTag === tag
+                    filterTag === null
                       ? 'bg-stone-600 text-white'
                       : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
                   }`}
                 >
-                  #{tag}
+                  All Tags
                 </button>
-              ))}
-            </div>
-          )}
+                {allTags.map(tag => (
+                  <button
+                    key={tag}
+                    onClick={() => setFilterTag(tag)}
+                    className={`px-2 py-1 rounded text-xs ${
+                      filterTag === tag
+                        ? 'bg-stone-600 text-white'
+                        : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400'
+                    }`}
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Statistics Panel */}
+        {showStats && (
+          <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 bg-stone-50 dark:bg-stone-900/30">
+            <h3 className="text-xs font-bold uppercase tracking-wide text-neutral-500 mb-2">Statistics</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-white dark:bg-neutral-800 rounded-lg p-2">
+                <p className="text-xs text-neutral-500">Total Entries</p>
+                <p className="text-lg font-bold text-stone-600 dark:text-stone-400">{totalEntries}</p>
+              </div>
+              <div className="bg-white dark:bg-neutral-800 rounded-lg p-2">
+                <p className="text-xs text-neutral-500">Total Words</p>
+                <p className="text-lg font-bold text-stone-600 dark:text-stone-400">{totalWords.toLocaleString()}</p>
+              </div>
+              <div className="bg-white dark:bg-neutral-800 rounded-lg p-2">
+                <p className="text-xs text-neutral-500">Favorites</p>
+                <p className="text-lg font-bold text-amber-600 dark:text-amber-400">{favoriteCount}</p>
+              </div>
+              <div className="bg-white dark:bg-neutral-800 rounded-lg p-2">
+                <p className="text-xs text-neutral-500">Avg Words</p>
+                <p className="text-lg font-bold text-stone-600 dark:text-stone-400">{totalEntries > 0 ? Math.round(totalWords / totalEntries) : 0}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Entries List */}
         <div className="flex-1 overflow-auto">
@@ -255,6 +381,8 @@ export function JournalTemplate({ title = "My Journal", notebookId }: JournalTem
                         <Clock className="w-3 h-3" />
                         {formatDate(entry.updatedAt)}
                       </span>
+                      {entry.mood && moodIcons[entry.mood]}
+                      {entry.isFavorite && <Star className="w-3 h-3 text-amber-500 fill-amber-500" />}
                       {entry.tags.length > 0 && (
                         <span className="text-xs text-stone-500">
                           #{entry.tags[0]}{entry.tags.length > 1 && ` +${entry.tags.length - 1}`}
@@ -281,17 +409,69 @@ export function JournalTemplate({ title = "My Journal", notebookId }: JournalTem
           <>
             {/* Entry Header */}
             <div className="p-6 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
-              <input
-                type="text"
-                value={selectedEntry.title}
-                onChange={(e) => updateEntry({ title: e.target.value })}
-                placeholder="Entry title..."
-                className="w-full text-2xl font-bold text-neutral-900 dark:text-white bg-transparent border-none outline-none placeholder-neutral-300"
-              />
-              <div className="flex items-center gap-4 mt-3 text-sm text-neutral-500">
+              <div className="flex items-start gap-3">
+                <input
+                  type="text"
+                  value={selectedEntry.title}
+                  onChange={(e) => updateEntry({ title: e.target.value })}
+                  placeholder="Entry title..."
+                  className="flex-1 text-2xl font-bold text-neutral-900 dark:text-white bg-transparent border-none outline-none placeholder-neutral-300"
+                />
+                <button
+                  onClick={toggleFavorite}
+                  className="p-2 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                  title={selectedEntry.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  <Star className={`w-5 h-5 ${selectedEntry.isFavorite ? 'text-amber-500 fill-amber-500' : 'text-neutral-400'}`} />
+                </button>
+              </div>
+              <div className="flex items-center gap-4 mt-3 text-sm text-neutral-500 flex-wrap">
                 <span>Created {formatDate(selectedEntry.createdAt)} at {formatTime(selectedEntry.createdAt)}</span>
                 <span>•</span>
                 <span>Updated {formatDate(selectedEntry.updatedAt)}</span>
+                <span>•</span>
+                <span className="flex items-center gap-1">
+                  <FileText className="w-3 h-3" />
+                  {currentWordCount} words
+                </span>
+              </div>
+
+              {/* Category & Mood */}
+              <div className="flex items-center gap-4 mt-3">
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-neutral-500">Category:</label>
+                  <select
+                    value={selectedEntry.category}
+                    onChange={(e) => updateEntry({ category: e.target.value })}
+                    className="px-2 py-1 bg-neutral-100 dark:bg-neutral-800 rounded text-xs outline-none"
+                  >
+                    <option value="Personal">Personal</option>
+                    <option value="Work">Work</option>
+                    <option value="Ideas">Ideas</option>
+                    <option value="Goals">Goals</option>
+                    <option value="Learning">Learning</option>
+                    <option value="Travel">Travel</option>
+                    <option value="Health">Health</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-neutral-500">Mood:</label>
+                  <div className="flex gap-1">
+                    {(['happy', 'neutral', 'sad'] as const).map(mood => (
+                      <button
+                        key={mood}
+                        onClick={() => updateEntry({ mood: selectedEntry.mood === mood ? null : mood })}
+                        className={`p-1.5 rounded ${
+                          selectedEntry.mood === mood
+                            ? 'bg-stone-200 dark:bg-stone-700'
+                            : 'hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                        }`}
+                      >
+                        {moodIcons[mood]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               {/* Tags */}
@@ -602,6 +782,8 @@ Let your mind flow freely. This is your private space to reflect, explore ideas,
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

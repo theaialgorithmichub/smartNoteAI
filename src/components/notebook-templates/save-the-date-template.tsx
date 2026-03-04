@@ -1,8 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { CalendarDays, Plus, Bell, Clock, MapPin, Trash2, Edit2, AlertCircle, BellRing, Info, X, Check } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Calendar, Plus, Bell, Trash2, X, Info, BellRing, AlertCircle, CalendarDays, Clock, MapPin, Check } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 import { Button } from '@/components/ui/button';
 
 interface SaveTheDateTemplateProps {
@@ -28,6 +31,8 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; eventId: number | null; eventTitle: string }>({ show: false, eventId: null, eventTitle: '' });
   const [showDocumentation, setShowDocumentation] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [searchDate, setSearchDate] = useState('');
+  const [filterCategory, setFilterCategory] = useState('All');
   const saveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const saveData = () => {
@@ -142,9 +147,26 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
     }
   };
 
+  // Filter events based on search date and category
+  const filteredEvents = events.filter(event => {
+    const matchesDate = !searchDate || event.date.includes(new Date(searchDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
+    const matchesCategory = filterCategory === 'All' || event.category === filterCategory;
+    return matchesDate && matchesCategory;
+  });
+
+  // Quick date selection helper
+  const setQuickDate = (daysFromNow: number) => {
+    const date = new Date();
+    date.setDate(date.getDate() + daysFromNow);
+    const formattedDate = date.toISOString().split('T')[0];
+    setNewEvent({ ...newEvent, date: formattedDate });
+  };
+
   return (
-    <div className="h-full bg-gradient-to-br from-rose-50 to-pink-50 dark:from-neutral-900 dark:to-neutral-800 p-8 overflow-y-auto">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-rose-50 to-pink-50 dark:from-neutral-900 dark:to-neutral-800">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-6xl mx-auto space-y-6">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-2">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
@@ -202,6 +224,11 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
         <Card className="p-6 bg-white dark:bg-neutral-800">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Add New Event</h3>
+            <div className="flex gap-2">
+              <button onClick={() => setQuickDate(0)} className="px-3 py-1 text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors">Today</button>
+              <button onClick={() => setQuickDate(1)} className="px-3 py-1 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors">Tomorrow</button>
+              <button onClick={() => setQuickDate(7)} className="px-3 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors">Next Week</button>
+            </div>
           </div>
           <div className="space-y-3">
             <div className="grid md:grid-cols-2 gap-3">
@@ -254,15 +281,69 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
           </div>
         </Card>
 
+        <Card className="p-6 bg-white dark:bg-neutral-800">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Search & Filter Events</h3>
+          </div>
+          <div className="grid md:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">Search by Date</label>
+              <input 
+                type="date" 
+                value={searchDate}
+                onChange={(e) => setSearchDate(e.target.value)}
+                className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500" 
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">Filter by Category</label>
+              <select
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+              >
+                <option value="All">All Categories</option>
+                <option value="Personal">Personal</option>
+                <option value="Work">Work</option>
+                <option value="Health">Health</option>
+                <option value="Social">Social</option>
+              </select>
+            </div>
+            <div className="flex items-end">
+              <Button 
+                onClick={() => { setSearchDate(''); setFilterCategory('All'); }}
+                className="w-full bg-neutral-500 text-white hover:bg-neutral-600"
+              >
+                Clear Filters
+              </Button>
+            </div>
+          </div>
+          {(searchDate || filterCategory !== 'All') && (
+            <div className="mt-3 p-3 bg-rose-50 dark:bg-rose-900/20 rounded-lg border border-rose-200 dark:border-rose-800">
+              <p className="text-sm text-rose-700 dark:text-rose-400">
+                Showing {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''}
+                {searchDate && ` on ${new Date(searchDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`}
+                {filterCategory !== 'All' && ` in ${filterCategory} category`}
+              </p>
+            </div>
+          )}
+        </Card>
+
         {events.length === 0 ? (
           <Card className="p-12 bg-white dark:bg-neutral-800 text-center">
             <CalendarDays className="h-16 w-16 text-neutral-400 mx-auto mb-4" />
             <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">No Events Yet</h3>
             <p className="text-neutral-600 dark:text-neutral-400">Add your first event to start tracking important dates</p>
           </Card>
+        ) : filteredEvents.length === 0 ? (
+          <Card className="p-12 bg-white dark:bg-neutral-800 text-center">
+            <CalendarDays className="h-16 w-16 text-neutral-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">No Events Found</h3>
+            <p className="text-neutral-600 dark:text-neutral-400">No events match your search criteria. Try adjusting your filters.</p>
+          </Card>
         ) : (
           <div className="space-y-3">
-            {events.sort((a, b) => a.daysUntil - b.daysUntil).map(event => {
+            {filteredEvents.sort((a, b) => a.daysUntil - b.daysUntil).map(event => {
               const color = getCategoryColor(event.category);
               const isPast = event.daysUntil < 0;
               return (
@@ -573,7 +654,9 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
             </Card>
           </div>
         )}
+        </div>
       </div>
+      <TemplateFooter />
     </div>
   );
 }

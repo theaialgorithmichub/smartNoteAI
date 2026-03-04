@@ -22,6 +22,8 @@ import {
   Clock,
   Palette
 } from "lucide-react";
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 
 interface Character {
   id: string;
@@ -274,7 +276,9 @@ Please provide creative, detailed assistance.`,
   };
 
   return (
-    <div className="min-h-screen bg-amber-50/30 dark:bg-neutral-950 flex">
+    <div className="min-h-screen bg-amber-50/30 dark:bg-neutral-950 flex flex-col">
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex overflow-hidden">
       {saving && (
         <div className="fixed top-20 right-6 flex items-center gap-2 text-sm text-neutral-500 bg-white dark:bg-neutral-800 px-3 py-2 rounded-lg shadow-lg z-50">
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -908,6 +912,8 @@ Please provide creative, detailed assistance.`,
           </div>
         )}
       </div>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

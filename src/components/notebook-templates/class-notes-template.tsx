@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BookOpen, Calendar, CheckSquare, Plus, Clock, Bell, Info, X, Trash2, Edit2, Search } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 
 interface Lecture {
   id: string;
@@ -197,9 +199,11 @@ export function ClassNotesTemplate({ title, notebookId }: ClassNotesTemplateProp
   const getLectureCountBySubject = (subjectId: string) => lectures.filter(l => l.subject === subjectId).length;
 
   return (
-    <div className="h-full bg-gradient-to-br from-purple-50 to-pink-50 dark:from-neutral-900 dark:to-neutral-800 p-8 overflow-y-auto">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-50 to-pink-50 dark:from-neutral-900 dark:to-neutral-800">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-4 mb-2">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -443,18 +447,29 @@ export function ClassNotesTemplate({ title, notebookId }: ClassNotesTemplateProp
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
                 onClick={e => e.stopPropagation()}
-                className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto"
+                className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-5xl p-8 max-h-[90vh] overflow-y-auto"
               >
-                <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-4">
-                  {isEditingLecture ? 'Edit Lecture' : 'Add Lecture'}
-                </h3>
-                <div className="space-y-4">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl">
+                    <BookOpen className="h-8 w-8 text-white" />
+                  </div>
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Subject</label>
+                    <h3 className="text-2xl font-black text-neutral-900 dark:text-white">
+                      {isEditingLecture ? 'Edit Lecture' : 'Add New Lecture'}
+                    </h3>
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400">Record your class notes and save for a specific date</p>
+                  </div>
+                </div>
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-base font-bold text-neutral-700 dark:text-neutral-300 mb-3 flex items-center gap-2">
+                      <BookOpen className="h-5 w-5 text-purple-600" />
+                      Subject *
+                    </label>
                     <select
                       value={newLecture.subject}
                       onChange={(e) => setNewLecture({ ...newLecture, subject: e.target.value })}
-                      className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-5 py-4 text-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-300 dark:border-purple-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all font-medium text-neutral-900 dark:text-white"
                     >
                       <option value="">Select a subject</option>
                       {subjects.map(subject => (
@@ -463,54 +478,64 @@ export function ClassNotesTemplate({ title, notebookId }: ClassNotesTemplateProp
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Lecture Title</label>
+                    <label className="block text-base font-bold text-neutral-700 dark:text-neutral-300 mb-3 flex items-center gap-2">
+                      <Edit2 className="h-5 w-5 text-pink-600" />
+                      Lecture Title *
+                    </label>
                     <input
                       type="text"
                       value={newLecture.title}
                       onChange={(e) => setNewLecture({ ...newLecture, title: e.target.value })}
                       placeholder="e.g., Introduction to Calculus"
-                      className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-5 py-4 text-lg bg-gradient-to-r from-pink-50 to-purple-50 dark:from-pink-900/20 dark:to-purple-900/20 border-2 border-pink-300 dark:border-pink-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all font-medium text-neutral-900 dark:text-white"
+                      autoFocus
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Date</label>
+                      <label className="block text-base font-bold text-neutral-700 dark:text-neutral-300 mb-3 flex items-center gap-2">
+                        <Calendar className="h-5 w-5 text-blue-600" />
+                        Lecture Date * 📅
+                      </label>
                       <input
                         type="date"
                         value={newLecture.date}
                         onChange={(e) => setNewLecture({ ...newLecture, date: e.target.value })}
-                        className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-5 py-4 text-lg bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border-2 border-blue-300 dark:border-blue-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium text-neutral-900 dark:text-white"
                       />
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">💡 Lecture will be saved for this date</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Duration (optional)</label>
+                      <label className="block text-base font-bold text-neutral-700 dark:text-neutral-300 mb-3 flex items-center gap-2">
+                        <Clock className="h-5 w-5 text-cyan-600" />
+                        Duration (optional)
+                      </label>
                       <input
                         type="text"
                         value={newLecture.duration}
                         onChange={(e) => setNewLecture({ ...newLecture, duration: e.target.value })}
                         placeholder="e.g., 90 min"
-                        className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full px-5 py-4 text-lg bg-gradient-to-r from-cyan-50 to-teal-50 dark:from-cyan-900/20 dark:to-teal-900/20 border-2 border-cyan-300 dark:border-cyan-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all font-medium text-neutral-900 dark:text-white"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Notes</label>
+                    <label className="block text-base font-bold text-neutral-700 dark:text-neutral-300 mb-3 flex items-center gap-2">
+                      <Edit2 className="h-5 w-5 text-indigo-600" />
+                      Lecture Notes
+                    </label>
                     <textarea
                       value={newLecture.notes}
                       onChange={(e) => setNewLecture({ ...newLecture, notes: e.target.value })}
-                      placeholder="Write your lecture notes here..."
-                      rows={12}
-                      className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y"
+                      placeholder="Write your detailed lecture notes here... Take comprehensive notes during class."
+                      rows={20}
+                      className="w-full px-5 py-4 text-base bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-indigo-900/20 dark:via-purple-900/20 dark:to-pink-900/20 border-2 border-indigo-300 dark:border-indigo-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-neutral-900 dark:text-white leading-relaxed resize-y"
                     />
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
+                      📝 {newLecture.notes?.length || 0} characters • Tip: Include key concepts, formulas, and examples
+                    </p>
                   </div>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={isEditingLecture ? updateLecture : addLecture}
-                      disabled={!newLecture.subject || !newLecture.title?.trim()}
-                      className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-                    >
-                      {isEditingLecture ? 'Update Lecture' : 'Add Lecture'}
-                    </button>
+                  <div className="flex gap-4 pt-6 border-t border-neutral-200 dark:border-neutral-700">
                     <button
                       onClick={() => {
                         setIsAddingLecture(false);
@@ -526,9 +551,17 @@ export function ClassNotesTemplate({ title, notebookId }: ClassNotesTemplateProp
                           color: 'blue'
                         });
                       }}
-                      className="flex-1 px-4 py-2 bg-neutral-200 dark:bg-neutral-700 text-neutral-900 dark:text-white rounded-lg hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors"
+                      className="flex-1 px-6 py-3 bg-neutral-200 dark:bg-neutral-700 text-neutral-900 dark:text-white rounded-xl hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors font-semibold text-lg"
                     >
                       Cancel
+                    </button>
+                    <button
+                      onClick={isEditingLecture ? updateLecture : addLecture}
+                      disabled={!newLecture.subject || !newLecture.title?.trim()}
+                      className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl hover:shadow-lg hover:shadow-purple-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-lg flex items-center justify-center gap-2"
+                    >
+                      <Plus className="h-5 w-5" />
+                      {isEditingLecture ? 'Update Lecture' : 'Save Lecture'}
                     </button>
                   </div>
                 </div>
@@ -607,18 +640,17 @@ export function ClassNotesTemplate({ title, notebookId }: ClassNotesTemplateProp
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
-      {/* Documentation Modal */}
-      <AnimatePresence>
-        {showDocumentation && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-            onClick={() => setShowDocumentation(false)}
-          >
+        {/* Documentation Modal */}
+        <AnimatePresence>
+          {showDocumentation && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+              onClick={() => setShowDocumentation(false)}
+            >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -757,9 +789,12 @@ export function ClassNotesTemplate({ title, notebookId }: ClassNotesTemplateProp
                 </button>
               </div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        </div>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

@@ -65,13 +65,13 @@ export default function TemplatesPage() {
       case 'document':
         return <DocumentTemplate title="Sales and Growth Review / Q1 2024" />;
       case 'dashboard':
-        return <DashboardTemplate />;
+        return <DashboardTemplate title="Dashboard" />;
       case 'code-notebook':
         return <CodeNotebookTemplate title="Untitled Notebook" />;
       case 'planner':
         return <PlannerTemplate title="Interview: AI Use Cases In Design 🎨" />;
       case 'ai-research':
-        return <AIResearchTemplate />;
+        return <AIResearchTemplate title="AI Research" />;
       case 'diary':
         return <DiaryTemplate title="My Daily Diary" />;
       case 'doodle':

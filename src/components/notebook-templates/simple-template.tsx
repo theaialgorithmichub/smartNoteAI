@@ -1,9 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ChevronLeft, ChevronRight, Plus, Sparkles, Zap, Layers } from "lucide-react"
-import { PageContent } from "@/components/notebook/page-content"
+import { TemplateHeader } from './template-header'
+import { TemplateFooter } from './template-footer'
+import { ChevronLeft, ChevronRight, Plus, List, Hash, BookOpen, Save, Palette } from "lucide-react"
+import { QuillEditor } from "@/components/notebook/quill-editor"
 
 interface Page {
   _id: string
@@ -14,6 +16,7 @@ interface Page {
 }
 
 interface SimpleTemplateProps {
+  title: string
   notebookId: string
   pages: Page[]
   onUpdate: () => void
@@ -25,7 +28,162 @@ interface SimpleTemplateProps {
   }
 }
 
+interface TOCPage {
+  pageNumber: number
+  title: string
+  _id: string
+}
+
+interface Theme {
+  name: string
+  background: string
+  headerBg: string
+  headerText: string
+  contentBg: string
+  contentText: string
+  accent: string
+}
+
+const THEMES: Theme[] = [
+  {
+    name: "Classic",
+    background: "from-slate-900 via-slate-800 to-slate-900",
+    headerBg: "bg-slate-800/90",
+    headerText: "text-slate-200",
+    contentBg: "bg-white dark:bg-slate-900",
+    contentText: "text-slate-900 dark:text-slate-100",
+    accent: "from-purple-500 to-cyan-500"
+  },
+  {
+    name: "Ocean",
+    background: "from-blue-900 via-cyan-900 to-blue-900",
+    headerBg: "bg-cyan-800/90",
+    headerText: "text-cyan-100",
+    contentBg: "bg-cyan-50 dark:bg-blue-950",
+    contentText: "text-blue-900 dark:text-cyan-100",
+    accent: "from-blue-500 to-cyan-400"
+  },
+  {
+    name: "Forest",
+    background: "from-green-900 via-emerald-900 to-green-900",
+    headerBg: "bg-emerald-800/90",
+    headerText: "text-emerald-100",
+    contentBg: "bg-green-50 dark:bg-green-950",
+    contentText: "text-green-900 dark:text-emerald-100",
+    accent: "from-green-500 to-emerald-400"
+  },
+  {
+    name: "Sunset",
+    background: "from-orange-900 via-rose-900 to-orange-900",
+    headerBg: "bg-rose-800/90",
+    headerText: "text-rose-100",
+    contentBg: "bg-orange-50 dark:bg-rose-950",
+    contentText: "text-orange-900 dark:text-rose-100",
+    accent: "from-orange-500 to-rose-400"
+  },
+  {
+    name: "Lavender",
+    background: "from-purple-900 via-violet-900 to-purple-900",
+    headerBg: "bg-violet-800/90",
+    headerText: "text-violet-100",
+    contentBg: "bg-purple-50 dark:bg-violet-950",
+    contentText: "text-purple-900 dark:text-violet-100",
+    accent: "from-purple-500 to-violet-400"
+  },
+  {
+    name: "Amber",
+    background: "from-amber-900 via-yellow-900 to-amber-900",
+    headerBg: "bg-yellow-800/90",
+    headerText: "text-amber-100",
+    contentBg: "bg-amber-50 dark:bg-amber-950",
+    contentText: "text-amber-900 dark:text-amber-100",
+    accent: "from-amber-500 to-yellow-400"
+  },
+  {
+    name: "Midnight",
+    background: "from-indigo-950 via-slate-950 to-indigo-950",
+    headerBg: "bg-indigo-900/90",
+    headerText: "text-indigo-100",
+    contentBg: "bg-indigo-50 dark:bg-indigo-950",
+    contentText: "text-indigo-900 dark:text-indigo-100",
+    accent: "from-indigo-500 to-blue-500"
+  },
+  {
+    name: "Rose Gold",
+    background: "from-pink-900 via-rose-900 to-pink-900",
+    headerBg: "bg-pink-800/90",
+    headerText: "text-pink-100",
+    contentBg: "bg-pink-50 dark:bg-pink-950",
+    contentText: "text-pink-900 dark:text-pink-100",
+    accent: "from-pink-500 to-rose-400"
+  },
+  {
+    name: "Mint",
+    background: "from-teal-900 via-green-900 to-teal-900",
+    headerBg: "bg-teal-800/90",
+    headerText: "text-teal-100",
+    contentBg: "bg-teal-50 dark:bg-teal-950",
+    contentText: "text-teal-900 dark:text-teal-100",
+    accent: "from-teal-500 to-green-400"
+  },
+  {
+    name: "Crimson",
+    background: "from-red-900 via-rose-900 to-red-900",
+    headerBg: "bg-red-800/90",
+    headerText: "text-red-100",
+    contentBg: "bg-red-50 dark:bg-red-950",
+    contentText: "text-red-900 dark:text-red-100",
+    accent: "from-red-500 to-rose-400"
+  },
+  {
+    name: "Sky",
+    background: "from-sky-900 via-blue-900 to-sky-900",
+    headerBg: "bg-sky-800/90",
+    headerText: "text-sky-100",
+    contentBg: "bg-sky-50 dark:bg-sky-950",
+    contentText: "text-sky-900 dark:text-sky-100",
+    accent: "from-sky-500 to-blue-400"
+  },
+  {
+    name: "Lime",
+    background: "from-lime-900 via-green-900 to-lime-900",
+    headerBg: "bg-lime-800/90",
+    headerText: "text-lime-100",
+    contentBg: "bg-lime-50 dark:bg-lime-950",
+    contentText: "text-lime-900 dark:text-lime-100",
+    accent: "from-lime-500 to-green-400"
+  },
+  {
+    name: "Fuchsia",
+    background: "from-fuchsia-900 via-purple-900 to-fuchsia-900",
+    headerBg: "bg-fuchsia-800/90",
+    headerText: "text-fuchsia-100",
+    contentBg: "bg-fuchsia-50 dark:bg-fuchsia-950",
+    contentText: "text-fuchsia-900 dark:text-fuchsia-100",
+    accent: "from-fuchsia-500 to-purple-400"
+  },
+  {
+    name: "Chocolate",
+    background: "from-stone-900 via-amber-950 to-stone-900",
+    headerBg: "bg-stone-800/90",
+    headerText: "text-amber-100",
+    contentBg: "bg-amber-50 dark:bg-stone-950",
+    contentText: "text-stone-900 dark:text-amber-100",
+    accent: "from-amber-600 to-orange-500"
+  },
+  {
+    name: "Slate Blue",
+    background: "from-slate-900 via-blue-950 to-slate-900",
+    headerBg: "bg-slate-800/90",
+    headerText: "text-blue-200",
+    contentBg: "bg-slate-50 dark:bg-slate-950",
+    contentText: "text-slate-900 dark:text-blue-100",
+    accent: "from-slate-500 to-blue-500"
+  }
+]
+
 export function SimpleTemplate({ 
+  title,
   notebookId, 
   pages, 
   onUpdate, 
@@ -33,246 +191,445 @@ export function SimpleTemplate({
   appearance 
 }: SimpleTemplateProps) {
   const [currentPage, setCurrentPage] = useState(0)
+  const [showTOC, setShowTOC] = useState(false)
+  const [showGotoPage, setShowGotoPage] = useState(false)
+  const [gotoPageNumber, setGotoPageNumber] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
   const [isFlipping, setIsFlipping] = useState(false)
-  const [flipDirection, setFlipDirection] = useState<'forward' | 'backward'>('forward')
+  const [flipDirection, setFlipDirection] = useState<'next' | 'prev'>('next')
+  const [currentTheme, setCurrentTheme] = useState<Theme>(THEMES[0])
+  const [showThemeSelector, setShowThemeSelector] = useState(false)
+  const [notebookTitle, setNotebookTitle] = useState('My Notebook')
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const flushRef = useRef<(() => Promise<void>) | null>(null)
 
   const handleNextPage = () => {
     if (currentPage < pages.length - 1 && !isFlipping) {
       setIsFlipping(true)
-      setFlipDirection('forward')
+      setFlipDirection('next')
       setTimeout(() => {
         setCurrentPage(currentPage + 1)
         setIsFlipping(false)
-      }, 600)
+      }, 400)
     }
   }
 
   const handlePrevPage = () => {
     if (currentPage > 0 && !isFlipping) {
       setIsFlipping(true)
-      setFlipDirection('backward')
+      setFlipDirection('prev')
       setTimeout(() => {
         setCurrentPage(currentPage - 1)
         setIsFlipping(false)
-      }, 600)
+      }, 400)
     }
   }
 
+  const handleGotoPage = () => {
+    const pageNum = parseInt(gotoPageNumber)
+    if (pageNum >= 1 && pageNum <= pages.length && !isFlipping) {
+      setIsFlipping(true)
+      setFlipDirection(pageNum > currentPage + 1 ? 'next' : 'prev')
+      setTimeout(() => {
+        setCurrentPage(pageNum - 1)
+        setShowGotoPage(false)
+        setGotoPageNumber('')
+        setIsFlipping(false)
+      }, 400)
+    }
+  }
+
+  const handleContentChange = async (pageId: string, content: string, title: string) => {
+    // Trigger parent refresh to update TOC when title changes
+    // QuillEditor auto-saves, but we need to refresh the pages data
+    onUpdate()
+  }
+
   const page = pages[currentPage]
+  const tocPages: TOCPage[] = pages.map(p => ({
+    pageNumber: p.pageNumber,
+    title: p.title || `Page ${p.pageNumber}`,
+    _id: p._id
+  }))
+  
+  // Refresh TOC when pages data changes (after title updates)
+  useEffect(() => {
+    // Force re-render of TOC when pages change
+  }, [pages])
+  
+  // Check if we're on the first page (TOC page)
+  const isOnTOCPage = currentPage === 0
 
   return (
-    <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 relative overflow-hidden">
-      {/* Animated Background Effects */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-purple-500/5 to-cyan-500/5 rounded-full blur-3xl animate-spin-slow" />
+    <div className={`min-h-screen flex flex-col bg-gradient-to-br ${currentTheme.background} relative overflow-hidden transition-colors duration-500`}>
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto">
+      {/* Header Section */}
+      <div className={`flex-shrink-0 ${currentTheme.headerBg} backdrop-blur-sm border-b border-slate-700/50 transition-colors duration-500`}>
+        {/* Notebook Title Header */}
+        <div className="px-6 py-4 border-b border-slate-700/30">
+          {isEditingTitle ? (
+            <input
+              type="text"
+              value={notebookTitle}
+              onChange={(e) => setNotebookTitle(e.target.value)}
+              onBlur={() => setIsEditingTitle(false)}
+              onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
+              className={`text-2xl font-bold ${currentTheme.headerText} bg-transparent border-b-2 border-white/30 outline-none px-2 py-1`}
+              autoFocus
+            />
+          ) : (
+            <h1 
+              onClick={() => setIsEditingTitle(true)}
+              className={`text-2xl font-bold ${currentTheme.headerText} cursor-pointer hover:opacity-80 transition-opacity`}
+            >
+              {notebookTitle}
+            </h1>
+          )}
+        </div>
+        
+        {/* Toolbar */}
+        <div className="px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <BookOpen className={`h-5 w-5 ${currentTheme.headerText} opacity-80`} />
+            <span className={`text-sm font-semibold ${currentTheme.headerText}`}>
+              Page {currentPage + 1} of {pages.length}
+            </span>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowTOC(!showTOC)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${currentTheme.headerText} bg-white/10 hover:bg-white/20 text-sm transition-colors`}
+            >
+              <List className="h-4 w-4" />
+              Table of Contents
+            </button>
+            
+            <button
+              onClick={() => setShowGotoPage(!showGotoPage)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${currentTheme.headerText} bg-white/10 hover:bg-white/20 text-sm transition-colors`}
+            >
+              <Hash className="h-4 w-4" />
+              Go to Page
+            </button>
+            
+            <button
+              onClick={() => setShowThemeSelector(!showThemeSelector)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${currentTheme.headerText} bg-white/10 hover:bg-white/20 text-sm transition-colors`}
+            >
+              <Palette className="h-4 w-4" />
+              Theme
+            </button>
+            
+            {isSaving && (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/20 text-green-300 text-sm">
+                <Save className="h-4 w-4 animate-pulse" />
+                Saving...
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Grid Pattern Overlay */}
-      <div className="absolute inset-0 opacity-10" style={{
-        backgroundImage: `linear-gradient(rgba(139, 92, 246, 0.3) 1px, transparent 1px),
-                         linear-gradient(90deg, rgba(139, 92, 246, 0.3) 1px, transparent 1px)`,
-        backgroundSize: '50px 50px'
-      }} />
+      {/* Main Content Area */}
+      <div className="flex-1 flex items-center justify-center p-6 relative overflow-hidden">
+        {/* Navigation Buttons */}
+        <button
+          onClick={handlePrevPage}
+          disabled={currentPage === 0}
+          className="absolute left-4 z-10 p-3 rounded-full bg-slate-700/80 hover:bg-slate-600/80 border border-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <ChevronLeft className="h-6 w-6 text-slate-200" />
+        </button>
 
-      {/* Navigation Buttons */}
-      <button
-        onClick={handlePrevPage}
-        disabled={currentPage === 0 || isFlipping}
-        className="absolute left-8 z-50 p-4 rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 backdrop-blur-xl border border-purple-500/30 hover:border-purple-400/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 hover:scale-110 shadow-lg shadow-purple-500/20"
-      >
-        <ChevronLeft className="h-8 w-8 text-purple-300" />
-      </button>
+        <button
+          onClick={handleNextPage}
+          disabled={currentPage === pages.length - 1}
+          className="absolute right-4 z-10 p-3 rounded-full bg-slate-700/80 hover:bg-slate-600/80 border border-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+        >
+          <ChevronRight className="h-6 w-6 text-slate-200" />
+        </button>
 
-      <button
-        onClick={handleNextPage}
-        disabled={currentPage === pages.length - 1 || isFlipping}
-        className="absolute right-8 z-50 p-4 rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 backdrop-blur-xl border border-cyan-500/30 hover:border-cyan-400/50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 hover:scale-110 shadow-lg shadow-cyan-500/20"
-      >
-        <ChevronRight className="h-8 w-8 text-cyan-300" />
-      </button>
-
-      {/* Main Notebook Container */}
-      <div className="relative" style={{ perspective: '2000px' }}>
+        {/* Page Container - Maximum writing space */}
         <AnimatePresence mode="wait">
           <motion.div
             key={currentPage}
             initial={{
-              rotateY: flipDirection === 'forward' ? -90 : 90,
-              opacity: 0,
-              scale: 0.8
+              rotateY: flipDirection === 'next' ? 90 : -90,
+              opacity: 0
             }}
             animate={{
               rotateY: 0,
-              opacity: 1,
-              scale: 1
+              opacity: 1
             }}
             exit={{
-              rotateY: flipDirection === 'forward' ? 90 : -90,
-              opacity: 0,
-              scale: 0.8
+              rotateY: flipDirection === 'next' ? -90 : 90,
+              opacity: 0
             }}
             transition={{
-              duration: 0.6,
+              duration: 0.4,
               ease: [0.43, 0.13, 0.23, 0.96]
             }}
-            className="relative"
+            className="w-full max-w-[1400px] h-full"
             style={{ transformStyle: 'preserve-3d' }}
           >
-            {/* Notebook */}
-            <div 
-              className="relative rounded-3xl overflow-hidden shadow-2xl"
-              style={{
-                width: '900px',
-                height: '650px',
-                boxShadow: `
-                  0 0 80px rgba(139, 92, 246, 0.4),
-                  0 0 40px rgba(6, 182, 212, 0.3),
-                  inset 0 0 60px rgba(139, 92, 246, 0.1)
-                `
-              }}
-            >
-              {/* Glassmorphism Background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-purple-500/5 to-cyan-500/10 backdrop-blur-2xl" />
-              
-              {/* Border Glow */}
-              <div className="absolute inset-0 rounded-3xl border-2 border-purple-500/30" />
-              <div className="absolute inset-0 rounded-3xl border border-cyan-500/20" />
-
-              {/* Top Bar with Neon Accent */}
-              <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-r from-purple-500/20 via-cyan-500/20 to-purple-500/20 backdrop-blur-xl border-b border-purple-500/30 flex items-center justify-between px-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 animate-pulse shadow-lg shadow-purple-500/50" />
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-r from-cyan-500 to-purple-500 animate-pulse delay-150 shadow-lg shadow-cyan-500/50" />
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-cyan-500 animate-pulse delay-300 shadow-lg shadow-purple-500/50" />
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-purple-400 animate-pulse" />
-                  <span className="text-sm font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-                    Page {currentPage + 1} of {pages.length}
-                  </span>
-                  <Zap className="h-5 w-5 text-cyan-400 animate-pulse" />
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Layers className="h-5 w-5 text-purple-400" />
-                </div>
-              </div>
-
-              {/* Page Content Area */}
-              <div className="absolute top-16 left-0 right-0 bottom-0 overflow-auto">
-                <div className="p-12">
-                  {/* Holographic Page Title */}
-                  {page?.title && (
-                    <div className="mb-8 pb-4 border-b border-purple-500/20">
-                      <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent animate-gradient">
-                        {page.title}
-                      </h2>
+            <div className={`w-full h-full ${currentTheme.contentBg} rounded-lg shadow-2xl border border-slate-700/50 overflow-hidden flex flex-col transition-colors duration-500`}>
+              {/* Page Content */}
+              <div className="flex-1 overflow-auto">
+                {isOnTOCPage ? (
+                  // First Page: Table of Contents
+                  <div className="p-12">
+                    <div className="mb-8">
+                      <h1 className={`text-4xl font-bold ${currentTheme.contentText} mb-2`}>Table of Contents</h1>
+                      <p className={`${currentTheme.contentText} opacity-60`}>Click any page to navigate</p>
                     </div>
-                  )}
-
-                  {/* Content with Futuristic Styling */}
-                  <div className="relative">
-                    {/* Subtle Grid Background */}
-                    <div className="absolute inset-0 opacity-5" style={{
-                      backgroundImage: `linear-gradient(rgba(139, 92, 246, 0.5) 1px, transparent 1px),
-                                       linear-gradient(90deg, rgba(139, 92, 246, 0.5) 1px, transparent 1px)`,
-                      backgroundSize: '20px 20px'
-                    }} />
                     
-                    <div className="relative z-10">
-                      {page ? (
-                        <PageContent
-                          page={page}
-                          notebookId={notebookId}
-                          paperPattern={appearance.paperPattern}
-                          onUpdate={onUpdate}
-                          isEditing={true}
-                        />
-                      ) : (
-                        <div className="flex flex-col items-center justify-center h-96 text-purple-300/50">
-                          <Sparkles className="h-16 w-16 mb-4 animate-pulse" />
-                          <p className="text-lg">No content yet</p>
-                        </div>
-                      )}
+                    <div className="space-y-3">
+                      {tocPages.slice(1).map((tocPage, index) => (
+                        <button
+                          key={tocPage._id}
+                          onClick={() => {
+                            if (!isFlipping) {
+                              setIsFlipping(true)
+                              setFlipDirection('next')
+                              setTimeout(() => {
+                                setCurrentPage(index + 1)
+                                setIsFlipping(false)
+                              }, 400)
+                            }
+                          }}
+                          className="w-full flex items-center justify-between px-6 py-4 rounded-xl bg-white/50 dark:bg-slate-800/50 hover:bg-white/70 dark:hover:bg-slate-700/70 border border-slate-200 dark:border-slate-600 transition-all group"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${currentTheme.accent} flex items-center justify-center text-white font-bold`}>
+                              {tocPage.pageNumber}
+                            </div>
+                            <span className={`font-medium ${currentTheme.contentText} transition-colors`}>
+                              {tocPage.title}
+                            </span>
+                          </div>
+                          <ChevronRight className={`h-5 w-5 ${currentTheme.contentText} opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all`} />
+                        </button>
+                      ))}
                     </div>
                   </div>
-                </div>
+                ) : page ? (
+                  // Regular Pages: QuillEditor
+                  <QuillEditor
+                    pageId={page._id}
+                    notebookId={notebookId}
+                    initialContent={page.content}
+                    initialTitle={page.title}
+                    pageNumber={page.pageNumber}
+                    isEditing={true}
+                    onSave={onUpdate}
+                    flushRef={flushRef}
+                    onContentChange={handleContentChange}
+                  />
+                ) : (
+                  <div className={`flex items-center justify-center h-full ${currentTheme.contentText} opacity-40`}>
+                    <p>No page selected</p>
+                  </div>
+                )}
               </div>
-
-              {/* Bottom Accent Bar */}
-              <div className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-purple-500 via-cyan-500 to-purple-500 animate-gradient" />
-
-              {/* Corner Decorations */}
-              <div className="absolute top-16 left-0 w-32 h-32 bg-gradient-to-br from-purple-500/20 to-transparent rounded-br-full" />
-              <div className="absolute top-16 right-0 w-32 h-32 bg-gradient-to-bl from-cyan-500/20 to-transparent rounded-bl-full" />
-              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-purple-500/20 to-transparent rounded-tr-full" />
-              <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-cyan-500/20 to-transparent rounded-tl-full" />
             </div>
-
-            {/* 3D Shadow Effect */}
-            <div 
-              className="absolute inset-0 -z-10 rounded-3xl blur-2xl opacity-50"
-              style={{
-                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(6, 182, 212, 0.4))',
-                transform: 'translateZ(-50px) scale(1.05)'
-              }}
-            />
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* Add Page Button */}
-      <button
-        onClick={onAddPage}
-        className="absolute bottom-8 right-8 p-4 rounded-full bg-gradient-to-br from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 transition-all duration-300 hover:scale-110 shadow-lg shadow-purple-500/50 group"
-      >
-        <Plus className="h-6 w-6 text-white group-hover:rotate-90 transition-transform duration-300" />
-      </button>
-
-      {/* Page Indicator Dots */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
-        {pages.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => {
-              if (index !== currentPage && !isFlipping) {
-                setIsFlipping(true)
-                setFlipDirection(index > currentPage ? 'forward' : 'backward')
-                setTimeout(() => {
-                  setCurrentPage(index)
-                  setIsFlipping(false)
-                }, 600)
-              }
-            }}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              index === currentPage 
-                ? 'w-8 bg-gradient-to-r from-purple-500 to-cyan-500 shadow-lg shadow-purple-500/50' 
-                : 'w-2 bg-purple-500/30 hover:bg-purple-500/50'
-            }`}
-          />
-        ))}
+      {/* Bottom Bar */}
+      <div className={`flex-shrink-0 ${currentTheme.headerBg} backdrop-blur-sm border-t border-slate-700/50 px-6 py-3 flex items-center justify-between transition-colors duration-500`}>
+        <div className="flex items-center gap-2">
+          <span className={`text-xs ${currentTheme.headerText} opacity-70`}>Total Pages: {pages.length}</span>
+        </div>
+        
+        <button
+          onClick={onAddPage}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r ${currentTheme.accent} hover:opacity-90 text-white text-sm font-medium transition-all shadow-lg`}
+        >
+          <Plus className="h-4 w-4" />
+          Add New Page
+        </button>
       </div>
 
-      <style jsx>{`
-        @keyframes gradient {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-        .animate-gradient {
-          background-size: 200% auto;
-          animation: gradient 3s ease infinite;
-        }
-        @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .animate-spin-slow {
-          animation: spin-slow 20s linear infinite;
-        }
-      `}</style>
+      {/* Table of Contents Modal */}
+      <AnimatePresence>
+        {showTOC && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+            onClick={() => setShowTOC(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-slate-800 rounded-xl border border-slate-700 shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col"
+            >
+              <div className="px-6 py-4 border-b border-slate-700 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-slate-200">Table of Contents</h3>
+                <button
+                  onClick={() => setShowTOC(false)}
+                  className="text-slate-400 hover:text-slate-200 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-auto p-6">
+                <div className="space-y-2">
+                  {tocPages.map((tocPage, index) => (
+                    <button
+                      key={tocPage._id}
+                      onClick={() => {
+                        if (!isFlipping) {
+                          setIsFlipping(true)
+                          setFlipDirection(index > currentPage ? 'next' : 'prev')
+                          setTimeout(() => {
+                            setCurrentPage(index)
+                            setShowTOC(false)
+                            setIsFlipping(false)
+                          }, 400)
+                        }
+                      }}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all ${
+                        index === currentPage
+                          ? 'bg-white/20 border border-white/40 text-white'
+                          : 'bg-slate-700/50 hover:bg-slate-700 text-slate-300'
+                      }`}
+                    >
+                      <span className="font-medium">{tocPage.title}</span>
+                      <span className="text-sm opacity-60">Page {tocPage.pageNumber}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Go to Page Modal */}
+      <AnimatePresence>
+        {showGotoPage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+            onClick={() => setShowGotoPage(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-slate-800 rounded-xl border border-slate-700 shadow-2xl p-6 max-w-md w-full"
+            >
+              <h3 className="text-lg font-semibold text-slate-200 mb-4">Go to Page</h3>
+              
+              <div className="space-y-4">
+                <input
+                  type="number"
+                  min="1"
+                  max={pages.length}
+                  value={gotoPageNumber}
+                  onChange={(e) => setGotoPageNumber(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleGotoPage()}
+                  placeholder={`Enter page number (1-${pages.length})`}
+                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-400 focus:outline-none focus:border-cyan-500"
+                  autoFocus
+                />
+                
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleGotoPage}
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white rounded-lg font-medium transition-all"
+                  >
+                    Go
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowGotoPage(false)
+                      setGotoPageNumber('')
+                    }}
+                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg font-medium transition-all"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Theme Selector Modal */}
+      <AnimatePresence>
+        {showThemeSelector && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+            onClick={() => setShowThemeSelector(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-slate-800 rounded-xl border border-slate-700 shadow-2xl p-6 max-w-2xl w-full"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-semibold text-slate-200">Choose Theme</h3>
+                <button
+                  onClick={() => setShowThemeSelector(false)}
+                  className="text-slate-400 hover:text-slate-200 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {THEMES.map((theme) => (
+                  <button
+                    key={theme.name}
+                    onClick={() => {
+                      setCurrentTheme(theme)
+                      setShowThemeSelector(false)
+                    }}
+                    className={`relative p-6 rounded-xl border-2 transition-all ${
+                      currentTheme.name === theme.name
+                        ? 'border-white shadow-lg scale-105'
+                        : 'border-slate-600 hover:border-slate-500'
+                    }`}
+                  >
+                    <div className={`absolute inset-0 bg-gradient-to-br ${theme.background} rounded-xl opacity-50`} />
+                    <div className="relative">
+                      <div className={`w-full h-20 rounded-lg bg-gradient-to-br ${theme.accent} mb-3`} />
+                      <p className="text-sm font-semibold text-white text-center">{theme.name}</p>
+                      {currentTheme.name === theme.name && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      </div>
+      <TemplateFooter />
     </div>
   )
 }

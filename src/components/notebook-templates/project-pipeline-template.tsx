@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Workflow, Plus, ArrowRight, CheckCircle, Clock, AlertCircle, Info, X, Trash2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 import { Button } from '@/components/ui/button';
 
 interface ProjectPipelineTemplateProps {
@@ -108,43 +110,67 @@ export function ProjectPipelineTemplate({ title, notebookId }: ProjectPipelineTe
   const teamMembers = Array.from(new Set(tasks.filter(t => t.assignee).map(t => t.assignee)));
 
   return (
-    <div className="h-full bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-neutral-900 dark:to-neutral-800 p-8 overflow-y-auto">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-4 mb-2">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
-              {title}
-            </h1>
-            <button
-              onClick={() => setShowDocumentation(true)}
-              className="p-2 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 rounded-lg hover:bg-cyan-200 dark:hover:bg-cyan-900/50 transition-colors"
-              title="Documentation"
-            >
-              <Info className="h-4 w-4" />
-            </button>
-          </div>
-          <p className="text-neutral-600 dark:text-neutral-400">Visual project management canvas</p>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-950 via-cyan-950 to-slate-900 relative overflow-hidden">
+      <TemplateHeader title={title} />
+      {/* Animated background grid */}
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.03)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
+      
+      <div className="flex-1 overflow-y-auto relative">
+        <div className="max-w-7xl mx-auto p-8 space-y-6 relative z-10">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-4 mb-2">
+              <div className="relative">
+                <h1 className="text-5xl font-black bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-pulse">
+                  {title}
+                </h1>
+                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-lg blur opacity-20 group-hover:opacity-40 transition duration-1000" />
+              </div>
+              <button
+                onClick={() => setShowDocumentation(true)}
+                className="p-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 rounded-lg hover:bg-cyan-500/20 hover:border-cyan-400/50 transition-all duration-300 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)]"
+                title="Documentation"
+              >
+                <Info className="h-4 w-4" />
+              </button>
+            </div>
+          <p className="text-cyan-300/60 text-sm tracking-widest uppercase font-mono">⚡ Neural Project Management System ⚡</p>
         </div>
 
-        {/* Stats */}
+        {/* Stats - Futuristic Cards */}
         <div className="grid sm:grid-cols-4 gap-4">
-          <Card className="p-4 bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
-            <p className="text-sm opacity-90 mb-1">Total Tasks</p>
-            <p className="text-3xl font-bold">{totalTasks}</p>
-          </Card>
-          <Card className="p-4 bg-gradient-to-br from-purple-500 to-pink-500 text-white">
-            <p className="text-sm opacity-90 mb-1">In Progress</p>
-            <p className="text-3xl font-bold">{getTasksByStatus('in-progress').length}</p>
-          </Card>
-          <Card className="p-4 bg-gradient-to-br from-green-500 to-emerald-500 text-white">
-            <p className="text-sm opacity-90 mb-1">Completed</p>
-            <p className="text-3xl font-bold">{completedTasks}</p>
-          </Card>
-          <Card className="p-4 bg-gradient-to-br from-amber-500 to-orange-500 text-white">
-            <p className="text-sm opacity-90 mb-1">Progress</p>
-            <p className="text-3xl font-bold">{progress}%</p>
-          </Card>
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300" />
+            <Card className="relative p-5 bg-slate-900/90 border border-cyan-500/30 backdrop-blur-xl">
+              <p className="text-xs text-cyan-400/80 mb-2 font-mono uppercase tracking-wider">Total Tasks</p>
+              <p className="text-4xl font-black text-cyan-400 drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]">{totalTasks}</p>
+              <div className="absolute top-2 right-2 w-2 h-2 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,211,238,0.8)]" />
+            </Card>
+          </div>
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300" />
+            <Card className="relative p-5 bg-slate-900/90 border border-purple-500/30 backdrop-blur-xl">
+              <p className="text-xs text-purple-400/80 mb-2 font-mono uppercase tracking-wider">In Progress</p>
+              <p className="text-4xl font-black text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">{getTasksByStatus('in-progress').length}</p>
+              <div className="absolute top-2 right-2 w-2 h-2 bg-purple-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(168,85,247,0.8)]" />
+            </Card>
+          </div>
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300" />
+            <Card className="relative p-5 bg-slate-900/90 border border-green-500/30 backdrop-blur-xl">
+              <p className="text-xs text-green-400/80 mb-2 font-mono uppercase tracking-wider">Completed</p>
+              <p className="text-4xl font-black text-green-400 drop-shadow-[0_0_10px_rgba(34,197,94,0.5)]">{completedTasks}</p>
+              <div className="absolute top-2 right-2 w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.8)]" />
+            </Card>
+          </div>
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-amber-500 to-orange-600 rounded-lg blur opacity-30 group-hover:opacity-60 transition duration-300" />
+            <Card className="relative p-5 bg-slate-900/90 border border-amber-500/30 backdrop-blur-xl">
+              <p className="text-xs text-amber-400/80 mb-2 font-mono uppercase tracking-wider">Progress</p>
+              <p className="text-4xl font-black text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]">{progress}%</p>
+              <div className="absolute top-2 right-2 w-2 h-2 bg-amber-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(251,191,36,0.8)]" />
+            </Card>
+          </div>
         </div>
 
         {/* Kanban Board */}
@@ -154,14 +180,15 @@ export function ProjectPipelineTemplate({ title, notebookId }: ProjectPipelineTe
             const stageTasks = getTasksByStatus(stage.id);
             
             return (
-              <div key={stage.id} className="flex-shrink-0 w-80">
-                <Card className={`p-4 bg-gradient-to-br from-${stage.color}-100 to-${stage.color}-200 dark:from-${stage.color}-900/30 dark:to-${stage.color}-900/20 border-2 border-${stage.color}-300 dark:border-${stage.color}-800 h-full`}>
+              <div key={stage.id} className="flex-shrink-0 w-80 relative group">
+                <div className={`absolute -inset-0.5 bg-gradient-to-r from-${stage.color}-500 to-${stage.color}-600 rounded-lg blur opacity-20 group-hover:opacity-40 transition duration-300`} />
+                <Card className={`relative p-4 bg-slate-900/80 border border-${stage.color}-500/40 backdrop-blur-xl h-full hover:border-${stage.color}-400/60 transition-all duration-300`}>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <Icon className={`h-5 w-5 text-${stage.color}-600`} />
-                      <h3 className="font-bold text-neutral-900 dark:text-white">{stage.name}</h3>
+                      <Icon className={`h-5 w-5 text-${stage.color}-400 drop-shadow-[0_0_8px_rgba(var(--tw-${stage.color}-rgb),0.6)]`} />
+                      <h3 className={`font-black text-${stage.color}-300 uppercase tracking-wide text-sm`}>{stage.name}</h3>
                     </div>
-                    <span className={`px-2 py-1 bg-${stage.color}-200 dark:bg-${stage.color}-900/40 text-${stage.color}-700 dark:text-${stage.color}-400 rounded-full text-xs font-bold`}>
+                    <span className={`px-3 py-1 bg-${stage.color}-500/20 border border-${stage.color}-500/40 text-${stage.color}-400 rounded-full text-xs font-bold shadow-[0_0_10px_rgba(var(--tw-${stage.color}-rgb),0.3)]`}>
                       {stageTasks.length}
                     </span>
                   </div>
@@ -170,31 +197,38 @@ export function ProjectPipelineTemplate({ title, notebookId }: ProjectPipelineTe
                     {stageTasks.map(task => {
                       const priorityColor = getPriorityColor(task.priority);
                       return (
-                        <Card
+                        <motion.div
                           key={task.id}
-                          className="p-4 bg-white dark:bg-neutral-800 shadow-sm hover:shadow-md transition-shadow group relative"
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="relative group"
                         >
+                          <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition duration-300" />
+                          <Card className="relative p-4 bg-slate-800/60 border border-slate-700/50 backdrop-blur-sm hover:border-cyan-500/50 transition-all duration-300 hover:shadow-[0_0_20px_rgba(34,211,238,0.2)]">
                           <button
                             onClick={() => deleteTask(task.id)}
-                            className="absolute top-2 right-2 p-1 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-2 right-2 p-1 text-red-400 hover:bg-red-500/20 hover:border hover:border-red-500/40 rounded opacity-0 group-hover:opacity-100 transition-all duration-300 hover:shadow-[0_0_10px_rgba(239,68,68,0.4)]"
                             title="Delete task"
                           >
                             <Trash2 className="h-3 w-3" />
                           </button>
                           <div className="flex items-start justify-between mb-2 pr-6">
-                            <h4 className="font-semibold text-neutral-900 dark:text-white text-sm flex-1">
+                            <h4 className="font-semibold text-cyan-100 text-sm flex-1">
                               {task.title}
                             </h4>
-                            <span className={`px-2 py-0.5 bg-${priorityColor}-100 dark:bg-${priorityColor}-900/30 text-${priorityColor}-700 dark:text-${priorityColor}-400 rounded text-xs font-medium`}>
+                            <span className={`px-2 py-0.5 bg-${priorityColor}-500/20 border border-${priorityColor}-500/40 text-${priorityColor}-400 rounded text-xs font-bold shadow-[0_0_8px_rgba(var(--tw-${priorityColor}-rgb),0.3)]`}>
                               {task.priority}
                             </span>
                           </div>
                           {task.assignee && (
                             <div className="flex items-center gap-2 mt-3">
-                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-bold">
-                                {task.assignee[0]}
+                              <div className="relative">
+                                <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full blur opacity-50" />
+                                <div className="relative w-6 h-6 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold border border-cyan-400/50 shadow-[0_0_10px_rgba(34,211,238,0.4)]">
+                                  {task.assignee[0]}
+                                </div>
                               </div>
-                              <span className="text-xs text-neutral-600 dark:text-neutral-400">
+                              <span className="text-xs text-cyan-300/80 font-mono">
                                 {task.assignee}
                               </span>
                             </div>
@@ -204,19 +238,21 @@ export function ProjectPipelineTemplate({ title, notebookId }: ProjectPipelineTe
                               <button
                                 key={targetStage.id}
                                 onClick={() => moveTask(task.id, targetStage.id as any)}
-                                className="px-2 py-1 text-xs bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 rounded transition-colors"
+                                className="px-2 py-1 text-xs bg-slate-700/50 border border-slate-600/50 text-slate-300 hover:bg-cyan-500/20 hover:border-cyan-500/50 hover:text-cyan-400 rounded transition-all duration-300 hover:shadow-[0_0_8px_rgba(34,211,238,0.3)] font-mono"
                                 title={`Move to ${targetStage.name}`}
                               >
                                 → {targetStage.name}
                               </button>
                             ))}
                           </div>
-                        </Card>
+                          </Card>
+                        </motion.div>
                       );
                     })}
                     
                     {stageTasks.length === 0 && (
-                      <div className="text-center py-8 text-neutral-400 dark:text-neutral-600 text-sm">
+                      <div className="text-center py-8 text-slate-600 text-sm font-mono">
+                        <div className="text-2xl mb-2 opacity-30">∅</div>
                         No tasks in {stage.name}
                       </div>
                     )}
@@ -228,8 +264,12 @@ export function ProjectPipelineTemplate({ title, notebookId }: ProjectPipelineTe
         </div>
 
         {/* Quick Add Task */}
-        <Card className="p-6 bg-white dark:bg-neutral-800">
-          <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4">Quick Add Task</h3>
+        <div className="relative group">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-lg blur opacity-20 group-hover:opacity-40 transition duration-300" />
+          <Card className="relative p-6 bg-slate-900/80 border border-cyan-500/30 backdrop-blur-xl">
+            <h3 className="text-lg font-black text-cyan-300 mb-4 uppercase tracking-wider flex items-center gap-2">
+              <span className="text-cyan-400">⚡</span> Quick Add Task
+            </h3>
           <div className="grid md:grid-cols-5 gap-3">
             <input
               type="text"
@@ -237,12 +277,12 @@ export function ProjectPipelineTemplate({ title, notebookId }: ProjectPipelineTe
               onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
               onKeyPress={(e) => e.key === 'Enter' && addTask()}
               placeholder="Task title..."
-              className="md:col-span-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              className="md:col-span-2 px-4 py-2 bg-slate-800/60 border border-slate-600/50 rounded-lg text-cyan-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:shadow-[0_0_15px_rgba(34,211,238,0.2)] transition-all duration-300 font-mono"
             />
             <select 
               value={newTask.priority}
               onChange={(e) => setNewTask({ ...newTask, priority: e.target.value as 'low' | 'medium' | 'high' })}
-              className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              className="px-4 py-2 bg-slate-800/60 border border-slate-600/50 rounded-lg text-cyan-100 focus:outline-none focus:border-cyan-500/50 focus:shadow-[0_0_15px_rgba(34,211,238,0.2)] transition-all duration-300 font-mono"
             >
               <option value="low">Low Priority</option>
               <option value="medium">Medium Priority</option>
@@ -253,23 +293,28 @@ export function ProjectPipelineTemplate({ title, notebookId }: ProjectPipelineTe
               value={newTask.assignee}
               onChange={(e) => setNewTask({ ...newTask, assignee: e.target.value })}
               placeholder="Assignee (optional)"
-              className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              className="px-4 py-2 bg-slate-800/60 border border-slate-600/50 rounded-lg text-cyan-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:shadow-[0_0_15px_rgba(34,211,238,0.2)] transition-all duration-300 font-mono"
             />
             <Button 
               onClick={addTask}
               disabled={!newTask.title.trim()}
-              className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-bold hover:shadow-[0_0_20px_rgba(34,211,238,0.5)] disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-300 border border-cyan-400/50"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Task
             </Button>
           </div>
-        </Card>
+          </Card>
+        </div>
 
         {/* Team Members */}
         {teamMembers.length > 0 && (
-          <Card className="p-6 bg-white dark:bg-neutral-800">
-            <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4">Team Members</h3>
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg blur opacity-20 group-hover:opacity-40 transition duration-300" />
+            <Card className="relative p-6 bg-slate-900/80 border border-purple-500/30 backdrop-blur-xl">
+              <h3 className="text-lg font-black text-purple-300 mb-4 uppercase tracking-wider flex items-center gap-2">
+                <span className="text-purple-400">👥</span> Team Members
+              </h3>
             <div className="flex gap-4 flex-wrap">
               {teamMembers.map((member, idx) => {
                 const memberTasks = tasks.filter(t => t.assignee === member);
@@ -279,24 +324,31 @@ export function ProjectPipelineTemplate({ title, notebookId }: ProjectPipelineTe
                 return (
                   <div
                     key={member}
-                    className={`flex-1 min-w-[200px] p-4 bg-gradient-to-br from-${color}-100 to-${color}-200 dark:from-${color}-900/30 dark:to-${color}-900/20 rounded-lg border border-${color}-300 dark:border-${color}-800`}
+                    className="flex-1 min-w-[200px] relative group/member"
                   >
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-${color}-500 to-${color}-600 flex items-center justify-center text-white font-bold`}>
-                        {member![0]}
-                      </div>
-                      <div>
-                        <p className="font-bold text-neutral-900 dark:text-white">{member}</p>
-                        <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                          {memberTasks.length} tasks
-                        </p>
+                    <div className={`absolute -inset-0.5 bg-gradient-to-r from-${color}-500 to-${color}-600 rounded-lg blur opacity-20 group-hover/member:opacity-40 transition duration-300`} />
+                    <div className={`relative p-4 bg-slate-800/60 border border-${color}-500/40 rounded-lg backdrop-blur-sm hover:border-${color}-400/60 transition-all duration-300`}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="relative">
+                          <div className={`absolute -inset-1 bg-gradient-to-r from-${color}-500 to-${color}-600 rounded-full blur opacity-50`} />
+                          <div className={`relative w-10 h-10 rounded-full bg-gradient-to-br from-${color}-500 to-${color}-600 flex items-center justify-center text-white font-bold border border-${color}-400/50 shadow-[0_0_15px_rgba(var(--tw-${color}-rgb),0.4)]`}>
+                            {member![0]}
+                          </div>
+                        </div>
+                        <div>
+                          <p className={`font-bold text-${color}-300`}>{member}</p>
+                          <p className="text-xs text-slate-400 font-mono">
+                            {memberTasks.length} tasks
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
                 );
               })}
             </div>
-          </Card>
+            </Card>
+          </div>
         )}
 
         {/* Documentation Modal */}
@@ -450,7 +502,9 @@ export function ProjectPipelineTemplate({ title, notebookId }: ProjectPipelineTe
             </motion.div>
           )}
         </AnimatePresence>
+        </div>
       </div>
+      <TemplateFooter />
     </div>
   );
 }

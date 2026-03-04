@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 import {
   Plus, X, Loader2, CheckCircle2, Circle, Trash2, Pencil,
   LayoutDashboard, StickyNote, ListTodo, CalendarDays, BarChart3,
@@ -16,7 +18,7 @@ interface StatItem { id: string; label: string; value: string; trend: "up" | "do
 interface CountdownItem { id: string; label: string; targetDate: string; }
 interface Widget { id: string; type: WidgetType; title: string; notes?: NoteItem[]; tasks?: TaskItem[]; events?: EventItem[]; stats?: StatItem[]; scratchpad?: string; countdowns?: CountdownItem[]; }
 interface Dashboard { id: string; name: string; emoji: string; widgets: Widget[]; createdAt: string; updatedAt: string; }
-interface DashboardTemplateProps { notebookId?: string; }
+interface DashboardTemplateProps { title: string; notebookId?: string; }
 
 const NOTE_COLORS = ["amber","sky","emerald","rose","violet","orange"];
 const EVENT_COLORS = ["blue","green","yellow","purple","red","pink"];
@@ -83,7 +85,7 @@ function TasksWidget({ widget, onChange }: { widget: Widget; onChange: (w: Widge
   const [title, setTitle] = useState(""); const [due, setDue] = useState(""); const [priority, setPriority] = useState<"low"|"medium"|"high">("medium"); const [tag, setTag] = useState("");
   const [filter, setFilter] = useState<"all"|"active"|"done">("all");
   const tasks = widget.tasks ?? [];
-  const add = () => { if (!title.trim()) return; onChange({ ...widget, tasks: [...tasks, { id: Date.now().toString(), title, dueDate: due||"No due date", completed: false, priority, tag }] }); setTitle(""); setDue(""); setTag(""); setAdding(false); };
+  const add = () => { if (!title.trim()) return; const formattedDue = due ? new Date(due).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "No due date"; onChange({ ...widget, tasks: [...tasks, { id: Date.now().toString(), title, dueDate: formattedDue, completed: false, priority, tag }] }); setTitle(""); setDue(""); setTag(""); setAdding(false); };
   const toggle = (id: string) => onChange({ ...widget, tasks: tasks.map(t => t.id===id?{...t,completed:!t.completed}:t) });
   const remove = (id: string) => onChange({ ...widget, tasks: tasks.filter(t => t.id!==id) });
   const filtered = tasks.filter(t => filter==="all"?true:filter==="done"?t.completed:!t.completed);
@@ -113,7 +115,7 @@ function TasksWidget({ widget, onChange }: { widget: Widget; onChange: (w: Widge
         <div className="bg-neutral-50 dark:bg-neutral-800 rounded-xl p-3 space-y-2">
           <input value={title} onChange={e=>setTitle(e.target.value)} onKeyDown={e=>e.key==="Enter"&&add()} placeholder="Task title..." autoFocus className="w-full px-2 py-1.5 text-sm bg-white dark:bg-neutral-700 rounded-lg outline-none border border-neutral-200 dark:border-neutral-600"/>
           <div className="grid grid-cols-2 gap-2">
-            <input value={due} onChange={e=>setDue(e.target.value)} placeholder="Due date..." className="px-2 py-1.5 text-sm bg-white dark:bg-neutral-700 rounded-lg outline-none border border-neutral-200 dark:border-neutral-600"/>
+            <input type="date" value={due} onChange={e=>setDue(e.target.value)} className="px-2 py-1.5 text-sm bg-white dark:bg-neutral-700 rounded-lg outline-none border border-neutral-200 dark:border-neutral-600"/>
             <input value={tag} onChange={e=>setTag(e.target.value)} placeholder="Tag (optional)" className="px-2 py-1.5 text-sm bg-white dark:bg-neutral-700 rounded-lg outline-none border border-neutral-200 dark:border-neutral-600"/>
           </div>
           <div className="flex gap-2 items-center">
@@ -302,7 +304,7 @@ function AddWidgetPanel({ onAdd, onClose }: { onAdd: (type: WidgetType) => void;
   );
 }
 
-export function DashboardTemplate({ notebookId }: DashboardTemplateProps) {
+export function DashboardTemplate({ title, notebookId }: DashboardTemplateProps) {
   const [dashboards, setDashboards] = useState<Dashboard[]>([]);
   const [activeId, setActiveId] = useState<string>("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -407,13 +409,19 @@ export function DashboardTemplate({ notebookId }: DashboardTemplateProps) {
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center h-full min-h-[400px]">
-      <Loader2 className="w-8 h-8 animate-spin text-amber-500"/>
+    <div className="min-h-screen flex flex-col bg-neutral-100 dark:bg-neutral-950">
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-amber-500"/>
+      </div>
+      <TemplateFooter />
     </div>
   );
 
   return (
-    <div className="flex h-full min-h-screen bg-neutral-100 dark:bg-neutral-950 overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-neutral-100 dark:bg-neutral-950">
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex overflow-hidden">
 
       {/*  Sidebar  */}
       <AnimatePresence initial={false}>
@@ -531,6 +539,8 @@ export function DashboardTemplate({ notebookId }: DashboardTemplateProps) {
       <AnimatePresence>
         {showAddWidget && <AddWidgetPanel onAdd={addWidget} onClose={()=>setShowAddWidget(false)}/>}
       </AnimatePresence>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

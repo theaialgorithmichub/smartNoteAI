@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MessageSquare, Plus, Copy, Search, Tag, Star, ChevronLeft, ChevronRight, Info, X, Check, Edit2, Trash2, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 
 interface PromptDiaryTemplateProps {
   title: string;
@@ -214,13 +216,15 @@ export function PromptDiaryTemplate({ title, notebookId }: PromptDiaryTemplatePr
   );
 
   return (
-    <div className="h-full bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-neutral-900 dark:to-neutral-800 p-8 overflow-y-auto">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              {title}
-            </h1>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-neutral-900 dark:to-neutral-800">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-6xl mx-auto p-8 space-y-6">
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                {title}
+              </h1>
             <button
               onClick={() => setShowDocumentation(true)}
               className="p-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors"
@@ -538,10 +542,9 @@ export function PromptDiaryTemplate({ title, notebookId }: PromptDiaryTemplatePr
             Add First Prompt
           </Button>
         </Card>
-      </div>
 
-      {/* Delete Confirmation Modal */}
-      {deleteConfirm.show && (
+        {/* Delete Confirmation Modal */}
+        {deleteConfirm.show && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card className="max-w-md w-full bg-white dark:bg-neutral-800 p-6">
             <div className="text-center">
@@ -570,10 +573,10 @@ export function PromptDiaryTemplate({ title, notebookId }: PromptDiaryTemplatePr
             </div>
           </Card>
         </div>
-      )}
+        )}
 
-      {/* Documentation Modal */}
-      {showDocumentation && (
+        {/* Documentation Modal */}
+        {showDocumentation && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <Card className="max-w-4xl w-full max-h-[90vh] overflow-y-auto bg-white dark:bg-neutral-800">
             <div className="sticky top-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-6 flex items-center justify-between">
@@ -810,7 +813,10 @@ export function PromptDiaryTemplate({ title, notebookId }: PromptDiaryTemplatePr
             </div>
           </Card>
         </div>
-      )}
+        )}
+        </div>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

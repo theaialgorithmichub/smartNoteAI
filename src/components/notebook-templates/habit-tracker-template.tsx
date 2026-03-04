@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, Calendar, TrendingUp, Target, Info, Plus, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 
 interface Habit {
   id: string;
@@ -162,24 +164,26 @@ export function HabitTrackerTemplate({ title, notebookId }: HabitTrackerTemplate
   const colors = ['emerald', 'blue', 'purple', 'cyan', 'pink', 'orange', 'indigo', 'teal'];
 
   return (
-    <div className="h-full bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-neutral-900 dark:to-neutral-800 p-8 overflow-y-auto">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-4 mb-2">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              {title}
-            </h1>
-            <button
-              onClick={() => setShowDocumentation(true)}
-              className="p-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors"
-              title="Documentation"
-            >
-              <Info className="h-4 w-4" />
-            </button>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-green-50 to-emerald-50 dark:from-neutral-900 dark:to-neutral-800">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-4 mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                {title}
+              </h1>
+              <button
+                onClick={() => setShowDocumentation(true)}
+                className="p-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors"
+                title="Documentation"
+              >
+                <Info className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-neutral-600 dark:text-neutral-400">Build better habits, one day at a time</p>
           </div>
-          <p className="text-neutral-600 dark:text-neutral-400">Build better habits, one day at a time</p>
-        </div>
 
         {/* Week Navigator */}
         <Card className="p-4 bg-white dark:bg-neutral-800">
@@ -420,10 +424,9 @@ export function HabitTrackerTemplate({ title, notebookId }: HabitTrackerTemplate
             </div>
           </Card>
         )}
-      </div>
 
-      {/* Documentation Modal */}
-      <AnimatePresence>
+        {/* Documentation Modal */}
+        <AnimatePresence>
         {showDocumentation && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -572,7 +575,10 @@ export function HabitTrackerTemplate({ title, notebookId }: HabitTrackerTemplate
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
+        </AnimatePresence>
+        </div>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

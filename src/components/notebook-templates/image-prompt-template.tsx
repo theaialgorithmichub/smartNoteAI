@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 import {
   Image as ImageIcon, Plus, Loader2, Trash2, Edit3, X, Search, FolderOpen,
   Upload, Sparkles, Download, Copy, Check, Grid3x3, List, Eye, Wand2, Info
@@ -339,7 +341,9 @@ export function ImagePromptTemplate({ title = "Image Prompts", notebookId }: Ima
   }) || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 dark:from-neutral-950 dark:to-neutral-900">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 dark:from-neutral-950 dark:to-neutral-900">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto">
       {saving && (
         <div className="fixed top-20 right-6 flex items-center gap-2 text-sm text-neutral-500 bg-white dark:bg-neutral-800 px-3 py-2 rounded-lg shadow-lg z-50">
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -1046,6 +1050,8 @@ export function ImagePromptTemplate({ title = "Image Prompts", notebookId }: Ima
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

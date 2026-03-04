@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DollarSign, TrendingUp, TrendingDown, PiggyBank, Plus, Info, Trash2, X, ChevronLeft, ChevronRight, Edit2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 
 interface ExpenseCategory {
   id: string;
@@ -159,15 +161,17 @@ export function BudgetPlannerTemplate({ title, notebookId }: BudgetPlannerTempla
   };
 
   return (
-    <div className="h-full bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-neutral-900 dark:to-neutral-800 p-8 overflow-y-auto">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-4 mb-2">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-              {title}
-            </h1>
-            <button
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-neutral-900 dark:to-neutral-800">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-4 mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
+                {title}
+              </h1>
+              <button
               onClick={() => setShowDocumentation(true)}
               className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
               title="Documentation"
@@ -464,10 +468,9 @@ export function BudgetPlannerTemplate({ title, notebookId }: BudgetPlannerTempla
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
-      {/* Documentation Modal */}
-      <AnimatePresence>
+        {/* Documentation Modal */}
+        <AnimatePresence>
         {showDocumentation && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -617,6 +620,9 @@ export function BudgetPlannerTemplate({ title, notebookId }: BudgetPlannerTempla
           </motion.div>
         )}
       </AnimatePresence>
+        </div>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

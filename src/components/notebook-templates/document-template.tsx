@@ -12,12 +12,14 @@ import { Extension } from "@tiptap/core";
 import Color from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
 import { motion, AnimatePresence } from "framer-motion";
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 import {
   Plus, X, Loader2, Bold, Italic, Underline, Strikethrough,
   List, ListOrdered, Link, Unlink, Image, Heading1, Heading2,
   Heading3, Quote, Code, Undo, Redo, Palette, Highlighter,
   Minus, Download, Printer, Type, ChevronDown, FileText,
-  Pencil, Trash2, FolderOpen, PanelLeft, Info, Check,
+  Pencil, Trash2, FolderOpen, PanelLeft, Info, Check, Wand2, Sparkles,
 } from "lucide-react";
 
 const FONT_FAMILIES = [
@@ -34,9 +36,22 @@ const FONT_FAMILIES = [
 ];
 
 const COLORS = [
-  "#000000","#434343","#666666","#999999","#cccccc","#ffffff",
-  "#980000","#ff0000","#ff9900","#ffff00","#00ff00","#00ffff",
-  "#4a86e8","#0000ff","#9900ff","#ff00ff",
+  { name: "Black", value: "#000000" },
+  { name: "Dark Gray", value: "#434343" },
+  { name: "Gray", value: "#666666" },
+  { name: "Light Gray", value: "#999999" },
+  { name: "Silver", value: "#cccccc" },
+  { name: "White", value: "#ffffff" },
+  { name: "Dark Red", value: "#980000" },
+  { name: "Red", value: "#ff0000" },
+  { name: "Orange", value: "#ff9900" },
+  { name: "Yellow", value: "#ffff00" },
+  { name: "Green", value: "#00ff00" },
+  { name: "Cyan", value: "#00ffff" },
+  { name: "Blue", value: "#4a86e8" },
+  { name: "Dark Blue", value: "#0000ff" },
+  { name: "Purple", value: "#9900ff" },
+  { name: "Magenta", value: "#ff00ff" },
 ];
 
 interface Tab { id: string; name: string; content: string; }
@@ -100,6 +115,9 @@ function DocumentEditor({ doc, onUpdate, notebookId }: {
   const [showLinkDlg, setShowLinkDlg] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [showAIPanel, setShowAIPanel] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResult, setAiResult] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const activeTabIdRef = useRef(activeTabId);
   const docTabsRef = useRef(doc.tabs);
@@ -180,6 +198,56 @@ function DocumentEditor({ doc, onUpdate, notebookId }: {
     a.click(); URL.revokeObjectURL(a.href);
   };
 
+  const handleAIAction = async (action: 'grammar' | 'beautify') => {
+    if (!editor) return;
+    const content = editor.getText();
+    if (!content.trim()) {
+      alert('Please add some content first');
+      return;
+    }
+
+    setAiLoading(true);
+    setAiResult('');
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notebookId,
+          mode: 'chat',
+          message: action === 'grammar'
+            ? `Please correct all grammar, spelling, and punctuation errors in the following text. Return ONLY the corrected text without any explanations:\n\n${content}`
+            : `Please beautify and improve the following text by making it more eloquent, professional, and well-structured. Maintain the original meaning. Return ONLY the improved text without any explanations:\n\n${content}`,
+          context: [],
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('AI request failed');
+      }
+
+      const data = await res.json();
+      if (data.response) {
+        setAiResult(data.response);
+      } else {
+        throw new Error('No response from AI');
+      }
+    } catch (error) {
+      console.error('AI action failed:', error);
+      alert('AI feature failed. Please check your OpenAI API key and try again.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const applyAIResult = () => {
+    if (aiResult && editor) {
+      editor.commands.setContent(aiResult);
+      setShowAIPanel(false);
+      setAiResult('');
+    }
+  };
+
   if (!editor) return <div className="flex items-center justify-center h-64"><Loader2 className="w-6 h-6 animate-spin text-neutral-400" /></div>;
 
   return (
@@ -230,11 +298,45 @@ function DocumentEditor({ doc, onUpdate, notebookId }: {
         <TDiv />
         <div className="relative">
           <button onMouseDown={(e) => { e.preventDefault(); setShowTextColor((v) => !v); setShowHighlight(false); setShowFontDD(false); }} className="p-1.5 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300" title="Text color"><Palette className="w-4 h-4" /></button>
-          {showTextColor && <div className="absolute top-full left-0 mt-1 p-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-xl z-50"><div className="grid grid-cols-8 gap-1">{COLORS.map((c) => <button key={c} onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().setColor(c).run(); setShowTextColor(false); }} className="w-5 h-5 rounded border border-neutral-300 dark:border-neutral-600" style={{ backgroundColor: c }} />)}</div></div>}
+          {showTextColor && (
+            <div className="absolute top-full left-0 mt-1 p-3 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-xl z-50 w-64">
+              <p className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-2">Text Color</p>
+              <div className="grid grid-cols-4 gap-2">
+                {COLORS.map((c) => (
+                  <button
+                    key={c.value}
+                    onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().setColor(c.value).run(); setShowTextColor(false); }}
+                    className="flex flex-col items-center gap-1 p-2 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                    title={c.name}
+                  >
+                    <div className="w-8 h-8 rounded border-2 border-neutral-300 dark:border-neutral-600" style={{ backgroundColor: c.value }} />
+                    <span className="text-[10px] text-neutral-600 dark:text-neutral-400 text-center leading-tight">{c.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <div className="relative">
           <button onMouseDown={(e) => { e.preventDefault(); setShowHighlight((v) => !v); setShowTextColor(false); setShowFontDD(false); }} className="p-1.5 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300" title="Highlight"><Highlighter className="w-4 h-4" /></button>
-          {showHighlight && <div className="absolute top-full left-0 mt-1 p-2 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-xl z-50"><div className="grid grid-cols-8 gap-1">{COLORS.map((c) => <button key={c} onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleHighlight({ color: c }).run(); setShowHighlight(false); }} className="w-5 h-5 rounded border border-neutral-300 dark:border-neutral-600" style={{ backgroundColor: c }} />)}</div></div>}
+          {showHighlight && (
+            <div className="absolute top-full left-0 mt-1 p-3 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg shadow-xl z-50 w-64">
+              <p className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-2">Highlight Color</p>
+              <div className="grid grid-cols-4 gap-2">
+                {COLORS.map((c) => (
+                  <button
+                    key={c.value}
+                    onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleHighlight({ color: c.value }).run(); setShowHighlight(false); }}
+                    className="flex flex-col items-center gap-1 p-2 rounded hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+                    title={c.name}
+                  >
+                    <div className="w-8 h-8 rounded border-2 border-neutral-300 dark:border-neutral-600" style={{ backgroundColor: c.value }} />
+                    <span className="text-[10px] text-neutral-600 dark:text-neutral-400 text-center leading-tight">{c.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <TDiv />
         <TB onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive("heading", { level: 1 })} title="Heading 1"><Heading1 className="w-4 h-4" /></TB>
@@ -254,8 +356,85 @@ function DocumentEditor({ doc, onUpdate, notebookId }: {
         <TDiv />
         <TB onClick={printDoc} title="Print"><Printer className="w-4 h-4" /></TB>
         <TB onClick={exportHtml} title="Export HTML"><Download className="w-4 h-4" /></TB>
+        <TDiv />
+        <TB onClick={() => setShowAIPanel(true)} title="AI Tools" active={showAIPanel}><Wand2 className="w-4 h-4" /></TB>
       </div>
       <div className="flex-1 overflow-y-auto bg-white dark:bg-neutral-900"><EditorContent editor={editor} /></div>
+      
+      {/* AI Panel */}
+      {showAIPanel && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 w-[600px] max-h-[80vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-amber-500" />
+                AI Writing Assistant
+              </h3>
+              <button onClick={() => { setShowAIPanel(false); setAiResult(''); }} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleAIAction('grammar')}
+                  disabled={aiLoading}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  Correct Grammar
+                </button>
+                <button
+                  onClick={() => handleAIAction('beautify')}
+                  disabled={aiLoading}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {aiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  Beautify Content
+                </button>
+              </div>
+              
+              {aiLoading && (
+                <div className="flex items-center justify-center py-8 text-neutral-500">
+                  <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                  Processing with AI...
+                </div>
+              )}
+              
+              {aiResult && (
+                <div className="space-y-3">
+                  <div className="bg-neutral-50 dark:bg-neutral-900 rounded-lg p-4 border border-neutral-200 dark:border-neutral-700 max-h-96 overflow-y-auto">
+                    <p className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 mb-2">AI Result:</p>
+                    <div className="text-sm text-neutral-800 dark:text-neutral-200 whitespace-pre-wrap">{aiResult}</div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={applyAIResult}
+                      className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-medium transition-colors"
+                    >
+                      Apply to Document
+                    </button>
+                    <button
+                      onClick={() => setAiResult('')}
+                      className="px-4 py-2 bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-neutral-700 dark:text-neutral-300 rounded-lg font-medium transition-colors"
+                    >
+                      Discard
+                    </button>
+                  </div>
+                </div>
+              )}
+              
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                <p className="text-xs text-amber-800 dark:text-amber-200">
+                  <strong>Tip:</strong> The AI will analyze your entire document content and provide improved versions. Review the results before applying.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {showLinkDlg && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-neutral-800 rounded-xl p-6 w-96 shadow-2xl">
@@ -391,13 +570,19 @@ export function DocumentTemplate({ title, notebookId }: DocumentTemplateProps) {
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center h-full">
-      <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+    <div className="min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950">
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+      </div>
+      <TemplateFooter />
     </div>
   );
 
   return (
-    <div className="flex h-full bg-neutral-50 dark:bg-neutral-950 overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950">
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex overflow-hidden">
       <AnimatePresence initial={false}>
         {sidebarOpen && (
           <motion.aside
@@ -651,6 +836,8 @@ export function DocumentTemplate({ title, notebookId }: DocumentTemplateProps) {
           </div>
         )}
       </div>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

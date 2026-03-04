@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 import {
   Plus, Globe, FileText, Brain, Send, X, Loader2, Trash2,
   Copy, Link, Youtube, BookOpen, Pencil, ChevronDown, ChevronRight,
@@ -49,7 +51,7 @@ interface Research {
   createdAt: string;
 }
 
-interface AIResearchTemplateProps { notebookId?: string; }
+interface AIResearchTemplateProps { title: string; notebookId?: string; }
 
 //  Helpers 
 
@@ -208,7 +210,7 @@ function AddSourcePanel({ onAdd, onCancel }: { onAdd: (s: Source) => void; onCan
 
 //  Main Component 
 
-export function AIResearchTemplate({ notebookId }: AIResearchTemplateProps) {
+export function AIResearchTemplate({ title, notebookId }: AIResearchTemplateProps) {
   const [researches, setResearches] = useState<Research[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -417,12 +419,18 @@ export function AIResearchTemplate({ notebookId }: AIResearchTemplateProps) {
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center h-full min-h-[400px]">
-      <Loader2 className="w-8 h-8 animate-spin text-blue-500"/>
+    <div className="min-h-screen flex flex-col bg-white dark:bg-neutral-950">
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500"/>
+      </div>
+      <TemplateFooter />
     </div>
   );
   return (
-    <div className="flex h-full min-h-screen bg-white dark:bg-neutral-950 overflow-hidden">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-neutral-950">
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex overflow-hidden">
 
       {/* Research Sidebar */}
       <AnimatePresence initial={false}>
@@ -1055,6 +1063,8 @@ export function AIResearchTemplate({ notebookId }: AIResearchTemplateProps) {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

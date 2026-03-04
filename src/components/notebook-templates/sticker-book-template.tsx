@@ -3,6 +3,8 @@
 import React, { useState, useRef } from 'react';
 import { StickyNote, Plus, Trash2, Palette, Move, Info, X, Check } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 import { Button } from '@/components/ui/button';
 
 interface StickerBookTemplateProps {
@@ -32,6 +34,15 @@ export function StickerBookTemplate({ title }: StickerBookTemplateProps) {
     { name: 'Green', value: 'green', bg: 'bg-green-200', border: 'border-green-400' },
     { name: 'Purple', value: 'purple', bg: 'bg-purple-200', border: 'border-purple-400' },
     { name: 'Orange', value: 'orange', bg: 'bg-orange-200', border: 'border-orange-400' },
+    { name: 'Red', value: 'red', bg: 'bg-red-200', border: 'border-red-400' },
+    { name: 'Teal', value: 'teal', bg: 'bg-teal-200', border: 'border-teal-400' },
+    { name: 'Indigo', value: 'indigo', bg: 'bg-indigo-200', border: 'border-indigo-400' },
+    { name: 'Lime', value: 'lime', bg: 'bg-lime-200', border: 'border-lime-400' },
+    { name: 'Cyan', value: 'cyan', bg: 'bg-cyan-200', border: 'border-cyan-400' },
+    { name: 'Fuchsia', value: 'fuchsia', bg: 'bg-fuchsia-200', border: 'border-fuchsia-400' },
+    { name: 'Rose', value: 'rose', bg: 'bg-rose-200', border: 'border-rose-400' },
+    { name: 'Amber', value: 'amber', bg: 'bg-amber-200', border: 'border-amber-400' },
+    { name: 'Emerald', value: 'emerald', bg: 'bg-emerald-200', border: 'border-emerald-400' },
   ];
 
   const getColorClasses = (color: string) => {
@@ -86,8 +97,9 @@ export function StickerBookTemplate({ title }: StickerBookTemplateProps) {
   };
 
   return (
-    <div className="h-full bg-gradient-to-br from-lime-50 to-green-50 dark:from-neutral-900 dark:to-neutral-800 overflow-hidden">
-      <div className="h-full flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-lime-50 to-green-50 dark:from-neutral-900 dark:to-neutral-800">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-hidden flex flex-col">
         {/* Header */}
         <div className="p-6 bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm border-b border-neutral-200 dark:border-neutral-800">
           <div className="max-w-7xl mx-auto">
@@ -383,6 +395,7 @@ export function StickerBookTemplate({ title }: StickerBookTemplateProps) {
           </div>
         )}
       </div>
+      <TemplateFooter />
     </div>
   );
 }

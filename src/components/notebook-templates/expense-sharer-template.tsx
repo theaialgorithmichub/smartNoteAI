@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Plus, DollarSign, UserPlus, TrendingUp, CheckCircle, Info, X, Trash2, Calendar, ArrowRight, Edit } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 import { Button } from '@/components/ui/button';
 
 interface ExpenseSharerTemplateProps {
@@ -278,21 +280,24 @@ export function ExpenseSharerTemplate({ title, notebookId }: ExpenseSharerTempla
   };
 
   return (
-    <div className="h-full bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-neutral-900 dark:to-neutral-800 p-8 overflow-y-auto">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-4 mb-2">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
-              {title}
-            </h1>
-            <button
-              onClick={() => setShowDocumentation(true)}
-              className="p-2 bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 rounded-lg hover:bg-teal-200 dark:hover:bg-teal-900/50 transition-colors"
-              title="Documentation"
-            >
-              <Info className="h-4 w-4" />
-            </button>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-neutral-900 dark:to-neutral-800">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-5xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-4 mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">
+                {title}
+              </h1>
+              <button
+                onClick={() => setShowDocumentation(true)}
+                className="p-2 bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 rounded-lg hover:bg-teal-200 dark:hover:bg-teal-900/50 transition-colors"
+                title="Documentation"
+              >
+                <Info className="h-4 w-4" />
+              </button>
+            </div>
           </div>
           <p className="text-neutral-600 dark:text-neutral-400">Split expenses fairly among friends</p>
         </div>
@@ -968,6 +973,7 @@ export function ExpenseSharerTemplate({ title, notebookId }: ExpenseSharerTempla
           )}
         </AnimatePresence>
       </div>
+      <TemplateFooter />
     </div>
   );
 }

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2, Upload, X, ImageIcon, BookOpen, Users, FileText, LayoutDashboard, Code, Calendar, Brain, Check, CalendarDays, PenTool, Blocks, Pencil, FolderKanban, LayoutGrid, BookText, GraduationCap, Layers, PenLine, ChefHat, Wallet, Plane, CheckSquare, Film, Workflow, Video, Link, Type, Mic, Target, Dumbbell, DollarSign, ShoppingCart, MessageSquare, Bell, Languages, Search, UtensilsCrossed, Trophy, StickyNote } from "lucide-react"
+import { Loader2, Upload, X, ImageIcon, BookOpen, Users, FileText, LayoutDashboard, Code, Calendar, Brain, Check, CalendarDays, PenTool, Blocks, Pencil, FolderKanban, LayoutGrid, BookText, GraduationCap, Layers, PenLine, ChefHat, Wallet, Plane, CheckSquare, Film, Workflow, Video, Link, Type, Mic, Target, Dumbbell, DollarSign, ShoppingCart, MessageSquare, Bell, Languages, Search, UtensilsCrossed, Trophy, StickyNote, Sparkles } from "lucide-react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 
@@ -223,41 +223,53 @@ export function CreateNotebookDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Create New Notebook</DialogTitle>
+      <DialogContent className="sm:max-w-6xl max-h-[95vh] overflow-y-auto bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 border-2 border-cyan-500/30 shadow-[0_0_50px_rgba(34,211,238,0.3)]">
+        <DialogHeader className="border-b border-cyan-500/20 pb-4">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="absolute -inset-2 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full blur opacity-40 animate-pulse" />
+              <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
+                <BookOpen className="w-8 h-8 text-white" />
+              </div>
+            </div>
+            <div>
+              <DialogTitle className="text-3xl font-black bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">Create New Notebook</DialogTitle>
+              <p className="text-sm text-cyan-300/60 font-mono mt-1">⚡ Design your perfect digital notebook ⚡</p>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-8 py-6">
           {/* Template Selection */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-amber-200">
+          <div className="space-y-4">
+            <label className="text-base font-bold text-cyan-300 flex items-center gap-2 uppercase tracking-wider">
+              <Sparkles className="h-5 w-5 text-cyan-400" />
               Choose Template
             </label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-5 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
               {templates.map((template) => {
                 const Icon = template.icon
                 return (
                   <motion.button
                     key={template.id}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setSelectedTemplate(template.id)}
-                    className={`relative p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${
+                    className={`relative p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 group ${
                       selectedTemplate === template.id
-                        ? "border-amber-500 bg-amber-500/10"
-                        : "border-neutral-700 hover:border-neutral-600 bg-neutral-800/50"
+                        ? "border-cyan-500 bg-cyan-500/20 shadow-[0_0_20px_rgba(34,211,238,0.4)]"
+                        : "border-slate-700 hover:border-cyan-500/50 bg-slate-800/50 hover:bg-slate-800"
                     }`}
                   >
                     {selectedTemplate === template.id && (
-                      <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-amber-500 flex items-center justify-center">
-                        <Check className="w-3 h-3 text-white" />
+                      <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-gradient-to-r from-cyan-500 to-purple-600 flex items-center justify-center shadow-[0_0_15px_rgba(34,211,238,0.6)] animate-pulse">
+                        <Check className="w-4 h-4 text-white" />
                       </div>
                     )}
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${template.color} flex items-center justify-center`}>
-                      <Icon className="w-4 h-4 text-white" />
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${template.color} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow`}>
+                      <Icon className="w-5 h-5 text-white" />
                     </div>
-                    <span className="text-xs text-neutral-300 text-center leading-tight">{template.name}</span>
+                    <span className="text-xs text-slate-300 group-hover:text-cyan-300 text-center leading-tight font-medium transition-colors">{template.name}</span>
                   </motion.button>
                 )
               })}
@@ -265,34 +277,40 @@ export function CreateNotebookDialog({
           </div>
 
           {/* Title */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-amber-200">
+          <div className="space-y-3">
+            <label className="text-base font-bold text-cyan-300 flex items-center gap-2 uppercase tracking-wider">
+              <Type className="h-5 w-5 text-cyan-400" />
               Notebook Title
             </label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="My Notebook"
-              className="w-full"
+              placeholder="My Awesome Notebook"
+              className="w-full px-5 py-4 text-lg bg-slate-800/60 border-2 border-slate-600/50 rounded-xl text-cyan-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:shadow-[0_0_20px_rgba(34,211,238,0.3)] transition-all duration-300 font-medium"
             />
           </div>
 
           {/* Category */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-amber-200">Category</label>
-            <div className="flex flex-wrap gap-2">
+          <div className="space-y-3">
+            <label className="text-base font-bold text-cyan-300 flex items-center gap-2 uppercase tracking-wider">
+              <LayoutGrid className="h-5 w-5 text-cyan-400" />
+              Category
+            </label>
+            <div className="flex flex-wrap gap-3">
               {categories.map((cat) => (
-                <button
+                <motion.button
                   key={cat}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setCategory(cat)}
-                  className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                  className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
                     category === cat
-                      ? "bg-amber-700 text-white"
-                      : "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                      ? "bg-gradient-to-r from-cyan-500 to-purple-600 text-white shadow-[0_0_20px_rgba(34,211,238,0.4)]"
+                      : "bg-slate-800/60 border border-slate-600/50 text-slate-300 hover:bg-slate-700 hover:border-cyan-500/50 hover:text-cyan-300"
                   }`}
                 >
                   {cat}
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>
@@ -343,19 +361,22 @@ export function CreateNotebookDialog({
           </div>
 
           {/* Cover Color */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-amber-200">
-              Cover Color {coverImageUrl && <span className="text-xs text-neutral-400">(used as fallback)</span>}
+          <div className="space-y-3">
+            <label className="text-base font-bold text-cyan-300 flex items-center gap-2 uppercase tracking-wider">
+              <Sparkles className="h-5 w-5 text-cyan-400" />
+              Cover Color {coverImageUrl && <span className="text-xs text-slate-400 normal-case">(used as fallback)</span>}
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-3">
               {themeColors.map((color) => (
-                <button
+                <motion.button
                   key={color.value}
+                  whileHover={{ scale: 1.15 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => setThemeColor(color.value)}
-                  className={`w-8 h-8 rounded-lg transition-transform ${
+                  className={`w-10 h-10 rounded-xl transition-all ${
                     themeColor === color.value
-                      ? "ring-2 ring-offset-2 ring-amber-500 scale-110"
-                      : "hover:scale-105"
+                      ? "ring-2 ring-offset-2 ring-offset-slate-950 ring-cyan-500 scale-110 shadow-[0_0_20px_rgba(34,211,238,0.5)]"
+                      : "hover:shadow-lg border-2 border-slate-700 hover:border-slate-600"
                   }`}
                   style={{ backgroundColor: color.value }}
                   title={color.name}
@@ -365,61 +386,72 @@ export function CreateNotebookDialog({
           </div>
 
           {/* Paper Pattern */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-amber-200">
+          <div className="space-y-3">
+            <label className="text-base font-bold text-cyan-300 flex items-center gap-2 uppercase tracking-wider">
+              <Layers className="h-5 w-5 text-cyan-400" />
               Paper Style
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-3">
               {paperPatterns.map((pattern) => (
-                <button
+                <motion.button
                   key={pattern.value}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setPaperPattern(pattern.value)}
-                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                  className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${
                     paperPattern === pattern.value
-                      ? "bg-amber-700 text-white"
-                      : "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                      ? "bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)]"
+                      : "bg-slate-800/60 border border-slate-600/50 text-slate-300 hover:bg-slate-700 hover:border-purple-500/50 hover:text-purple-300"
                   }`}
                 >
                   {pattern.name}
-                </button>
+                </motion.button>
               ))}
             </div>
           </div>
 
           {/* Page Color */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-amber-200">
+          <div className="space-y-3">
+            <label className="text-base font-bold text-cyan-300 flex items-center gap-2 uppercase tracking-wider">
+              <Sparkles className="h-5 w-5 text-cyan-400" />
               Page Color
             </label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-3">
               {pageColors.map((color) => (
-                <button
+                <motion.button
                   key={color.value}
+                  whileHover={{ scale: 1.15 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => setPageColor(color.value)}
-                  className={`w-8 h-8 rounded-lg transition-transform border ${
+                  className={`w-10 h-10 rounded-xl transition-all border-2 ${
                     pageColor === color.value
-                      ? "ring-2 ring-offset-2 ring-offset-neutral-900 ring-amber-500 scale-110"
-                      : "hover:scale-105 border-neutral-600"
-                  } ${color.isDark ? 'border-neutral-500' : ''}`}
+                      ? "ring-2 ring-offset-2 ring-offset-slate-950 ring-cyan-500 scale-110 shadow-[0_0_20px_rgba(34,211,238,0.5)]"
+                      : "hover:scale-105 border-slate-700 hover:border-slate-600"
+                  } ${color.isDark ? 'border-slate-600' : 'border-slate-700'}`}
                   style={{ backgroundColor: color.value }}
                   title={color.name}
                 />
               ))}
             </div>
             {isDarkColor(pageColor) && (
-              <p className="text-xs text-amber-400 mt-1">
+              <p className="text-xs text-cyan-400 mt-2 font-mono">
                 ✓ Dark page selected - text will automatically use light colors for readability
               </p>
             )}
           </div>
 
           {/* Preview */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-amber-200">Preview</label>
-            <div
-              className="w-28 h-28 rounded-lg shadow-lg mx-auto relative overflow-hidden"
-              style={{ backgroundColor: themeColor }}
-            >
+          <div className="space-y-3">
+            <label className="text-base font-bold text-cyan-300 flex items-center gap-2 uppercase tracking-wider justify-center">
+              <ImageIcon className="h-5 w-5 text-cyan-400" />
+              Preview
+            </label>
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-2xl blur opacity-40 group-hover:opacity-60 transition duration-300" />
+              <div
+                className="relative w-32 h-32 rounded-xl shadow-2xl mx-auto overflow-hidden border-2 border-cyan-500/30"
+                style={{ backgroundColor: themeColor }}
+              >
               {coverImageUrl && (
                 <Image
                   src={coverImageUrl}
@@ -428,23 +460,32 @@ export function CreateNotebookDialog({
                   className="object-cover"
                 />
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-              <div className="absolute inset-0 flex flex-col justify-end p-2">
-                <p className="text-white text-xs font-medium truncate">
-                  {title || "My Notebook"}
-                </p>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                <div className="absolute inset-0 flex flex-col justify-end p-3">
+                  <p className="text-white text-sm font-bold truncate drop-shadow-lg">
+                    {title || "My Notebook"}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="border-t border-cyan-500/20 pt-6 gap-3">
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            className="flex-1 px-6 py-3 bg-slate-800/60 border-2 border-slate-600/50 text-slate-300 hover:bg-slate-700 hover:border-slate-500 rounded-xl font-bold text-base transition-all"
+          >
             Cancel
           </Button>
-          <Button onClick={handleCreate} disabled={loading || !title.trim()}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Notebook
+          <Button 
+            onClick={handleCreate} 
+            disabled={loading || !title.trim()}
+            className="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] disabled:opacity-30 disabled:cursor-not-allowed rounded-xl font-black text-base transition-all duration-300 border-2 border-cyan-400/50"
+          >
+            {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+            {loading ? 'Creating...' : '⚡ Create Notebook'}
           </Button>
         </DialogFooter>
       </DialogContent>

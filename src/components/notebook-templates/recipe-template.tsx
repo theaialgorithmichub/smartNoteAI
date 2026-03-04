@@ -22,6 +22,8 @@ import {
   Info,
   X
 } from "lucide-react";
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 
 interface Ingredient {
   id: string;
@@ -336,60 +338,56 @@ Only return the JSON.`,
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 dark:from-neutral-950 dark:to-neutral-900">
-      {saving && (
-        <div className="fixed top-20 right-6 flex items-center gap-2 text-sm text-neutral-500 bg-white dark:bg-neutral-800 px-3 py-2 rounded-lg shadow-lg z-50">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          Saving...
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border-b border-neutral-200 dark:border-neutral-800 sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
-                <ChefHat className="w-5 h-5 text-white" />
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 to-red-50 dark:from-neutral-900 dark:to-neutral-800">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border-b border-neutral-200 dark:border-neutral-800 sticky top-0 z-40">
+            <div className="max-w-6xl mx-auto px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
+                    <ChefHat className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="font-bold text-neutral-900 dark:text-white">{title}</h1>
+                    <p className="text-xs text-neutral-500">{recipes.length} recipes</p>
+                  </div>
+                  <button
+                    onClick={() => setShowDocumentation(true)}
+                    className="p-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
+                    title="Documentation"
+                  >
+                    <Info className="h-4 w-4" />
+                  </button>
+                </div>
+                
+                <div className="flex gap-1 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
+                  {[
+                    { id: 'recipes', label: 'Recipes', icon: UtensilsCrossed },
+                    { id: 'shopping', label: 'Shopping', icon: ShoppingCart },
+                    { id: 'generate', label: 'AI Chef', icon: Sparkles },
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all ${
+                        activeTab === tab.id
+                          ? 'bg-white dark:bg-neutral-700 text-orange-600 dark:text-orange-400 shadow-sm'
+                          : 'text-neutral-600 dark:text-neutral-400'
+                      }`}
+                    >
+                      <tab.icon className="w-4 h-4" />
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div>
-                <h1 className="font-bold text-neutral-900 dark:text-white">{title}</h1>
-                <p className="text-xs text-neutral-500">{recipes.length} recipes</p>
-              </div>
-              <button
-                onClick={() => setShowDocumentation(true)}
-                className="p-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
-                title="Documentation"
-              >
-                <Info className="h-4 w-4" />
-              </button>
-            </div>
-            
-            <div className="flex gap-1 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
-              {[
-                { id: 'recipes', label: 'Recipes', icon: UtensilsCrossed },
-                { id: 'shopping', label: 'Shopping', icon: ShoppingCart },
-                { id: 'generate', label: 'AI Chef', icon: Sparkles },
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all ${
-                    activeTab === tab.id
-                      ? 'bg-white dark:bg-neutral-700 text-orange-600 dark:text-orange-400 shadow-sm'
-                      : 'text-neutral-600 dark:text-neutral-400'
-                  }`}
-                >
-                  <tab.icon className="w-4 h-4" />
-                  {tab.label}
-                </button>
-              ))}
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8">
+          <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Recipes Tab */}
         {activeTab === 'recipes' && (
           <div className="flex gap-6">
@@ -803,8 +801,8 @@ Only return the JSON.`,
         )}
       </div>
 
-      {/* Documentation Modal */}
-      <AnimatePresence>
+          {/* Documentation Modal */}
+          <AnimatePresence>
         {showDocumentation && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -954,6 +952,9 @@ Only return the JSON.`,
           </motion.div>
         )}
       </AnimatePresence>
+        </div>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 import {
   FolderKanban, Plus, Loader2, FileText, Users, Trash2, X,
   GitBranch, Palette, Globe, Link, ExternalLink, ChevronLeft,
@@ -9,6 +11,7 @@ import {
   ArrowUp, ArrowDown, Minus, MessageSquare, Paperclip, Image,
   GripVertical, ChevronDown, ChevronUp, Tag, Clock, Star,
   Upload, Download, Eye, MoreHorizontal, Layers, Zap, Info,
+  BarChart3, PieChart, TrendingUp, Activity, Send, Bot,
 } from "lucide-react";
 
 //  Types 
@@ -432,7 +435,7 @@ export function ProjectTemplate({ title = "Project Hub", notebookId }: ProjectTe
   const [activeId, _setActiveId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"overview"|"kanban"|"documents"|"team">("overview");
+  const [activeTab, setActiveTab] = useState<"overview"|"kanban"|"documents"|"team"|"dashboard"|"ai">("overview");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showDocumentation, setShowDocumentation] = useState(false);
 
@@ -467,6 +470,11 @@ export function ProjectTemplate({ title = "Project Hub", notebookId }: ProjectTe
   const [newTech, setNewTech] = useState("");
   const [showLinkForm, setShowLinkForm] = useState(false);
   const [linkForm, setLinkForm] = useState({ title: "", url: "", type: "website" as ProjectLink["type"] });
+  
+  // AI Chat
+  const [aiMessages, setAiMessages] = useState<{role: 'user' | 'assistant', content: string}[]>([]);
+  const [aiInput, setAiInput] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
 
   // DB refs
   const pageIdRef = useRef<string | null>(null);
@@ -677,6 +685,59 @@ export function ProjectTemplate({ title = "Project Hub", notebookId }: ProjectTe
     setMemberForm({ name: "", role: "" }); setShowMemberForm(false);
   };
 
+  //  AI Chat handler 
+  const handleAIChat = async () => {
+    if (!aiInput.trim() || !project) return;
+    
+    const userMessage = aiInput.trim();
+    setAiMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setAiInput("");
+    setAiLoading(true);
+
+    try {
+      // Prepare project context for AI
+      const context = `Project: ${project.name}
+Description: ${project.description}
+Status: ${project.status}
+Tech Stack: ${project.techStack.join(', ')}
+Team: ${project.team.map(m => `${m.name} (${m.role})`).join(', ')}
+Total Tickets: ${project.tickets.length}
+Tickets by Status:
+- Backlog: ${project.tickets.filter(t => t.status === 'backlog').length}
+- To Do: ${project.tickets.filter(t => t.status === 'todo').length}
+- In Progress: ${project.tickets.filter(t => t.status === 'in_progress').length}
+- Review: ${project.tickets.filter(t => t.status === 'review').length}
+- Done: ${project.tickets.filter(t => t.status === 'done').length}
+Tickets by Priority:
+- Critical: ${project.tickets.filter(t => t.priority === 'critical').length}
+- High: ${project.tickets.filter(t => t.priority === 'high').length}
+- Medium: ${project.tickets.filter(t => t.priority === 'medium').length}
+- Low: ${project.tickets.filter(t => t.priority === 'low').length}
+Recent Tickets: ${project.tickets.slice(0, 5).map(t => `${t.title} (${t.status})`).join(', ')}`;
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notebookId,
+          mode: 'chat',
+          message: `You are a project management assistant. Based on the following project data, answer the user's question:\n\n${context}\n\nUser Question: ${userMessage}`,
+          context: [],
+        }),
+      });
+
+      if (!res.ok) throw new Error('AI request failed');
+
+      const data = await res.json();
+      setAiMessages(prev => [...prev, { role: 'assistant', content: data.response || 'No response from AI' }]);
+    } catch (error) {
+      console.error('AI chat error:', error);
+      setAiMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }]);
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   //  Computed 
   const sprintTickets = useMemo(() => {
     if (!project) return [] as Ticket[];
@@ -695,15 +756,21 @@ export function ProjectTemplate({ title = "Project Hub", notebookId }: ProjectTe
 
   //  Loading 
   if (loading) return (
-    <div className="flex items-center justify-center h-full min-h-[400px]">
-      <Loader2 className="w-8 h-8 animate-spin text-indigo-500"/>
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-neutral-950">
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-500"/>
+      </div>
+      <TemplateFooter />
     </div>
   );
 
   const closeProjectForm = () => { setShowCreateForm(false); setEditingProjectId(null); setFormData(blankProject()); };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-neutral-950 flex overflow-hidden">
+    <div className="min-h-screen bg-slate-50 dark:bg-neutral-950 flex flex-col">
+      <TemplateHeader title={title} />
+      <div className="flex-1 flex overflow-hidden">
       {/* Ticket Modal */}
       <AnimatePresence>
         {openTicket && project && (
@@ -856,6 +923,8 @@ export function ProjectTemplate({ title = "Project Hub", notebookId }: ProjectTe
                     ["kanban","Board",Layers],
                     ["documents","Docs",FileText],
                     ["team","Team",Users],
+                    ["dashboard","Analytics",BarChart3],
+                    ["ai","AI Assistant",Bot],
                   ] as const).map(([id, label, Icon]) => (
                     <button key={id} onClick={() => setActiveTab(id)}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${activeTab === id ? "bg-white dark:bg-neutral-700 text-indigo-600 shadow-sm" : "text-neutral-500 hover:text-neutral-700"}`}>
@@ -1351,6 +1420,263 @@ export function ProjectTemplate({ title = "Project Hub", notebookId }: ProjectTe
               )}
             </div>
           )}
+
+          {/*  Dashboard Tab  */}
+          {project && activeTab === "dashboard" && (
+            <div className="max-w-6xl space-y-6">
+              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white">
+                <h2 className="text-2xl font-bold mb-2">📊 Project Analytics</h2>
+                <p className="text-indigo-100">Real-time insights and metrics for {project.name}</p>
+              </div>
+
+              {/* Key Metrics */}
+              <div className="grid grid-cols-4 gap-4">
+                <div className="bg-white dark:bg-neutral-900 rounded-2xl p-5 border border-neutral-200 dark:border-neutral-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Total Tickets</p>
+                    <Activity className="w-5 h-5 text-indigo-500" />
+                  </div>
+                  <p className="text-3xl font-bold text-neutral-900 dark:text-white">{project.tickets.length}</p>
+                  <p className="text-xs text-neutral-400 mt-1">{project.tickets.filter(t => t.status === 'done').length} completed</p>
+                </div>
+                <div className="bg-white dark:bg-neutral-900 rounded-2xl p-5 border border-neutral-200 dark:border-neutral-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">In Progress</p>
+                    <TrendingUp className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <p className="text-3xl font-bold text-neutral-900 dark:text-white">{project.tickets.filter(t => t.status === 'in_progress').length}</p>
+                  <p className="text-xs text-neutral-400 mt-1">Active work items</p>
+                </div>
+                <div className="bg-white dark:bg-neutral-900 rounded-2xl p-5 border border-neutral-200 dark:border-neutral-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Team Size</p>
+                    <Users className="w-5 h-5 text-green-500" />
+                  </div>
+                  <p className="text-3xl font-bold text-neutral-900 dark:text-white">{project.team.length}</p>
+                  <p className="text-xs text-neutral-400 mt-1">Active members</p>
+                </div>
+                <div className="bg-white dark:bg-neutral-900 rounded-2xl p-5 border border-neutral-200 dark:border-neutral-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Completion</p>
+                    <PieChart className="w-5 h-5 text-purple-500" />
+                  </div>
+                  <p className="text-3xl font-bold text-neutral-900 dark:text-white">
+                    {project.tickets.length > 0 ? Math.round((project.tickets.filter(t => t.status === 'done').length / project.tickets.length) * 100) : 0}%
+                  </p>
+                  <p className="text-xs text-neutral-400 mt-1">Overall progress</p>
+                </div>
+              </div>
+
+              {/* Status Distribution */}
+              <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800">
+                <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4 flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-indigo-500" />
+                  Ticket Status Distribution
+                </h3>
+                <div className="space-y-3">
+                  {STATUSES.map(status => {
+                    const count = project.tickets.filter(t => t.status === status.id).length;
+                    const percentage = project.tickets.length > 0 ? (count / project.tickets.length) * 100 : 0;
+                    return (
+                      <div key={status.id}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">{status.label}</span>
+                          <span className="text-sm font-bold text-neutral-900 dark:text-white">{count} ({percentage.toFixed(0)}%)</span>
+                        </div>
+                        <div className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-full h-2">
+                          <div className={`h-2 rounded-full ${status.bg.replace('bg-', 'bg-gradient-to-r from-').replace('dark:bg-', 'to-')}`} style={{ width: `${percentage}%` }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                {/* Priority Breakdown */}
+                <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800">
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4 flex items-center gap-2">
+                    <ArrowUp className="w-5 h-5 text-red-500" />
+                    Priority Breakdown
+                  </h3>
+                  <div className="space-y-3">
+                    {PRIORITIES.map(priority => {
+                      const count = project.tickets.filter(t => t.priority === priority.id).length;
+                      return (
+                        <div key={priority.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <priority.icon className={`w-4 h-4 ${priority.color}`} />
+                            <span className="text-sm text-neutral-700 dark:text-neutral-300">{priority.label}</span>
+                          </div>
+                          <span className="text-sm font-bold text-neutral-900 dark:text-white">{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Issue Type Breakdown */}
+                <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800">
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4 flex items-center gap-2">
+                    <Layers className="w-5 h-5 text-blue-500" />
+                    Issue Types
+                  </h3>
+                  <div className="space-y-3">
+                    {ISSUE_TYPES.map(type => {
+                      const count = project.tickets.filter(t => t.type === type.id).length;
+                      return (
+                        <div key={type.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-3 h-3 rounded ${type.color}`} />
+                            <span className="text-sm text-neutral-700 dark:text-neutral-300">{type.label}</span>
+                          </div>
+                          <span className="text-sm font-bold text-neutral-900 dark:text-white">{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Team Performance */}
+              <div className="bg-white dark:bg-neutral-900 rounded-2xl p-6 border border-neutral-200 dark:border-neutral-800">
+                <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-green-500" />
+                  Team Performance
+                </h3>
+                <div className="grid grid-cols-3 gap-4">
+                  {project.team.map(member => {
+                    const memberTickets = project.tickets.filter(t => t.assigneeId === member.id);
+                    const completed = memberTickets.filter(t => t.status === 'done').length;
+                    const completionRate = memberTickets.length > 0 ? (completed / memberTickets.length) * 100 : 0;
+                    return (
+                      <div key={member.id} className="bg-neutral-50 dark:bg-neutral-800 rounded-xl p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <Avatar member={member} size="sm" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-neutral-900 dark:text-white truncate">{member.name}</p>
+                            <p className="text-xs text-neutral-500">{member.role}</p>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-xs">
+                            <span className="text-neutral-500">Assigned</span>
+                            <span className="font-bold text-neutral-900 dark:text-white">{memberTickets.length}</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span className="text-neutral-500">Completed</span>
+                            <span className="font-bold text-green-600">{completed}</span>
+                          </div>
+                          <div className="w-full bg-neutral-200 dark:bg-neutral-700 rounded-full h-1.5 mt-2">
+                            <div className="bg-green-500 h-1.5 rounded-full" style={{ width: `${completionRate}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/*  AI Assistant Tab  */}
+          {project && activeTab === "ai" && (
+            <div className="max-w-4xl mx-auto h-full flex flex-col">
+              <div className="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl p-6 text-white mb-6">
+                <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+                  <Bot className="w-7 h-7" />
+                  AI Project Assistant
+                </h2>
+                <p className="text-purple-100">Ask me anything about your project, tickets, team, or status</p>
+              </div>
+
+              <div className="flex-1 bg-white dark:bg-neutral-900 rounded-2xl border border-neutral-200 dark:border-neutral-800 flex flex-col overflow-hidden">
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                  {aiMessages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center">
+                      <Bot className="w-16 h-16 text-neutral-300 dark:text-neutral-700 mb-4" />
+                      <h3 className="text-lg font-semibold text-neutral-900 dark:text-white mb-2">Start a Conversation</h3>
+                      <p className="text-neutral-500 max-w-md mb-6">Ask me about ticket status, project progress, team workload, or anything else!</p>
+                      <div className="grid grid-cols-2 gap-3 max-w-lg">
+                        <button onClick={() => setAiInput("What's the current status of the project?")} className="px-4 py-3 bg-neutral-50 dark:bg-neutral-800 rounded-xl text-sm text-left hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
+                          <p className="font-medium text-neutral-900 dark:text-white">Project Status</p>
+                          <p className="text-xs text-neutral-500 mt-1">Get overall progress</p>
+                        </button>
+                        <button onClick={() => setAiInput("Which tickets are in progress?")} className="px-4 py-3 bg-neutral-50 dark:bg-neutral-800 rounded-xl text-sm text-left hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
+                          <p className="font-medium text-neutral-900 dark:text-white">Active Tickets</p>
+                          <p className="text-xs text-neutral-500 mt-1">See what's being worked on</p>
+                        </button>
+                        <button onClick={() => setAiInput("Show me high priority tickets")} className="px-4 py-3 bg-neutral-50 dark:bg-neutral-800 rounded-xl text-sm text-left hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
+                          <p className="font-medium text-neutral-900 dark:text-white">Priority Items</p>
+                          <p className="text-xs text-neutral-500 mt-1">Focus on urgent work</p>
+                        </button>
+                        <button onClick={() => setAiInput("How is the team performing?")} className="px-4 py-3 bg-neutral-50 dark:bg-neutral-800 rounded-xl text-sm text-left hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors">
+                          <p className="font-medium text-neutral-900 dark:text-white">Team Performance</p>
+                          <p className="text-xs text-neutral-500 mt-1">Check team metrics</p>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    aiMessages.map((msg, idx) => (
+                      <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        {msg.role === 'assistant' && (
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                            <Bot className="w-5 h-5 text-white" />
+                          </div>
+                        )}
+                        <div className={`max-w-[80%] rounded-2xl px-4 py-3 ${
+                          msg.role === 'user' 
+                            ? 'bg-indigo-500 text-white' 
+                            : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white'
+                        }`}>
+                          <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                        </div>
+                        {msg.role === 'user' && (
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-xs font-bold">You</span>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                  {aiLoading && (
+                    <div className="flex gap-3">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                        <Bot className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="bg-neutral-100 dark:bg-neutral-800 rounded-2xl px-4 py-3">
+                        <Loader2 className="w-5 h-5 animate-spin text-indigo-500" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Input */}
+                <div className="border-t border-neutral-200 dark:border-neutral-800 p-4">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={aiInput}
+                      onChange={(e) => setAiInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleAIChat()}
+                      placeholder="Ask about your project..."
+                      className="flex-1 px-4 py-3 bg-neutral-50 dark:bg-neutral-800 rounded-xl outline-none text-sm"
+                      disabled={aiLoading}
+                    />
+                    <button
+                      onClick={handleAIChat}
+                      disabled={aiLoading || !aiInput.trim()}
+                      className="px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      <Send className="w-4 h-4" />
+                      Send
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1509,6 +1835,8 @@ export function ProjectTemplate({ title = "Project Hub", notebookId }: ProjectTe
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

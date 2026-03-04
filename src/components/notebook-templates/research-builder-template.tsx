@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Plus, FileText, CheckCircle, Sparkles, TrendingUp, BookOpen, Lightbulb, Search, Info, X, Trash2, Edit2, List } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 
 interface Chapter {
   id: string;
@@ -41,6 +43,8 @@ export function ResearchBuilderTemplate({ title, notebookId }: ResearchBuilderTe
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedSuggestions, setGeneratedSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<string>('');
+  const [showAnalysis, setShowAnalysis] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const saveData = () => {
@@ -190,8 +194,26 @@ export function ResearchBuilderTemplate({ title, notebookId }: ResearchBuilderTe
     // Simulate AI analysis generation
     await new Promise(resolve => setTimeout(resolve, 2000));
     
-    alert(`AI Analysis for "${topic.title}":\n\n✓ Research scope is well-defined\n✓ ${topic.chapters.length} chapters provide comprehensive coverage\n✓ ${topic.chapters.filter(c => c.status === 'completed').length} chapters completed\n\nRecommendations:\n• Consider adding more case studies\n• Expand on practical applications\n• Include expert interviews\n• Add visual data representations`);
+    const analysis = `AI Analysis for "${topic.title}":
+
+✓ Research scope is well-defined
+✓ ${topic.chapters.length} chapters provide comprehensive coverage
+✓ ${topic.chapters.filter(c => c.status === 'completed').length} chapters completed
+
+Recommendations:
+• Consider adding more case studies
+• Expand on practical applications
+• Include expert interviews
+• Add visual data representations
+
+Key Insights:
+• Strong foundation with current chapter structure
+• Content depth varies across chapters
+• Consider adding more empirical evidence
+• Visual aids would enhance comprehension`;
     
+    setAiAnalysis(analysis);
+    setShowAnalysis(true);
     setIsGenerating(false);
   };
 
@@ -205,8 +227,10 @@ export function ResearchBuilderTemplate({ title, notebookId }: ResearchBuilderTe
   ];
 
   return (
-    <div className="h-full bg-gradient-to-br from-violet-50 to-purple-50 dark:from-neutral-900 dark:to-neutral-800 overflow-y-auto">
-      <div className="max-w-7xl mx-auto p-8 space-y-6">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-violet-50 to-purple-50 dark:from-neutral-900 dark:to-neutral-800">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-7xl mx-auto p-8 space-y-6">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-4 mb-2">
@@ -647,46 +671,65 @@ export function ResearchBuilderTemplate({ title, notebookId }: ResearchBuilderTe
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
                 onClick={e => e.stopPropagation()}
-                className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-2xl p-6"
+                className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-4xl p-8"
               >
-                <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-4">Add Chapter</h3>
-                <div className="space-y-4">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl">
+                    <FileText className="h-8 w-8 text-white" />
+                  </div>
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Chapter Title</label>
+                    <h3 className="text-2xl font-black text-neutral-900 dark:text-white">Add New Chapter</h3>
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400">Define a chapter for your research topic</p>
+                  </div>
+                </div>
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-base font-bold text-neutral-700 dark:text-neutral-300 mb-3 flex items-center gap-2">
+                      <BookOpen className="h-5 w-5 text-blue-600" />
+                      Chapter Title *
+                    </label>
                     <input
                       type="text"
                       value={newChapter.title}
                       onChange={(e) => setNewChapter({ ...newChapter, title: e.target.value })}
                       placeholder="e.g., Introduction to AI in Healthcare"
-                      className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
+                      className="w-full px-5 py-4 text-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-300 dark:border-blue-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-neutral-900 dark:text-white font-medium"
+                      autoFocus
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Initial Content (optional)</label>
+                    <label className="block text-base font-bold text-neutral-700 dark:text-neutral-300 mb-3 flex items-center gap-2">
+                      <Edit2 className="h-5 w-5 text-indigo-600" />
+                      Initial Content (optional)
+                    </label>
                     <textarea
                       value={newChapter.content}
                       onChange={(e) => setNewChapter({ ...newChapter, content: e.target.value })}
                       placeholder="Write initial content or leave empty to add later..."
-                      rows={4}
-                      className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
+                      rows={8}
+                      className="w-full px-5 py-4 text-base bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border-2 border-indigo-300 dark:border-indigo-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-neutral-900 dark:text-white resize-none"
                     />
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
+                      💡 Tip: You can add or edit content later in the Execution stage
+                    </p>
                   </div>
-                  <div className="flex gap-3">
-                    <button
-                      onClick={addChapter}
-                      disabled={!newChapter.title.trim()}
-                      className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
-                    >
-                      Add Chapter
-                    </button>
+                  <div className="flex gap-4 pt-4 border-t border-neutral-200 dark:border-neutral-700">
                     <button
                       onClick={() => {
                         setIsAddingChapter(false);
                         setNewChapter({ title: '', content: '' });
                       }}
-                      className="flex-1 px-4 py-2 bg-neutral-200 dark:bg-neutral-700 text-neutral-900 dark:text-white rounded-lg hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors"
+                      className="flex-1 px-6 py-3 bg-neutral-200 dark:bg-neutral-700 text-neutral-900 dark:text-white rounded-xl hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors font-semibold text-lg"
                     >
                       Cancel
+                    </button>
+                    <button
+                      onClick={addChapter}
+                      disabled={!newChapter.title.trim()}
+                      className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:shadow-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-lg flex items-center justify-center gap-2"
+                    >
+                      <Plus className="h-5 w-5" />
+                      Add Chapter
                     </button>
                   </div>
                 </div>
@@ -805,6 +848,85 @@ export function ResearchBuilderTemplate({ title, notebookId }: ResearchBuilderTe
                     className="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:opacity-90 transition-opacity"
                   >
                     Close
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* AI Analysis Modal */}
+        <AnimatePresence>
+          {showAnalysis && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+              onClick={() => setShowAnalysis(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                onClick={e => e.stopPropagation()}
+                className="bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
+              >
+                <div className="sticky top-0 bg-gradient-to-r from-violet-500 via-purple-600 to-pink-600 p-6 flex items-center justify-between z-10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-14 h-14 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center animate-pulse">
+                      <Brain className="w-8 h-8 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">AI Analysis Results</h2>
+                      <p className="text-violet-100 text-sm">Comprehensive research insights</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowAnalysis(false)}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  >
+                    <X className="h-5 w-5 text-white" />
+                  </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-6">
+                  <div className="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/20 rounded-xl p-6 border-2 border-violet-200 dark:border-violet-800">
+                    <div className="flex items-center gap-3 mb-4">
+                      <Sparkles className="h-6 w-6 text-violet-600" />
+                      <h3 className="text-xl font-bold text-neutral-900 dark:text-white">Analysis Report</h3>
+                    </div>
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <pre className="whitespace-pre-wrap font-sans text-base text-neutral-700 dark:text-neutral-300 leading-relaxed bg-white dark:bg-neutral-800 p-5 rounded-lg border border-violet-200 dark:border-violet-700">
+{aiAnalysis}
+                      </pre>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 grid grid-cols-2 gap-4">
+                    <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <h4 className="font-bold text-green-900 dark:text-green-400">Strengths</h4>
+                      </div>
+                      <p className="text-sm text-green-800 dark:text-green-300">Well-structured research with clear objectives</p>
+                    </div>
+                    <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Lightbulb className="h-5 w-5 text-amber-600" />
+                        <h4 className="font-bold text-amber-900 dark:text-amber-400">Opportunities</h4>
+                      </div>
+                      <p className="text-sm text-amber-800 dark:text-amber-300">Expand with more empirical data</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="sticky bottom-0 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-700 p-6">
+                  <button
+                    onClick={() => setShowAnalysis(false)}
+                    className="w-full px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl hover:shadow-lg hover:shadow-violet-500/50 transition-all font-bold text-lg"
+                  >
+                    Close Analysis
                   </button>
                 </div>
               </motion.div>
@@ -963,7 +1085,9 @@ export function ResearchBuilderTemplate({ title, notebookId }: ResearchBuilderTe
           </motion.div>
         )}
         </AnimatePresence>
+        </div>
       </div>
+      <TemplateFooter />
     </div>
   );
 }

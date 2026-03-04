@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { BookOpen, Search, Volume2, Star, History, Info, X, Check, Loader2, Globe } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 
 interface DictionaryTemplateProps {
   title: string;
@@ -133,20 +135,22 @@ export function DictionaryTemplate({ title }: DictionaryTemplateProps) {
   };
 
   return (
-    <div className="h-full bg-gradient-to-br from-slate-50 to-gray-50 dark:from-neutral-900 dark:to-neutral-800 p-8 overflow-y-auto">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-600 to-gray-600 bg-clip-text text-transparent">
-              {title}
-            </h1>
-            <button
-              onClick={() => setShowDocumentation(true)}
-              className="p-2 bg-slate-100 dark:bg-slate-900/30 text-slate-600 dark:text-slate-400 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-900/50 transition-colors"
-              title="Know More"
-            >
-              <Info className="h-5 w-5" />
-            </button>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-neutral-900 dark:to-neutral-800">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-600 to-gray-600 bg-clip-text text-transparent">
+                {title}
+              </h1>
+              <button
+                onClick={() => setShowDocumentation(true)}
+                className="p-2 bg-slate-100 dark:bg-slate-900/30 text-slate-600 dark:text-slate-400 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-900/50 transition-colors"
+                title="Know More"
+              >
+                <Info className="h-5 w-5" />
+              </button>
           </div>
           <p className="text-neutral-600 dark:text-neutral-400">Multi-language word meanings and translations</p>
         </div>
@@ -181,15 +185,23 @@ export function DictionaryTemplate({ title }: DictionaryTemplateProps) {
             </div>
           </div>
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
-            <input
-              type="text"
+            <div className="flex items-center gap-2 mb-2">
+              <Search className="h-5 w-5 text-neutral-400" />
+              <label className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                Enter word or text in {sourceLang}
+              </label>
+            </div>
+            <textarea
               value={searchWord}
               onChange={(e) => setSearchWord(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              placeholder="Search for a word..."
-              className="w-full pl-12 pr-4 py-4 bg-neutral-50 dark:bg-neutral-700 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-500"
+              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSearch()}
+              placeholder={`Type or paste text in ${sourceLang}... (Press Enter to search, Shift+Enter for new line)`}
+              rows={3}
+              className="w-full px-4 py-3 bg-neutral-50 dark:bg-neutral-700 border-2 border-slate-200 dark:border-slate-700 rounded-lg text-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-500 resize-none"
             />
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+              💡 You can paste sentences or paragraphs for translation
+            </p>
           </div>
           <div className="flex items-center gap-3 mt-4">
             <Button
@@ -453,7 +465,9 @@ export function DictionaryTemplate({ title }: DictionaryTemplateProps) {
             </Card>
           </div>
         )}
+        </div>
       </div>
+      <TemplateFooter />
     </div>
   );
 }

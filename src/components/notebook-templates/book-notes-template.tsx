@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
-import { BookOpen, Plus, Quote, Star, Bookmark, Trash2, Edit2, Info, X, Check, Save } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { BookOpen, Plus, Star, Trash2, Edit2, X, Info, Search, Bookmark, Quote, Save, Check } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 
 interface BookNotesTemplateProps {
   title: string;
@@ -130,8 +132,10 @@ export function BookNotesTemplate({ title }: BookNotesTemplateProps) {
   };
 
   return (
-    <div className="h-full bg-gradient-to-br from-amber-50 to-orange-50 dark:from-neutral-900 dark:to-neutral-800 p-8 overflow-y-auto">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-amber-50 to-orange-50 dark:from-neutral-900 dark:to-neutral-800">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-2">
@@ -728,7 +732,9 @@ export function BookNotesTemplate({ title }: BookNotesTemplateProps) {
             </Card>
           </div>
         )}
+        </div>
       </div>
+      <TemplateFooter />
     </div>
   );
 }

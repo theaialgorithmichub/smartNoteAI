@@ -498,6 +498,7 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
   if (notebook.template === 'simple') {
     return (
       <SimpleTemplate
+        title={notebook.title}
         notebookId={notebookId}
         pages={pages}
         onUpdate={fetchNotebookData}
@@ -516,13 +517,13 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
         case 'document':
           return <DocumentTemplate title={notebook.title} notebookId={notebookId} />
         case 'dashboard':
-          return <DashboardTemplate notebookId={notebookId} />
+          return <DashboardTemplate title={notebook.title} notebookId={notebookId} />
         case 'code-notebook':
           return <CodeNotebookTemplate title={notebook.title} notebookId={notebookId} />
         case 'planner':
           return <PlannerTemplate title={notebook.title} notebookId={notebookId} />
         case 'ai-research':
-          return <AIResearchTemplate notebookId={notebookId} />
+          return <AIResearchTemplate title={notebook.title} notebookId={notebookId} />
         case 'diary':
           return <DiaryTemplate title={notebook.title} notebookId={notebookId} />
         case 'journal':

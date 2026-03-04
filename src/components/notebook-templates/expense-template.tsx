@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 import {
   Wallet,
   Plus,
@@ -119,6 +121,8 @@ export function ExpenseTemplate({ title = "Expense Manager", notebookId }: Expen
     description: '',
     date: new Date().toISOString().split('T')[0],
   });
+  const [searchDate, setSearchDate] = useState('');
+  const [viewMode, setViewMode] = useState<'month' | 'date'>('month');
   
   const [isAddingBudget, setIsAddingBudget] = useState(false);
   const [newBudget, setNewBudget] = useState<Partial<Budget>>({
@@ -210,12 +214,27 @@ export function ExpenseTemplate({ title = "Expense Manager", notebookId }: Expen
 
   // Filtered transactions
   const filteredTransactions = useMemo(() => {
-    return monthlyStats.transactions.filter(t => {
+    let filtered = viewMode === 'month' ? monthlyStats.transactions : transactions;
+    
+    // Filter by search date if provided
+    if (searchDate) {
+      filtered = filtered.filter(t => t.date === searchDate);
+    }
+    
+    return filtered.filter(t => {
       if (filterType !== 'all' && t.type !== filterType) return false;
       if (filterCategory !== 'all' && t.category !== filterCategory) return false;
       return true;
     }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [monthlyStats, filterType, filterCategory]);
+  }, [monthlyStats, transactions, filterType, filterCategory, searchDate, viewMode]);
+
+  // Quick date selection helper
+  const setQuickDate = (daysFromNow: number) => {
+    const date = new Date();
+    date.setDate(date.getDate() + daysFromNow);
+    const formattedDate = date.toISOString().split('T')[0];
+    setNewTransaction({ ...newTransaction, date: formattedDate });
+  };
 
   const addTransaction = () => {
     if (!newTransaction.amount || !newTransaction.category) return;
@@ -302,7 +321,9 @@ export function ExpenseTemplate({ title = "Expense Manager", notebookId }: Expen
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-neutral-950 dark:to-neutral-900">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-neutral-950 dark:to-neutral-900">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto">
       {saving && (
         <div className="fixed top-20 right-6 flex items-center gap-2 text-sm text-neutral-500 bg-white dark:bg-neutral-800 px-3 py-2 rounded-lg shadow-lg z-50">
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -472,12 +493,23 @@ export function ExpenseTemplate({ title = "Expense Manager", notebookId }: Expen
                     className="px-3 py-2 bg-white dark:bg-neutral-700 rounded-lg outline-none"
                   />
                   
-                  <input
-                    type="date"
-                    value={newTransaction.date}
-                    onChange={(e) => setNewTransaction({ ...newTransaction, date: e.target.value })}
-                    className="px-3 py-2 bg-white dark:bg-neutral-700 rounded-lg outline-none"
-                  />
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300 flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      Event Date *
+                    </label>
+                    <input
+                      type="date"
+                      value={newTransaction.date}
+                      onChange={(e) => setNewTransaction({ ...newTransaction, date: e.target.value })}
+                      className="w-full px-4 py-3 bg-white dark:bg-neutral-700 border-2 border-emerald-200 dark:border-emerald-800 rounded-lg outline-none focus:border-emerald-500 dark:focus:border-emerald-500 text-neutral-900 dark:text-white font-medium"
+                    />
+                    <div className="flex gap-2">
+                      <button onClick={() => setQuickDate(0)} className="px-3 py-1 text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors">Today</button>
+                      <button onClick={() => setQuickDate(1)} className="px-3 py-1 text-xs bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 rounded-lg hover:bg-teal-200 dark:hover:bg-teal-900/50 transition-colors">Tomorrow</button>
+                      <button onClick={() => setQuickDate(-1)} className="px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors">Yesterday</button>
+                    </div>
+                  </div>
                   
                   <div className="flex gap-2">
                     <button onClick={addTransaction} className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg">Add</button>
@@ -577,6 +609,59 @@ export function ExpenseTemplate({ title = "Expense Manager", notebookId }: Expen
         {/* Transactions Tab */}
         {activeTab === 'transactions' && (
           <div className="space-y-6">
+            {/* View Mode Toggle */}
+            <div className="flex gap-2 mb-4">
+              <button
+                onClick={() => { setViewMode('month'); setSearchDate(''); }}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  viewMode === 'month'
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                }`}
+              >
+                Monthly View
+              </button>
+              <button
+                onClick={() => setViewMode('date')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  viewMode === 'date'
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                }`}
+              >
+                Search by Date
+              </button>
+            </div>
+
+            {/* Date Search */}
+            {viewMode === 'date' && (
+              <div className="mb-4 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+                <label className="text-sm font-medium text-emerald-700 dark:text-emerald-400 mb-2 flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Search Expenses by Date
+                </label>
+                <div className="flex gap-3 mt-2">
+                  <input
+                    type="date"
+                    value={searchDate}
+                    onChange={(e) => setSearchDate(e.target.value)}
+                    className="flex-1 px-4 py-2 bg-white dark:bg-neutral-800 border border-emerald-300 dark:border-emerald-700 rounded-lg outline-none focus:border-emerald-500 text-neutral-900 dark:text-white"
+                  />
+                  <button
+                    onClick={() => setSearchDate('')}
+                    className="px-4 py-2 bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-300 dark:hover:bg-neutral-600 transition-colors"
+                  >
+                    Clear
+                  </button>
+                </div>
+                {searchDate && (
+                  <p className="text-sm text-emerald-600 dark:text-emerald-400 mt-2">
+                    📅 Showing expenses for {new Date(searchDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Filters */}
             <div className="flex items-center gap-4 flex-wrap">
               <select
@@ -627,7 +712,10 @@ export function ExpenseTemplate({ title = "Expense Manager", notebookId }: Expen
                   </select>
                   <input type="number" value={newTransaction.amount || ''} onChange={(e) => setNewTransaction({ ...newTransaction, amount: parseFloat(e.target.value) || 0 })} placeholder="Amount" className="px-3 py-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg outline-none" />
                   <input type="text" value={newTransaction.description} onChange={(e) => setNewTransaction({ ...newTransaction, description: e.target.value })} placeholder="Description" className="px-3 py-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg outline-none" />
-                  <input type="date" value={newTransaction.date} onChange={(e) => setNewTransaction({ ...newTransaction, date: e.target.value })} className="px-3 py-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg outline-none" />
+                  <div className="flex gap-2 items-center">
+                    <input type="date" value={newTransaction.date} onChange={(e) => setNewTransaction({ ...newTransaction, date: e.target.value })} className="px-3 py-2 bg-neutral-50 dark:bg-neutral-800 border-2 border-emerald-300 dark:border-emerald-700 rounded-lg outline-none focus:border-emerald-500" />
+                    <button onClick={() => setQuickDate(0)} className="px-2 py-2 text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-lg hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors" title="Set to today">Today</button>
+                  </div>
                   <div className="flex gap-2">
                     <button onClick={addTransaction} className="flex-1 px-4 py-2 bg-emerald-500 text-white rounded-lg">Add</button>
                     <button onClick={() => setIsAddingTransaction(false)} className="px-4 py-2 text-neutral-500">Cancel</button>
@@ -1008,6 +1096,8 @@ export function ExpenseTemplate({ title = "Expense Manager", notebookId }: Expen
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

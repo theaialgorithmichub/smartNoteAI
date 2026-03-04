@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dumbbell, Plus, TrendingUp, Calendar, Activity, Info, Trash2, X, ChevronLeft, ChevronRight, Edit2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 
 interface Exercise {
   id: string;
@@ -181,15 +183,17 @@ export function WorkoutLogTemplate({ title, notebookId }: WorkoutLogTemplateProp
   const totalExercises = allWorkouts.reduce((sum, w) => sum + w.exercises.length, 0);
 
   return (
-    <div className="h-full bg-gradient-to-br from-orange-50 to-red-50 dark:from-neutral-900 dark:to-neutral-800 p-8 overflow-y-auto">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-4 mb-2">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-              {title}
-            </h1>
-            <button
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-red-50 to-orange-50 dark:from-neutral-900 dark:to-neutral-800">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-6xl mx-auto space-y-6">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-4 mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                {title}
+              </h1>
+              <button
               onClick={() => setShowDocumentation(true)}
               className="p-2 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-lg hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
               title="Documentation"
@@ -518,10 +522,9 @@ export function WorkoutLogTemplate({ title, notebookId }: WorkoutLogTemplateProp
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
-      {/* Documentation Modal */}
-      <AnimatePresence>
+        {/* Documentation Modal */}
+        <AnimatePresence>
         {showDocumentation && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -671,6 +674,9 @@ export function WorkoutLogTemplate({ title, notebookId }: WorkoutLogTemplateProp
           </motion.div>
         )}
       </AnimatePresence>
+        </div>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

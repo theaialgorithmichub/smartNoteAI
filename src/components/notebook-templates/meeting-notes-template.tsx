@@ -8,6 +8,8 @@ import {
   Copy, Trash2, Clock, ChevronDown, Info,
 } from "lucide-react";
 import { FuturisticCalendar } from "@/components/ui/futuristic-calendar";
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -113,10 +115,27 @@ function AIPanel({ meeting, notebookId }: { meeting: Meeting; notebookId?: strin
           context: [],
         }),
       });
+      
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("API Error:", errorData);
+        setResult(`Error: ${errorData.error || "Failed to process request"}`);
+        return;
+      }
+      
       const data = await res.json();
-      setResult(data.response || "No result returned.");
-    } catch {
-      setResult("Something went wrong. Please try again.");
+      console.log("API Response:", data);
+      
+      if (data.response) {
+        setResult(data.response);
+      } else if (data.error) {
+        setResult(`Error: ${data.error}`);
+      } else {
+        setResult("No result returned from AI. Please try again.");
+      }
+    } catch (error) {
+      console.error("Request failed:", error);
+      setResult(`Something went wrong: ${error instanceof Error ? error.message : "Please try again."}`);
     } finally {
       setLoading(false);
     }
@@ -309,7 +328,9 @@ export function MeetingNotesTemplate({ title, notebookId, participants = [] }: M
     Object.keys(dayData).filter((d) => (dayData[d]?.meetings?.length ?? 0) > 0);
 
   return (
-    <div className="relative w-full bg-neutral-950 text-neutral-100">
+    <div className="min-h-screen flex flex-col bg-neutral-950 text-neutral-100">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto relative">
       <div className="pointer-events-none fixed top-0 left-0 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl -z-0" />
       <div className="pointer-events-none fixed top-40 right-0 h-64 w-64 rounded-full bg-cyan-500/8 blur-3xl -z-0" />
 
@@ -889,6 +910,8 @@ export function MeetingNotesTemplate({ title, notebookId, participants = [] }: M
           </div>
         )}
       </div>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }

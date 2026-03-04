@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { UtensilsCrossed, Plus, Users, Edit2, Trash2, Info, X, Check, Save, Calendar, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 
 interface MealsPlannerTemplateProps {
   title: string;
@@ -190,8 +192,10 @@ export function MealsPlannerTemplate({ title, notebookId }: MealsPlannerTemplate
   const foodSummary = generateFoodSummary();
 
   return (
-    <div className="h-full bg-gradient-to-br from-orange-50 to-amber-50 dark:from-neutral-900 dark:to-neutral-800 p-8 overflow-y-auto">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-orange-50 to-amber-50 dark:from-neutral-900 dark:to-neutral-800">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto p-8">
+        <div className="max-w-7xl mx-auto space-y-6">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent mb-2">
             {title}
@@ -318,10 +322,33 @@ export function MealsPlannerTemplate({ title, notebookId }: MealsPlannerTemplate
                     </Card>
                   ))}
                 </div>
-                <div className="mt-4 p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                  <p className="text-sm text-green-800 dark:text-green-300 font-medium">
-                    📋 Total: {foodSummary.reduce((sum, item) => sum + item.count, 0)} items • {attendees.length} people
-                  </p>
+                <div className="mt-4 space-y-2">
+                  <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                    <p className="text-sm text-green-800 dark:text-green-300 font-medium">
+                      📋 <strong>Total Items:</strong> {foodSummary.reduce((sum, item) => sum + item.count, 0)} • <strong>Unique Foods:</strong> {foodSummary.length} • <strong>People:</strong> {attendees.length}
+                    </p>
+                  </div>
+                  {attendees.filter(a => a.dietaryRestrictions).length > 0 && (
+                    <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
+                      <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">
+                        ⚠️ <strong>Dietary Restrictions:</strong> {attendees.filter(a => a.dietaryRestrictions).length} person(s) with special requirements
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {attendees.filter(a => a.dietaryRestrictions).map((person, idx) => (
+                          <span key={idx} className="text-xs bg-amber-200 dark:bg-amber-800 px-2 py-1 rounded">
+                            {person.personName}: {person.dietaryRestrictions}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {attendees.filter(a => a.notes).length > 0 && (
+                    <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                      <p className="text-sm text-blue-800 dark:text-blue-300 font-medium">
+                        💬 <strong>Special Notes:</strong> {attendees.filter(a => a.notes).length} person(s) with additional requests
+                      </p>
+                    </div>
+                  )}
                 </div>
               </Card>
             )}
@@ -710,7 +737,9 @@ export function MealsPlannerTemplate({ title, notebookId }: MealsPlannerTemplate
             </Card>
           </div>
         )}
+        </div>
       </div>
+      <TemplateFooter />
     </div>
   );
 }

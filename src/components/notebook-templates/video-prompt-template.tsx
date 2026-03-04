@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { TemplateHeader } from './template-header';
+import { TemplateFooter } from './template-footer';
 import {
   Video, Plus, Loader2, Trash2, Edit3, X, Search, FolderOpen,
   Upload, Link as LinkIcon, Download, Copy, Check, Grid3x3, List, 
@@ -328,7 +330,9 @@ export function VideoPromptTemplate({ title = "Video Prompts", notebookId }: Vid
   }) || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 dark:from-neutral-950 dark:to-neutral-900">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-cyan-50 to-teal-50 dark:from-neutral-950 dark:to-neutral-900">
+      <TemplateHeader title={title} />
+      <div className="flex-1 overflow-y-auto">
       {saving && (
         <div className="fixed top-20 right-6 flex items-center gap-2 text-sm text-neutral-500 bg-white dark:bg-neutral-800 px-3 py-2 rounded-lg shadow-lg z-50">
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -1102,6 +1106,8 @@ export function VideoPromptTemplate({ title = "Video Prompts", notebookId }: Vid
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
+      <TemplateFooter />
     </div>
   );
 }
