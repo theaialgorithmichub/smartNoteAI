@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 import {
   Film, Plus, Loader2, Trash2, Edit3, X, Upload, Sparkles,
@@ -706,9 +705,8 @@ export function StorytellingTemplate({ title = "Story Studio", notebookId }: Sto
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-neutral-950 dark:to-neutral-900">
-      <TemplateHeader title={title} />
-      <div className="flex-1 overflow-y-auto">
+    <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:from-neutral-950 dark:to-neutral-900">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
       {saving && (
         <div className="fixed top-20 right-6 flex items-center gap-2 text-sm text-neutral-500 bg-white dark:bg-neutral-800 px-3 py-2 rounded-lg shadow-lg z-50">
           <Loader2 className="w-4 h-4 animate-spin" />

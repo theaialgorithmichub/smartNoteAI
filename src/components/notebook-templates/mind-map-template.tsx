@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef } from 'react';
 import { Plus, Trash2, Edit2, Save, X, Download, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
@@ -123,7 +123,7 @@ export function MindMapTemplate({ title, notebookId }: MindMapTemplateProps) {
   const selectedNode = nodes.find(n => n.id === selected);
 
   return (
-    <div className="h-full flex flex-col" style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)' }}>
+    <div className="h-full min-h-0 flex flex-col" style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)' }}>
       {/* Toolbar */}
       <div className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-black/30 border-b border-white/10">
         <button onClick={() => setZoom(z => Math.min(z + 0.15, 2.5))} className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors" title="Zoom In">

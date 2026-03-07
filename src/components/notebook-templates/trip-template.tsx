@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 import {
   Plane, Plus, Loader2, Trash2, MapPin, Calendar, Clock, Hotel,
@@ -591,9 +590,8 @@ export function TripTemplate({ title = "Trip Planner", notebookId }: TripTemplat
 
   //  Loading 
   if (loading) return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-sky-50 to-blue-50 dark:from-neutral-950 dark:to-neutral-900">
-      <TemplateHeader title={title} />
-      <div className="flex-1 flex items-center justify-center">
+    <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-sky-50 to-blue-50 dark:from-neutral-950 dark:to-neutral-900">
+      <div className="flex-1 min-h-0 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-sky-500"/>
       </div>
       <TemplateFooter />
@@ -603,9 +601,8 @@ export function TripTemplate({ title = "Trip Planner", notebookId }: TripTemplat
   const closeForm = () => { setShowCreateForm(false); setEditingTrip(null); setFormData(blankTrip()); };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-50 dark:from-neutral-950 dark:to-neutral-900 flex flex-col">
-      <TemplateHeader title={title} />
-      <div className="flex-1 flex overflow-hidden">
+    <div className="h-full min-h-0 bg-gradient-to-br from-sky-50 to-blue-50 dark:from-neutral-950 dark:to-neutral-900 flex flex-col">
+      <div className="flex-1 min-h-0 flex overflow-hidden">
       {/* Modals */}
       {showCreateForm && <TripForm formData={formData} setFormData={setFormData} onSubmit={createTrip} onClose={closeForm}/>}
       {editingTrip && <TripForm isEdit formData={formData} setFormData={setFormData} onSubmit={saveEditTrip} onClose={closeForm}/>}

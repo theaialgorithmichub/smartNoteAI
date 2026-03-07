@@ -94,7 +94,7 @@ export function FriendsPanel({
 
   const tabs = [
     { id: 'friends', label: 'My Friends', count: friends.length },
-    { id: 'requests', label: 'Requests', count: friendRequests.length },
+    { id: 'requests', label: 'Requests', count: friendRequests.length + sentRequests.length },
     { id: 'find', label: 'Find Friends', count: null }
   ];
 
@@ -173,12 +173,12 @@ export function FriendsPanel({
         </div>
       )}
 
-      {/* Friend Requests */}
+      {/* Friend Requests: Received and Sent sections always visible */}
       {activeTab === 'requests' && (
-        <div className="space-y-6">
-          {/* Incoming Requests */}
+        <div className="space-y-8">
+          {/* Received Requests (incoming) */}
           <div>
-            <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4">Incoming Requests</h3>
+            <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4">Received Requests</h3>
             {friendRequests.length === 0 ? (
               <Card className="p-8 bg-neutral-50 dark:bg-neutral-800 text-center">
                 <Mail className="h-12 w-12 text-neutral-400 mx-auto mb-3" />
@@ -224,10 +224,16 @@ export function FriendsPanel({
             )}
           </div>
 
-          {/* Sent Requests */}
-          {sentRequests.length > 0 && (
-            <div>
-              <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4">Sent Requests</h3>
+          {/* Sent Requests - always show section */}
+          <div>
+            <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4">Sent Requests</h3>
+            {sentRequests.length === 0 ? (
+              <Card className="p-8 bg-neutral-50 dark:bg-neutral-800 text-center">
+                <UserPlus className="h-12 w-12 text-neutral-400 mx-auto mb-3" />
+                <p className="text-neutral-600 dark:text-neutral-400">No sent requests</p>
+                <p className="text-sm text-neutral-500 dark:text-neutral-500 mt-1">Requests you send will appear here</p>
+              </Card>
+            ) : (
               <div className="space-y-3">
                 {sentRequests.map(request => (
                   <Card key={request.id} className="p-4 bg-neutral-50 dark:bg-neutral-800">
@@ -239,6 +245,9 @@ export function FriendsPanel({
                         <div>
                           <p className="font-bold text-neutral-900 dark:text-white">{request.from.name}</p>
                           <p className="text-sm text-neutral-600 dark:text-neutral-400">{request.from.email}</p>
+                          <p className="text-xs text-neutral-500 dark:text-neutral-500 mt-1">
+                            Sent {new Date(request.timestamp).toLocaleDateString()}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
@@ -249,8 +258,8 @@ export function FriendsPanel({
                   </Card>
                 ))}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 

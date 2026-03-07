@@ -3,7 +3,6 @@
 import React, { useState, useRef } from 'react';
 import { StickyNote, Plus, Trash2, Palette, Move, Info, X, Check } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 import { Button } from '@/components/ui/button';
 
@@ -97,9 +96,8 @@ export function StickerBookTemplate({ title }: StickerBookTemplateProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-lime-50 to-green-50 dark:from-neutral-900 dark:to-neutral-800">
-      <TemplateHeader title={title} />
-      <div className="flex-1 overflow-hidden flex flex-col">
+    <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-lime-50 to-green-50 dark:from-neutral-900 dark:to-neutral-800">
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
         {/* Header */}
         <div className="p-6 bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm border-b border-neutral-200 dark:border-neutral-800">
           <div className="max-w-7xl mx-auto">

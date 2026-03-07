@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 import {
   Plus, X, Loader2, Trash2, Pencil, Bot, ChevronDown,
@@ -477,9 +476,8 @@ export function CodeNotebookTemplate({ title = "Untitled Notebook", notebookId }
   };
 
   if (loading) return (
-    <div className="min-h-screen flex flex-col bg-slate-950">
-      <TemplateHeader title={title} />
-      <div className="flex-1 flex items-center justify-center">
+    <div className="h-full min-h-0 flex flex-col bg-slate-950">
+      <div className="flex-1 min-h-0 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-amber-500"/>
       </div>
       <TemplateFooter />
@@ -487,9 +485,8 @@ export function CodeNotebookTemplate({ title = "Untitled Notebook", notebookId }
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-950">
-      <TemplateHeader title={title} />
-      <div className="flex-1 flex overflow-hidden">
+    <div className="h-full min-h-0 flex flex-col bg-slate-950">
+      <div className="flex-1 min-h-0 flex overflow-hidden">
 
       {/*  Sidebar  */}
       <AnimatePresence initial={false}>

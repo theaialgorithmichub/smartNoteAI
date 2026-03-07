@@ -75,6 +75,7 @@ import { GoalTrackerTemplate } from "@/components/notebook-templates/goal-tracke
 import { AIPromptStudioTemplate } from "@/components/notebook-templates/ai-prompt-studio-template"
 import { LoadingCubes } from "@/components/ui/loading-cubes"
 import { SimpleTemplate } from "@/components/notebook-templates/simple-template"
+import { AppHeader } from "@/components/layout/app-header"
 import { ShareManager } from "@/components/share/share-manager"
 import { AIToolbar } from "@/components/ai/AIToolbar"
 import { CollaborationProvider } from "@/components/collaboration/CollaborationProvider"
@@ -637,47 +638,38 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
 
     return (
       <div className="h-full flex flex-col relative overflow-hidden">
-        {/* Header for template views */}
-        <header className="flex items-center justify-between px-6 py-3 bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm border-b border-neutral-200 dark:border-neutral-800 flex-shrink-0 z-10">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-            >
-              <BookOpen className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-              <span className="text-sm font-bold text-amber-700 dark:text-amber-300 hidden sm:block">SmartNote AI</span>
-            </button>
-            <span className="text-amber-300 dark:text-neutral-600">|</span>
-            <h1 className="text-xl font-semibold text-neutral-900 dark:text-white">{notebook.title}</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => { setSelectedText(""); setIsAIOpen(o => !o) }}
-              className={isAIOpen ? "bg-purple-100 dark:bg-purple-900/30" : ""}
-              title="AI Assistant"
-            >
-              <Sparkles className="h-5 w-5 text-purple-500" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsShareOpen(true)}
-              title="Share notebook"
-            >
-              <Share2 className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsChatOpen(!isChatOpen)}
-              className={isChatOpen ? "bg-amber-100 dark:bg-amber-900/30" : ""}
-            >
-              <MessageSquare className="h-5 w-5" />
-            </Button>
-          </div>
-        </header>
+        <AppHeader
+          homeHref="/dashboard"
+          extraRight={
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => { setSelectedText(""); setIsAIOpen(o => !o) }}
+                className={isAIOpen ? "bg-purple-100 dark:bg-purple-900/30" : ""}
+                title="AI Assistant"
+              >
+                <Sparkles className="h-5 w-5 text-purple-500" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsShareOpen(true)}
+                title="Share notebook"
+              >
+                <Share2 className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsChatOpen(!isChatOpen)}
+                className={isChatOpen ? "bg-amber-100 dark:bg-amber-900/30" : ""}
+              >
+                <MessageSquare className="h-5 w-5" />
+              </Button>
+            </>
+          }
+        />
         <ShareManager
           notebookId={notebookId}
           isOpen={isShareOpen}

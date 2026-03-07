@@ -2,29 +2,21 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { friendsAPI, notebooksAPI, notificationsAPI } from '@/lib/api/sharing';
 import type { User, FriendRequest, Notification, SharedNotebook } from '@/lib/api/sharing';
 
-// Friends Hook
+// Friends Hook (uses API-level dedupe so concurrent/multiple mounts share one request)
 export function useFriends() {
   const [friends, setFriends] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isFetchingRef = useRef(false);
-  const hasFetchedRef = useRef(false);
 
   const fetchFriends = useCallback(async () => {
-    if (isFetchingRef.current || hasFetchedRef.current) {
-      console.log('[useFriends] Already fetching or fetched, skipping...');
-      return;
-    }
-
+    if (isFetchingRef.current) return;
     try {
       isFetchingRef.current = true;
       setLoading(true);
-      console.log('[useFriends] Fetching friends...');
       const data = await friendsAPI.getFriends();
       setFriends(data);
       setError(null);
-      hasFetchedRef.current = true;
-      console.log('[useFriends] Friends fetched successfully:', data.length);
     } catch (err) {
       console.error('[useFriends] Error fetching friends:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch friends');
@@ -35,9 +27,8 @@ export function useFriends() {
   }, []);
 
   useEffect(() => {
-    console.log('[useFriends] Hook mounted, fetching friends once');
     fetchFriends();
-  }, [fetchFriends])
+  }, [fetchFriends]);
 
   const removeFriend = useCallback(async (friendId: string) => {
     try {
@@ -79,18 +70,21 @@ export function useFriendRequests() {
 
   const sendRequest = useCallback(async (userId: string) => {
     try {
-      const request = await friendsAPI.sendRequest(userId);
-      setSent(prev => [...prev, request]);
+      await friendsAPI.sendRequest(userId);
+      friendsAPI.invalidateRequests();
+      await fetchRequests();
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Failed to send request');
     }
-  }, []);
+  }, [fetchRequests]);
 
   const acceptRequest = useCallback(async (requestId: string) => {
     try {
       await friendsAPI.acceptRequest(requestId);
       setIncoming(prev => prev.filter(r => r.id !== requestId));
-      await fetchRequests(); // Refresh to update friends list
+      friendsAPI.invalidateFriends();
+      friendsAPI.invalidateRequests();
+      await fetchRequests();
     } catch (err) {
       throw new Error(err instanceof Error ? err.message : 'Failed to accept request');
     }
@@ -145,7 +139,7 @@ export function useUserSearch() {
   return { results, loading, error, search };
 }
 
-// Notifications Hook
+// Notifications Hook (uses API-level dedupe; poll every 60s to reduce calls)
 export function useNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -168,11 +162,9 @@ export function useNotifications() {
 
   useEffect(() => {
     fetchNotifications();
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
+    const interval = setInterval(fetchNotifications, 60_000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only set up polling once on mount
+  }, [fetchNotifications]);
 
   const markAsRead = useCallback(async (notificationId: string) => {
     try {

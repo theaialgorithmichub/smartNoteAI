@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { TemplateHeader } from './template-header'
 import { ChevronLeft, ChevronRight, Plus, List, Save, Download, Palette } from "lucide-react"
 import { QuillEditor } from "@/components/notebook/quill-editor"
 
@@ -120,8 +119,6 @@ export function ModernFlipNotebook({
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      <TemplateHeader title={title} />
-      
       {/* Compact Header */}
       <div className="flex-shrink-0 bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/50 px-6 py-3">
         <div className="flex items-center justify-between">

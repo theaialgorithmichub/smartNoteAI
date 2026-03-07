@@ -28,7 +28,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 
 interface PromptVersion {
@@ -317,22 +316,21 @@ export function AIPromptStudioTemplate({ title, notebookId }: AIPromptStudioTemp
   } : null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 dark:from-neutral-900 dark:to-purple-950">
-      <TemplateHeader title={title} />
+    <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 dark:from-neutral-900 dark:to-purple-950">
 
-      <div className="flex-1 overflow-hidden p-6">
-        <div className="max-w-full mx-auto h-full flex gap-6">
+      <div className="flex-1 min-h-0 overflow-hidden p-6">
+        <div className="max-w-full mx-auto h-full min-h-0 flex gap-6">
           {/* Projects Sidebar */}
-          <div className="w-80 space-y-4">
+          <div className="w-80 flex flex-col min-h-0 space-y-4">
             <Button
               onClick={() => setShowNewProject(true)}
-              className="w-full bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white"
+              className="w-full flex-shrink-0 bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
               New Project
             </Button>
 
-            <div className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
+            <div className="space-y-2 min-h-0 flex-1 overflow-y-auto">
               {projects.map(project => {
                 const categoryConfig = CATEGORIES.find(c => c.value === project.category);
                 const Icon = categoryConfig?.icon || Brain;
@@ -367,7 +365,7 @@ export function AIPromptStudioTemplate({ title, notebookId }: AIPromptStudioTemp
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 space-y-6 overflow-y-auto">
+          <div className="flex-1 min-h-0 space-y-6 overflow-y-auto overflow-x-hidden">
             {selectedProjectData ? (
               <>
                 {/* Project Header */}

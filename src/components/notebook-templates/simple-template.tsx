@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { TemplateHeader } from './template-header'
 import { ChevronLeft, ChevronRight, Plus, List, Save, Download, Sparkles } from "lucide-react"
 import { AIToolbar } from "@/components/ai/AIToolbar"
 import { QuillEditor } from "@/components/notebook/quill-editor"
@@ -60,6 +59,8 @@ export function SimpleTemplate({
     }
   }
 
+  const FLIP_DURATION_MS = 450
+
   const handlePrevPage = async () => {
     if (currentPage > 0 && !isFlipping) {
       if (flushRef.current) {
@@ -68,10 +69,8 @@ export function SimpleTemplate({
       setIsFlipping(true)
       setFlipDirection('prev')
       playFlipSound()
-      setTimeout(() => {
-        setCurrentPage(currentPage - 1)
-        setTimeout(() => setIsFlipping(false), 100)
-      }, 300)
+      setCurrentPage(currentPage - 1)
+      setTimeout(() => setIsFlipping(false), FLIP_DURATION_MS)
     }
   }
 
@@ -83,10 +82,8 @@ export function SimpleTemplate({
       setIsFlipping(true)
       setFlipDirection('next')
       playFlipSound()
-      setTimeout(() => {
-        setCurrentPage(currentPage + 1)
-        setTimeout(() => setIsFlipping(false), 100)
-      }, 300)
+      setCurrentPage(currentPage + 1)
+      setTimeout(() => setIsFlipping(false), FLIP_DURATION_MS)
     }
   }
 
@@ -121,19 +118,17 @@ export function SimpleTemplate({
   const page = pages[currentPage]
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      <TemplateHeader title={title} />
-      
+    <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Compact Header */}
-      <div className="flex-shrink-0 bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/50 px-6 py-3">
+      <div className="flex-shrink-0 bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/50 px-6 py-3.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-bold text-white">{title}</h1>
-            <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm font-medium">
+            <h1 className="text-2xl font-bold text-white tracking-tight">{title}</h1>
+            <span className="px-3 py-1.5 bg-blue-500/25 text-blue-200 rounded-full text-sm font-medium border border-blue-400/20">
               Page {currentPage + 1} / {pages.length}
             </span>
           </div>
-          
+
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsAIOpen(o => !o)}
@@ -169,13 +164,13 @@ export function SimpleTemplate({
         </div>
       </div>
 
-      {/* Main Content - Maximum Space */}
-      <div className="flex-1 relative overflow-hidden">
+      {/* Main Content - Maximum writing space */}
+      <div className="flex-1 relative overflow-hidden min-h-0">
         {/* Navigation Arrows */}
         <button
           onClick={handlePrevPage}
           disabled={currentPage === 0 || isFlipping}
-          className="absolute left-6 top-1/2 -translate-y-1/2 z-50 p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:opacity-50 rounded-full shadow-2xl transition-all disabled:cursor-not-allowed"
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-50 p-3.5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:opacity-50 rounded-full shadow-xl transition-all disabled:cursor-not-allowed border border-blue-400/30"
         >
           <ChevronLeft className="h-6 w-6 text-white" />
         </button>
@@ -183,35 +178,51 @@ export function SimpleTemplate({
         <button
           onClick={handleNextPage}
           disabled={currentPage === pages.length - 1 || isFlipping}
-          className="absolute right-6 top-1/2 -translate-y-1/2 z-50 p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:opacity-50 rounded-full shadow-2xl transition-all disabled:cursor-not-allowed"
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-50 p-3.5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-700 disabled:opacity-50 rounded-full shadow-xl transition-all disabled:cursor-not-allowed border border-blue-400/30"
         >
           <ChevronRight className="h-6 w-6 text-white" />
         </button>
 
-        {/* Page Container with Flip Effect */}
-        <div className="h-full flex items-center justify-center p-4">
+        {/* Page Container with 3D Flip Effect */}
+        <div className="h-full flex items-center justify-center p-4" style={{ perspective: 2000 }}>
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={currentPage}
-              initial={{ opacity: 0, x: flipDirection === 'next' ? 40 : -40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: flipDirection === 'next' ? -40 : 40 }}
-              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              initial={{
+                rotateY: flipDirection === 'next' ? 90 : -90,
+                opacity: 0,
+                scale: 0.96,
+              }}
+              animate={{
+                rotateY: 0,
+                opacity: 1,
+                scale: 1,
+              }}
+              exit={{
+                rotateY: flipDirection === 'next' ? -90 : 90,
+                opacity: 0,
+                scale: 0.96,
+              }}
+              transition={{
+                duration: 0.45,
+                ease: [0.43, 0.13, 0.23, 0.96],
+              }}
+              style={{ transformStyle: 'preserve-3d' }}
               className="w-full h-full max-w-[1400px]"
             >
-              {/* Paper Page */}
-              <div 
-                className="relative w-full h-full bg-gradient-to-br from-white via-amber-50 to-orange-50 rounded-lg shadow-2xl"
+              {/* Paper Page - clear single-page look */}
+              <div
+                className="relative w-full h-full bg-gradient-to-br from-white via-amber-50/95 to-orange-50/90 rounded-2xl overflow-hidden"
                 style={{
-                  boxShadow: '0 20px 60px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.6)',
+                  boxShadow: '0 25px 50px -12px rgba(0,0,0,0.35), 0 0 0 1px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.8)',
                 }}
               >
                 {/* Page Number Badge */}
-                <div className="absolute top-4 right-4 px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-semibold shadow-lg z-10">
+                <div className="absolute top-5 right-5 px-3.5 py-1.5 bg-blue-600 text-white rounded-full text-sm font-semibold shadow-lg z-10">
                   {currentPage + 1}
                 </div>
 
-                {/* Editor Area - Maximum Space */}
+                {/* Editor Area - QuillEditor has built-in toolbar on top (reliable font/color/heading) */}
                 <div className="h-full flex flex-col overflow-hidden">
                   <style jsx global>{`
                       /* Google Fonts import */
@@ -366,8 +377,8 @@ export function SimpleTemplate({
                       }
                     `}</style>
 
-                  {/* Content Area - QuillEditor has its own built-in toolbar */}
-                  <div className="flex-1 min-h-0 overflow-hidden">
+                  {/* Content Area - editor with built-in toolbar on top */}
+                  <div className="notebook-paper-editor flex-1 min-h-0 overflow-hidden">
                     {page ? (
                       <QuillEditor
                         pageId={page._id}
@@ -391,7 +402,7 @@ export function SimpleTemplate({
                 {/* Add Page Button */}
                 <button
                   onClick={onAddPage}
-                  className="absolute bottom-6 right-6 flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition-all"
+                  className="absolute bottom-6 right-6 flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl shadow-lg transition-all border border-blue-400/30 font-medium"
                 >
                   <Plus className="h-4 w-4" />
                   New Page

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 import {
   PenTool, Square, Circle, Type, Eraser, Trash2, Download,
@@ -453,9 +452,8 @@ export function WhiteboardTemplate({ title = "Whiteboard", notebookId }: Whitebo
   ] as const;
 
   if (loading) return (
-    <div className="min-h-screen flex flex-col bg-neutral-100 dark:bg-neutral-900">
-      <TemplateHeader title={title} />
-      <div className="flex-1 flex items-center justify-center">
+    <div className="h-full min-h-0 flex flex-col bg-neutral-100 dark:bg-neutral-900">
+      <div className="flex-1 min-h-0 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-blue-500"/>
       </div>
       <TemplateFooter />
@@ -464,9 +462,8 @@ export function WhiteboardTemplate({ title = "Whiteboard", notebookId }: Whitebo
 
 
   return (
-    <div className="min-h-screen flex flex-col bg-neutral-100 dark:bg-neutral-900">
-      <TemplateHeader title={title} />
-      <div className="flex-1 flex overflow-hidden">
+    <div className="h-full min-h-0 flex flex-col bg-neutral-100 dark:bg-neutral-900">
+      <div className="flex-1 min-h-0 flex overflow-hidden">
       {/* Saving indicator */}
       {saving && (
         <div className="fixed top-4 right-4 z-50 flex items-center gap-2 text-xs px-3 py-2 bg-white dark:bg-neutral-800 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-700">

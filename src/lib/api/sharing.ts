@@ -41,6 +41,16 @@ export interface SharedNotebook {
   content?: any;
 }
 
+// In-flight deduplication + short-lived cache (avoids duplicate calls from Strict Mode / rapid mounts)
+const CACHE_TTL_MS = 2000;
+
+let friendsInFlight: Promise<User[]> | null = null;
+let friendsCache: { data: User[]; at: number } | null = null;
+let requestsInFlight: Promise<{ incoming: FriendRequest[]; sent: FriendRequest[] }> | null = null;
+let requestsCache: { data: { incoming: FriendRequest[]; sent: FriendRequest[] }; at: number } | null = null;
+let notificationsInFlight: Promise<Notification[]> | null = null;
+let notificationsCache: { data: Notification[]; at: number } | null = null;
+
 // Friends API
 export const friendsAPI = {
   // Search for users
@@ -77,18 +87,52 @@ export const friendsAPI = {
     if (!response.ok) throw new Error('Failed to reject friend request');
   },
 
-  // Get friends list
+  // Get friends list (deduped + 2s cache to avoid duplicate calls from Strict Mode / rapid mounts)
   async getFriends(): Promise<User[]> {
-    const response = await fetch('/api/friends');
-    if (!response.ok) throw new Error('Failed to get friends');
-    return response.json();
+    const now = Date.now();
+    if (friendsCache && now - friendsCache.at < CACHE_TTL_MS) return Promise.resolve(friendsCache.data);
+    if (friendsInFlight) return friendsInFlight;
+    friendsInFlight = (async () => {
+      try {
+        const response = await fetch('/api/friends');
+        if (!response.ok) throw new Error('Failed to get friends');
+        const data = await response.json();
+        friendsCache = { data, at: Date.now() };
+        return data;
+      } finally {
+        friendsInFlight = null;
+      }
+    })();
+    return friendsInFlight;
   },
 
-  // Get friend requests
+  invalidateFriends(): void {
+    friendsInFlight = null;
+    friendsCache = null;
+  },
+
+  // Get friend requests (deduped + 2s cache)
   async getRequests(): Promise<{ incoming: FriendRequest[]; sent: FriendRequest[] }> {
-    const response = await fetch('/api/friends/requests');
-    if (!response.ok) throw new Error('Failed to get friend requests');
-    return response.json();
+    const now = Date.now();
+    if (requestsCache && now - requestsCache.at < CACHE_TTL_MS) return Promise.resolve(requestsCache.data);
+    if (requestsInFlight) return requestsInFlight;
+    requestsInFlight = (async () => {
+      try {
+        const response = await fetch('/api/friends/requests');
+        if (!response.ok) throw new Error('Failed to get friend requests');
+        const data = await response.json();
+        requestsCache = { data, at: Date.now() };
+        return data;
+      } finally {
+        requestsInFlight = null;
+      }
+    })();
+    return requestsInFlight;
+  },
+
+  invalidateRequests(): void {
+    requestsInFlight = null;
+    requestsCache = null;
   },
 
   // Remove friend
@@ -175,11 +219,28 @@ export const notebooksAPI = {
 
 // Notifications API
 export const notificationsAPI = {
-  // Get notifications
+  // Get notifications (deduped + 2s cache to avoid duplicate calls from multiple consumers / Strict Mode)
   async getNotifications(): Promise<Notification[]> {
-    const response = await fetch('/api/notifications');
-    if (!response.ok) throw new Error('Failed to get notifications');
-    return response.json();
+    const now = Date.now();
+    if (notificationsCache && now - notificationsCache.at < CACHE_TTL_MS) return Promise.resolve(notificationsCache.data);
+    if (notificationsInFlight) return notificationsInFlight;
+    notificationsInFlight = (async () => {
+      try {
+        const response = await fetch('/api/notifications');
+        if (!response.ok) throw new Error('Failed to get notifications');
+        const data = await response.json();
+        notificationsCache = { data, at: Date.now() };
+        return data;
+      } finally {
+        notificationsInFlight = null;
+      }
+    })();
+    return notificationsInFlight;
+  },
+
+  invalidateNotifications(): void {
+    notificationsInFlight = null;
+    notificationsCache = null;
   },
 
   // Mark as read
@@ -188,6 +249,7 @@ export const notificationsAPI = {
       method: 'PATCH'
     });
     if (!response.ok) throw new Error('Failed to mark notification as read');
+    this.invalidateNotifications();
   },
 
   // Mark all as read
@@ -196,6 +258,7 @@ export const notificationsAPI = {
       method: 'PATCH'
     });
     if (!response.ok) throw new Error('Failed to mark all as read');
+    this.invalidateNotifications();
   },
 
   // Get unread count
