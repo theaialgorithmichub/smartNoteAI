@@ -8,6 +8,8 @@ import { Card } from '@/components/ui/card';
 import { PLAN_CONFIG, CREDIT_PACKAGES, calculateDiscount } from '@/config/template-points';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
+import { Navbar } from '@/components/ui/navbar';
+import { Footer } from '@/components/home/footer';
 
 export default function PricingPage() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
@@ -77,11 +79,12 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-neutral-950 dark:via-blue-950 dark:to-indigo-950">
+      <Navbar />
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:bg-grid-slate-700/25" />
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -440,6 +443,7 @@ export default function PricingPage() {
           ))}
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

@@ -13,12 +13,16 @@ import {
   Grid,
   List,
   Plus,
-  Eye
+  Eye,
+  Sparkles,
+  Copy
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { Navbar } from '@/components/ui/navbar';
+import { Footer } from '@/components/home/footer';
 
 const CATEGORIES = [
   { value: 'all', label: 'All Templates' },
@@ -39,6 +43,7 @@ const SORT_OPTIONS = [
 export default function MarketplacePage() {
   const router = useRouter();
   const [templates, setTemplates] = useState<any[]>([]);
+  const [featuredTemplates, setFeaturedTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
@@ -49,7 +54,18 @@ export default function MarketplacePage() {
 
   useEffect(() => {
     fetchTemplates();
+    fetchFeatured();
   }, [category, sort, page]);
+
+  const fetchFeatured = async () => {
+    try {
+      const res = await fetch('/api/marketplace/templates?featured=true&limit=4&sort=popular');
+      if (res.ok) {
+        const data = await res.json();
+        setFeaturedTemplates(data.templates || []);
+      }
+    } catch {}
+  };
 
   const fetchTemplates = async () => {
     try {
@@ -85,7 +101,8 @@ export default function MarketplacePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-pink-50 dark:from-neutral-950 dark:via-purple-950 dark:to-pink-950">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <Navbar />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -110,6 +127,62 @@ export default function MarketplacePage() {
             </Button>
           </div>
         </motion.div>
+
+        {/* Featured Showcase */}
+        {featuredTemplates.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="mb-10"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="w-5 h-5 text-amber-500" />
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Featured Templates</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {featuredTemplates.map((t, i) => (
+                <motion.div
+                  key={t._id}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.07 }}
+                  onClick={() => router.push(`/marketplace/${t._id}`)}
+                  className="cursor-pointer group"
+                >
+                  <Card className="overflow-hidden hover:shadow-xl transition-all border-amber-200 dark:border-amber-800 bg-white/90 dark:bg-neutral-900/90">
+                    <div className="h-32 bg-gradient-to-br from-amber-100 to-orange-100 dark:from-amber-900/20 dark:to-orange-900/20 relative">
+                      {t.preview?.images?.[0] && (
+                        <Image src={t.preview.images[0]} alt={t.title} fill className="object-cover" />
+                      )}
+                      <div className="absolute top-2 left-2">
+                        <span className="flex items-center gap-1 px-2 py-0.5 bg-amber-400 text-white text-xs font-bold rounded-full">
+                          <Sparkles className="w-3 h-3" /> Featured
+                        </span>
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <h3 className="font-semibold text-sm text-neutral-900 dark:text-white truncate group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">{t.title}</h3>
+                      <div className="flex items-center justify-between mt-2 text-xs text-neutral-500">
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                          {(t.stats?.rating || 0).toFixed(1)}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Download className="w-3 h-3" />
+                          {t.stats?.downloads || 0}
+                        </div>
+                        <span className={t.pricing?.type === 'free' ? 'text-green-600 font-semibold' : 'text-purple-600 font-semibold'}>
+                          {t.pricing?.type === 'free' ? 'Free' : `${t.pricing?.credits} cr`}
+                        </span>
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         {/* Search and Filters */}
         <Card className="p-6 mb-8 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm">
@@ -204,7 +277,7 @@ export default function MarketplacePage() {
                   transition={{ delay: index * 0.1 }}
                 >
                   <Card 
-                    className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm"
+                    className="overflow-hidden hover:shadow-xl transition-shadow cursor-pointer bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm group"
                     onClick={() => router.push(`/marketplace/${template._id}`)}
                   >
                     {/* Preview Image */}
@@ -322,6 +395,7 @@ export default function MarketplacePage() {
           </>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

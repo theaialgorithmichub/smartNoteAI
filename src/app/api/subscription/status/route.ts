@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Subscription } from '@/lib/models/subscription';
+import { Notebook } from '@/lib/models/notebook';
 import { PLAN_CONFIG } from '@/config/template-points';
 
 export async function GET() {
@@ -27,6 +28,14 @@ export async function GET() {
       });
     }
 
+    // Always use real notebook count from DB instead of stale counter
+    const actualNotebookCount = await Notebook.countDocuments({ userId, isTrashed: false });
+
+    // Sync counter if out of date
+    if (subscription.notebooksCreated !== actualNotebookCount) {
+      await Subscription.findOneAndUpdate({ userId }, { notebooksCreated: actualNotebookCount });
+    }
+
     const planConfig = PLAN_CONFIG[subscription.planType as keyof typeof PLAN_CONFIG];
 
     return NextResponse.json({
@@ -35,7 +44,7 @@ export async function GET() {
         billingCycle: subscription.billingCycle,
         status: subscription.status,
         credits: subscription.credits,
-        notebooksCreated: subscription.notebooksCreated,
+        notebooksCreated: actualNotebookCount,
         selectedTemplates: subscription.selectedTemplates,
         currentPeriodEnd: subscription.currentPeriodEnd,
         cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
@@ -49,11 +58,11 @@ export async function GET() {
       limits: {
         canCreateNotebook: 
           planConfig.maxNotebooks === -1 || 
-          subscription.notebooksCreated < planConfig.maxNotebooks,
+          actualNotebookCount < planConfig.maxNotebooks,
         remainingNotebooks: 
           planConfig.maxNotebooks === -1 
             ? -1 
-            : Math.max(0, planConfig.maxNotebooks - subscription.notebooksCreated),
+            : Math.max(0, planConfig.maxNotebooks - actualNotebookCount),
         canSelectMoreTemplates:
           planConfig.maxTemplates === -1 ||
           subscription.selectedTemplates.length < planConfig.maxTemplates,

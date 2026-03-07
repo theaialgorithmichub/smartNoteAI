@@ -1,6 +1,6 @@
-import { auth } from "@clerk/nextjs/server"
+import { auth, currentUser } from "@clerk/nextjs/server"
 import { redirect, notFound } from "next/navigation"
-import { NotebookViewer } from "@/components/notebook/notebook-viewer"
+import { NotebookCollabWrapper } from "@/components/notebook/notebook-collab-wrapper"
 import connectDB from "@/lib/db/mongodb"
 import { Notebook } from "@/lib/models/notebook"
 import User from "@/lib/models/User"
@@ -17,14 +17,21 @@ export default async function NotebookPage({ params, searchParams }: NotebookPag
     redirect("/sign-in")
   }
 
+  const clerkUserData = await currentUser()
+  const userName =
+    clerkUserData?.fullName ||
+    clerkUserData?.firstName ||
+    clerkUserData?.emailAddresses?.[0]?.emailAddress?.split("@")[0] ||
+    "Anonymous"
+
   const { id: notebookId } = await params
   const { page } = await searchParams
   const initialPage = page ? parseInt(page) : 1
 
   // Verify user has access to this notebook
   await connectDB()
-  const currentUser = await User.findOne({ clerkId: userId })
-  if (!currentUser) {
+  const dbUser = await User.findOne({ clerkId: userId })
+  if (!dbUser) {
     redirect("/sign-in")
   }
 
@@ -35,7 +42,7 @@ export default async function NotebookPage({ params, searchParams }: NotebookPag
 
   // Check if user owns the notebook or it's shared with them
   const isOwner = notebook.userId === userId
-  const isSharedWithUser = notebook.sharedWith?.some((id: any) => id.toString() === currentUser._id.toString())
+  const isSharedWithUser = notebook.sharedWith?.some((id: any) => id.toString() === dbUser._id.toString())
   const isPublic = notebook.isPublic
 
   if (!isOwner && !isSharedWithUser && !isPublic) {
@@ -44,9 +51,10 @@ export default async function NotebookPage({ params, searchParams }: NotebookPag
 
   return (
     <div className="fixed inset-0 z-50 bg-amber-50 dark:bg-neutral-950">
-      <NotebookViewer 
-        notebookId={notebookId} 
+      <NotebookCollabWrapper
+        notebookId={notebookId}
         userId={userId}
+        userName={userName}
         initialPage={initialPage}
       />
     </div>

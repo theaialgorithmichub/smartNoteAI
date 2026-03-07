@@ -99,6 +99,7 @@ export function AIPromptStudioTemplate({ title, notebookId }: AIPromptStudioTemp
   const [showTestModal, setShowTestModal] = useState(false);
   const [testInput, setTestInput] = useState('');
   const [isTestRunning, setIsTestRunning] = useState(false);
+  const [testError, setTestError] = useState<string | null>(null);
 
   const [newProject, setNewProject] = useState<Partial<PromptProject>>({
     name: '',
@@ -228,35 +229,62 @@ export function AIPromptStudioTemplate({ title, notebookId }: AIPromptStudioTemp
 
   const runTest = async (projectId: string, versionId: string) => {
     if (!testInput.trim()) return;
+    const project = projects.find(p => p.id === projectId);
+    if (!project) return;
+    const version = project.versions.find(v => v.id === versionId);
+    if (!version) return;
 
     setIsTestRunning(true);
+    setTestError(null);
 
-    // Simulate API call (replace with actual OpenAI/Anthropic/etc. call)
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      const res = await fetch('/api/ai-prompt-studio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemPrompt: project.systemPrompt,
+          prompt: version.prompt,
+          userInput: testInput,
+          model: project.model,
+          temperature: project.temperature,
+          maxTokens: project.maxTokens,
+        }),
+      });
 
-    const testResult: TestResult = {
-      id: Date.now().toString(),
-      versionId,
-      input: testInput,
-      output: 'This is a simulated AI response. In production, this would be the actual API response.',
-      timestamp: new Date().toISOString(),
-      latency: Math.random() * 3000 + 500,
-      tokens: Math.floor(Math.random() * 500 + 100),
-      cost: Math.random() * 0.05 + 0.01,
-      rating: 0,
-    };
+      const data = await res.json();
 
-    setProjects(prev => prev.map(p => {
-      if (p.id !== projectId) return p;
-      
-      return {
-        ...p,
-        testResults: [...p.testResults, testResult],
+      if (!res.ok) {
+        setTestError(data.error || 'AI request failed');
+        return;
+      }
+
+      // Estimate cost: ~$0.01 per 1K tokens (GPT-4-turbo pricing)
+      const estimatedCost = (data.tokens / 1000) * 0.01;
+
+      const testResult: TestResult = {
+        id: Date.now().toString(),
+        versionId,
+        input: testInput,
+        output: data.output,
+        timestamp: new Date().toISOString(),
+        latency: data.latency,
+        tokens: data.tokens,
+        cost: estimatedCost,
+        rating: 0,
       };
-    }));
 
-    setIsTestRunning(false);
-    setTestInput('');
+      setProjects(prev => prev.map(p => {
+        if (p.id !== projectId) return p;
+        return { ...p, testResults: [...p.testResults, testResult] };
+      }));
+
+      setTestInput('');
+      setShowTestModal(false);
+    } catch (err: any) {
+      setTestError(err?.message || 'Network error');
+    } finally {
+      setIsTestRunning(false);
+    }
   };
 
   const exportProject = (projectId: string) => {
@@ -764,10 +792,16 @@ export function AIPromptStudioTemplate({ title, notebookId }: AIPromptStudioTemp
                     onChange={(e) => setTestInput(e.target.value)}
                     className="w-full p-3 border rounded-lg dark:bg-neutral-800 dark:border-neutral-700"
                     rows={6}
-                    placeholder="Enter test input..."
+                    placeholder="Enter your user message / input to test the prompt..."
                     disabled={isTestRunning}
                   />
                 </div>
+
+                {testError && (
+                  <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg text-sm text-red-700 dark:text-red-400">
+                    {testError}
+                  </div>
+                )}
 
                 <Button
                   onClick={() => runTest(selectedProject!, latestVersion.id)}
@@ -777,7 +811,7 @@ export function AIPromptStudioTemplate({ title, notebookId }: AIPromptStudioTemp
                   {isTestRunning ? (
                     <>
                       <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                      Running Test...
+                      Calling AI...
                     </>
                   ) : (
                     <>

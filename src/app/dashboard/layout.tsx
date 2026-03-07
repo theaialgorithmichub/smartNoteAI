@@ -1,7 +1,8 @@
 import { UserButton } from "@clerk/nextjs"
 import Link from "next/link"
-import { BookOpen, Trash2, Settings, CreditCard } from "lucide-react"
+import { BookOpen, Trash2, Settings, CreditCard, Users } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { NotificationsBell } from "@/components/ui/notifications-bell"
 
 export default function DashboardLayout({
   children,
@@ -21,6 +22,14 @@ export default function DashboardLayout({
             
             <div className="flex items-center gap-4">
               <ThemeToggle />
+              <NotificationsBell />
+              <Link
+                href="/dashboard/workspaces"
+                className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
+                title="Workspaces"
+              >
+                <Users className="h-5 w-5" />
+              </Link>
               <Link
                 href="/dashboard/trash"
                 className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"

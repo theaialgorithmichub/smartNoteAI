@@ -154,7 +154,11 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  const userId = subscription.metadata.userId;
+  let userId = subscription.metadata?.userId;
+  if (!userId) {
+    const existing = await Subscription.findOne({ stripeCustomerId: subscription.customer as string });
+    if (existing) userId = existing.userId;
+  }
   if (!userId) return;
 
   await Subscription.findOneAndUpdate(

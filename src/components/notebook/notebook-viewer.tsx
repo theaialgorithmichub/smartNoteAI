@@ -16,6 +16,8 @@ import {
   Palette,
   X,
   Check,
+  Share2,
+  Sparkles,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PageContent } from "./page-content"
@@ -73,6 +75,13 @@ import { GoalTrackerTemplate } from "@/components/notebook-templates/goal-tracke
 import { AIPromptStudioTemplate } from "@/components/notebook-templates/ai-prompt-studio-template"
 import { LoadingCubes } from "@/components/ui/loading-cubes"
 import { SimpleTemplate } from "@/components/notebook-templates/simple-template"
+import { ShareManager } from "@/components/share/share-manager"
+import { AIToolbar } from "@/components/ai/AIToolbar"
+import { CollaborationProvider } from "@/components/collaboration/CollaborationProvider"
+import { LiveCursors } from "@/components/collaboration/LiveCursors"
+import { CollaboratorsPresence } from "@/components/collaboration/CollaboratorsPresence"
+import { CommentsPanel } from "@/components/collaboration/CommentsPanel"
+import { useMyPresence } from "@/liveblocks.config"
 
 interface Page {
   _id: string
@@ -276,7 +285,12 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
   const [currentPage, setCurrentPage] = useState(initialPage)
   const [loading, setLoading] = useState(true)
   const [isChatOpen, setIsChatOpen] = useState(false)
+  const [isShareOpen, setIsShareOpen] = useState(false)
+  const [isCommentsOpen, setIsCommentsOpen] = useState(false)
+  const [isAIOpen, setIsAIOpen] = useState(false)
+  const [selectedText, setSelectedText] = useState("")
   const [isMobile, setIsMobile] = useState(false)
+  const [, updateMyPresence] = useMyPresence()
   const [isAnimating, setIsAnimating] = useState(false)
   const [direction, setDirection] = useState(0)
   // Separate flush refs for left and right pages so both are saved before navigation
@@ -640,6 +654,14 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
             <Button
               variant="ghost"
               size="icon"
+              onClick={() => setIsShareOpen(true)}
+              title="Share notebook"
+            >
+              <Share2 className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setIsChatOpen(!isChatOpen)}
               className={isChatOpen ? "bg-amber-100 dark:bg-amber-900/30" : ""}
             >
@@ -647,6 +669,11 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
             </Button>
           </div>
         </header>
+        <ShareManager
+          notebookId={notebookId}
+          isOpen={isShareOpen}
+          onClose={() => setIsShareOpen(false)}
+        />
 
         {/* Template Content — fills remaining height, no scroll (templates manage their own scrolling) */}
         <div className="flex-1 overflow-hidden min-h-0">
@@ -794,7 +821,12 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
 
   // Desktop: 2-sided book view
   return (
-    <div className="h-full flex bg-amber-50 dark:bg-neutral-950 relative overflow-hidden">
+    <div
+      className="h-full flex bg-amber-50 dark:bg-neutral-950 relative overflow-hidden"
+      onMouseMove={(e) => updateMyPresence({ cursor: { x: e.clientX, y: e.clientY } })}
+      onMouseLeave={() => updateMyPresence({ cursor: null })}
+    >
+      <LiveCursors />
       {/* Chapter Tabs (Left Side) */}
       <ChapterTabs
         chapters={chapters}
@@ -820,8 +852,39 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
             <h1 className="text-xl font-semibold text-amber-900 dark:text-amber-200">{notebook.title}</h1>
           </div>
           <div className="flex items-center gap-2">
+            <CollaboratorsPresence />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                const sel = window.getSelection()?.toString().trim() || ""
+                setSelectedText(sel)
+                setIsAIOpen(o => !o)
+              }}
+              className={isAIOpen ? "bg-purple-100 dark:bg-purple-900/30" : ""}
+              title="AI Assistant"
+            >
+              <Sparkles className="h-5 w-5 text-purple-500" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={addNewPage} title="Add page">
               <Plus className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsCommentsOpen(o => !o)}
+              className={isCommentsOpen ? "bg-amber-100 dark:bg-amber-900/30" : ""}
+              title="Comments"
+            >
+              <MessageSquare className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsShareOpen(true)}
+              title="Share notebook"
+            >
+              <Share2 className="h-5 w-5" />
             </Button>
             <Button
               variant="ghost"
@@ -843,6 +906,11 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
             </Button>
           </div>
         </header>
+        <ShareManager
+          notebookId={notebookId}
+          isOpen={isShareOpen}
+          onClose={() => setIsShareOpen(false)}
+        />
 
         {/* Theme Panel */}
         <AnimatePresence>
@@ -1066,6 +1134,41 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
           />
         </div>
       </div>
+
+      {/* AI Toolbar overlay */}
+      <AnimatePresence>
+        {isAIOpen && (
+          <AIToolbar
+            selectedText={selectedText}
+            notebookId={notebookId}
+            notebookTitle={notebook?.title}
+            onApply={(text) => {
+              setIsAIOpen(false)
+            }}
+            onClose={() => setIsAIOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Comments Panel — absolute overlay */}
+      <AnimatePresence>
+        {isCommentsOpen && (
+          <motion.div
+            initial={{ opacity: 0, x: 80 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 80 }}
+            transition={{ duration: 0.2 }}
+            className="absolute top-0 right-0 bottom-0 w-80 z-30"
+          >
+            <CommentsPanel
+              isOpen={isCommentsOpen}
+              onClose={() => setIsCommentsOpen(false)}
+              currentPage={currentPage}
+              notebookId={notebookId}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Chat Sidebar — absolute overlay so it doesn't squeeze the book */}
       <AnimatePresence>

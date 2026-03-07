@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react"
 import dynamic from "next/dynamic"
-import { Loader2 } from "lucide-react"
+import { Loader2, Wand2 } from "lucide-react"
 import "react-quill-new/dist/quill.snow.css"
+import { VoiceRecorder } from "@/components/ai/VoiceRecorder"
 
 // Dynamic import for Quill (client-only) with font registration
 const ReactQuill = dynamic(
@@ -60,6 +61,9 @@ export function QuillEditor({
   const [title, setTitle] = useState(initialTitle || "")
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [aiSuggestion, setAiSuggestion] = useState("")
+  const [isLoadingSuggestion, setIsLoadingSuggestion] = useState(false)
+  const suggestionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const quillRef = useRef<any>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -160,6 +164,47 @@ export function QuillEditor({
     [saveContentSilent]
   )
 
+  // Fetch AI autocomplete suggestion after user pauses typing (3s debounce)
+  const scheduleAiSuggestion = useCallback((value: string) => {
+    if (suggestionTimeoutRef.current) clearTimeout(suggestionTimeoutRef.current)
+    setAiSuggestion("")
+    // Only suggest when there's meaningful content and user has stopped typing
+    const plain = value.replace(/<[^>]*>/g, "").trim()
+    if (plain.length < 20) return
+    suggestionTimeoutRef.current = setTimeout(async () => {
+      setIsLoadingSuggestion(true)
+      try {
+        const res = await fetch("/api/ai/complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: plain, cursorPosition: plain.length }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.completion?.trim()) setAiSuggestion(data.completion.trim())
+        }
+      } catch {}
+      finally { setIsLoadingSuggestion(false) }
+    }, 3000)
+  }, [])
+
+  // Accept suggestion — append to editor
+  const acceptSuggestion = useCallback(() => {
+    if (!aiSuggestion) return
+    const quill = quillRef.current?.getEditor()
+    if (quill) {
+      const len = quill.getLength()
+      quill.insertText(len - 1, " " + aiSuggestion)
+      const newContent = quill.root.innerHTML
+      setContent(newContent)
+      contentRef.current = newContent
+      isDirtyRef.current = true
+      onContentChange?.(pageId, newContent, titleRef.current)
+      scheduleDebounce(newContent)
+    }
+    setAiSuggestion("")
+  }, [aiSuggestion, pageId, onContentChange, scheduleDebounce])
+
   // Handle content change — only update state + schedule debounce, no refresh
   const handleChange = (value: string) => {
     setContent(value)
@@ -169,6 +214,7 @@ export function QuillEditor({
     onContentChange?.(pageId, value, titleRef.current)
     if (isEditing) {
       scheduleDebounce(value)
+      scheduleAiSuggestion(value)
     }
   }
 
@@ -187,6 +233,30 @@ export function QuillEditor({
       console.error("Failed to save title:", error)
     }
   }
+
+  // Insert transcribed voice text at end of editor
+  const handleVoiceTranscription = useCallback((text: string) => {
+    if (!text.trim()) return
+    const quill = quillRef.current?.getEditor()
+    if (quill) {
+      const len = quill.getLength()
+      quill.insertText(len - 1, "\n" + text)
+      const newContent = quill.root.innerHTML
+      setContent(newContent)
+      contentRef.current = newContent
+      isDirtyRef.current = true
+      onContentChange?.(pageId, newContent, titleRef.current)
+      scheduleDebounce(newContent)
+    } else {
+      // Fallback: append to HTML content
+      const newContent = content + `<p>${text}</p>`
+      setContent(newContent)
+      contentRef.current = newContent
+      isDirtyRef.current = true
+      onContentChange?.(pageId, newContent, titleRef.current)
+      scheduleDebounce(newContent)
+    }
+  }, [pageId, content, onContentChange, scheduleDebounce])
 
   // Handle image upload to Cloudinary
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -467,6 +537,46 @@ export function QuillEditor({
         <div className="flex items-center gap-2 mb-2 text-amber-600 text-sm flex-shrink-0">
           <Loader2 className="h-4 w-4 animate-spin" />
           Uploading image...
+        </div>
+      )}
+
+      {/* Voice recorder + AI suggestion bar */}
+      {isEditing && (
+        <div className="flex items-center gap-3 mb-2 flex-shrink-0 px-1">
+          <VoiceRecorder
+            onTranscription={handleVoiceTranscription}
+            disabled={!isEditing}
+          />
+          {isLoadingSuggestion && (
+            <span className="flex items-center gap-1 text-xs text-purple-400 dark:text-purple-500">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              AI thinking…
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Inline AI autocomplete suggestion */}
+      {aiSuggestion && isEditing && (
+        <div className="flex items-start gap-2 mb-2 px-3 py-2 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg flex-shrink-0">
+          <Wand2 className="w-3.5 h-3.5 text-purple-500 flex-shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-purple-700 dark:text-purple-300 italic line-clamp-2">{aiSuggestion}</p>
+          </div>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={acceptSuggestion}
+              className="text-xs px-2 py-0.5 bg-purple-500 hover:bg-purple-600 text-white rounded font-medium transition-colors"
+            >
+              Tab ↵
+            </button>
+            <button
+              onClick={() => setAiSuggestion("")}
+              className="text-xs px-1.5 py-0.5 text-purple-400 hover:text-purple-600 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
         </div>
       )}
 
