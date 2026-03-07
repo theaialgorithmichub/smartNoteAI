@@ -50,7 +50,7 @@ export default async function NotebookPage({ params, searchParams }: NotebookPag
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-amber-50 dark:bg-neutral-950">
+    <div className="fixed inset-0 z-[100] bg-amber-50 dark:bg-neutral-950">
       <NotebookCollabWrapper
         notebookId={notebookId}
         userId={userId}
