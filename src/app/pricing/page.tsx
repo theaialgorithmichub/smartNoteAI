@@ -339,9 +339,9 @@ export default function PricingPage() {
                     </span>
                   </div>
                 )}
-                {pkg.discount && (
+                {pkg.discount && !pkg.popular && (
                   <div className="absolute -top-2 -right-2">
-                    <div className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                    <div className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
                       {pkg.discount}
                     </div>
                   </div>
@@ -351,12 +351,27 @@ export default function PricingPage() {
                   <Star className={`w-12 h-12 mx-auto ${pkg.popular ? 'text-amber-500' : 'text-slate-400'}`} />
                 </div>
 
-                <div className="mb-2">
+                <div className="mb-1">
                   <span className="text-3xl font-bold text-slate-900 dark:text-white">
                     {pkg.credits}
                   </span>
                   <span className="text-sm text-slate-500 ml-1">credits</span>
                 </div>
+
+                {/* Show base credits + bonus for 100 and 250 packages */}
+                {pkg.id === 'credits_100' && (
+                  <div className="mb-2 text-xs text-green-600 dark:text-green-400 font-semibold">
+                    100 + 15 bonus credits
+                  </div>
+                )}
+                {pkg.id === 'credits_250' && (
+                  <div className="mb-2 text-xs text-green-600 dark:text-green-400 font-semibold">
+                    250 + 50 bonus credits
+                  </div>
+                )}
+                {pkg.id !== 'credits_100' && pkg.id !== 'credits_250' && (
+                  <div className="mb-2" />
+                )}
 
                 <div className="mb-4">
                   <span className="text-2xl font-bold text-slate-900 dark:text-white">
