@@ -61,8 +61,13 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ error: 'Invalid checkout type' }, { status: 400 });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating checkout session:', error);
-    return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });
+    return NextResponse.json({ 
+      error: 'Failed to create checkout session',
+      detail: error?.message || String(error),
+      type: error?.type,
+      code: error?.code,
+    }, { status: 500 });
   }
 }
