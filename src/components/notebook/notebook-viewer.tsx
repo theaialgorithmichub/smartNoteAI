@@ -648,8 +648,8 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
           </div>
         </header>
 
-        {/* Template Content — scrollable, fills remaining height */}
-        <div className="flex-1 overflow-y-auto min-h-0">
+        {/* Template Content — fills remaining height, no scroll (templates manage their own scrolling) */}
+        <div className="flex-1 overflow-hidden min-h-0">
           {renderTemplateView()}
         </div>
 

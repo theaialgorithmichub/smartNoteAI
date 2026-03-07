@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Plus, Trash2, Edit2, Save, X, Download, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
-import { TemplateHeader } from './template-header';
 
 interface MindMapNode {
   id: string;
@@ -63,14 +62,16 @@ export function MindMapTemplate({ title, notebookId }: MindMapTemplateProps) {
     const parent = nodes.find(n => n.id === parentId);
     if (!parent) return;
     const siblings = nodes.filter(n => n.parentId === parentId).length;
-    const angle = siblings * 45 * (Math.PI / 180) - Math.PI / 2;
-    const dist = parentId === '1' ? 180 : 130;
+    const isRoot = parentId === '1';
+    const dist = isRoot ? 180 : 130;
+    // Spread children evenly: first child goes right, subsequent ones fan out
+    const baseAngle = isRoot ? (siblings * (Math.PI * 2 / Math.max(8, siblings + 1))) : (siblings * 50 * (Math.PI / 180) - Math.PI / 3);
     const newNode: MindMapNode = {
       id: Date.now().toString(),
       text: 'New Idea',
       color: COLORS[(nodes.length) % COLORS.length],
-      x: parent.x + Math.cos(angle) * dist,
-      y: parent.y + Math.sin(angle) * dist,
+      x: parent.x + Math.cos(baseAngle) * dist,
+      y: parent.y + Math.sin(baseAngle) * dist,
       parentId,
       children: [],
     };
@@ -122,9 +123,7 @@ export function MindMapTemplate({ title, notebookId }: MindMapTemplateProps) {
   const selectedNode = nodes.find(n => n.id === selected);
 
   return (
-    <div className="h-screen flex flex-col" style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)' }}>
-      <TemplateHeader title={title} />
-
+    <div className="h-full flex flex-col" style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)' }}>
       {/* Toolbar */}
       <div className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-black/30 border-b border-white/10">
         <button onClick={() => setZoom(z => Math.min(z + 0.15, 2.5))} className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors" title="Zoom In">

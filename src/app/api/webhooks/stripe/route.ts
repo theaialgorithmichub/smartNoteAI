@@ -20,14 +20,15 @@ export async function POST(req: Request) {
 
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-  } catch (err) {
-    console.error('Webhook signature verification failed:', err);
+  } catch (err: any) {
+    console.error('Webhook signature verification failed:', err?.message);
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
   }
 
   await connectDB();
 
   try {
+    console.log(`[Webhook] Processing event: ${event.type} id=${event.id}`);
     switch (event.type) {
       case 'checkout.session.completed':
         await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session);
@@ -51,13 +52,18 @@ export async function POST(req: Request) {
         break;
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        console.log(`[Webhook] Unhandled event type: ${event.type}`);
     }
 
+    console.log(`[Webhook] Successfully processed: ${event.type}`);
     return NextResponse.json({ received: true });
-  } catch (error) {
-    console.error('Error processing webhook:', error);
-    return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 });
+  } catch (error: any) {
+    console.error(`[Webhook] FAILED event ${event.type}:`, error?.message, error?.stack);
+    return NextResponse.json({ 
+      error: 'Webhook processing failed', 
+      detail: error?.message,
+      stack: process.env.NODE_ENV !== 'production' ? error?.stack : undefined,
+    }, { status: 500 });
   }
 }
 
@@ -96,24 +102,42 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 }
 
 async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
-  const userId = subscription.metadata.userId;
-  if (!userId) return;
+  let userId = subscription.metadata?.userId;
+  let planType = subscription.metadata?.planType as 'pro' | 'ultra' | undefined;
+  let billingCycle = subscription.metadata?.billingCycle as 'monthly' | 'yearly' | undefined;
 
-  const planType = subscription.metadata.planType as 'pro' | 'ultra';
-  const billingCycle = subscription.metadata.billingCycle as 'monthly' | 'yearly';
+  const stripeCustomerId = subscription.customer as string;
 
-  const updateData = {
+  // If metadata is missing (can happen on subscription.created before session metadata propagates),
+  // fall back to looking up by stripeCustomerId in our DB
+  if (!userId) {
+    console.warn(`[Webhook] subscription.metadata.userId missing for sub ${subscription.id}, looking up by customerId ${stripeCustomerId}`);
+    const existing = await Subscription.findOne({ stripeCustomerId });
+    if (existing) {
+      userId = existing.userId;
+      planType = planType || existing.planType;
+      billingCycle = billingCycle || existing.billingCycle;
+    }
+  }
+
+  if (!userId) {
+    console.error(`[Webhook] Cannot find userId for subscription ${subscription.id}, skipping update`);
+    return;
+  }
+
+  const updateData: any = {
     userId,
-    planType,
-    billingCycle,
-    stripeCustomerId: subscription.customer as string,
+    stripeCustomerId,
     stripeSubscriptionId: subscription.id,
-    stripePriceId: subscription.items.data[0].price.id,
-    status: subscription.status as 'active' | 'canceled' | 'past_due' | 'trialing',
+    stripePriceId: subscription.items.data[0]?.price.id,
+    status: subscription.status,
     currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
     currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
   };
+
+  if (planType) updateData.planType = planType;
+  if (billingCycle) updateData.billingCycle = billingCycle;
 
   await Subscription.findOneAndUpdate(
     { userId },

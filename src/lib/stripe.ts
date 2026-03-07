@@ -1,19 +1,25 @@
 import Stripe from 'stripe';
 
+let _stripe: Stripe | null = null;
+
 function getStripeInstance(): Stripe {
+  if (_stripe) return _stripe;
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) {
     throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
   }
-  return new Stripe(key, {
+  _stripe = new Stripe(key, {
     apiVersion: '2026-02-25.clover',
     typescript: true,
   });
+  return _stripe;
 }
 
-export const stripe: Stripe = new Proxy({} as Stripe, {
-  get(_target, prop) {
-    return (getStripeInstance() as any)[prop];
+export const stripe = new Proxy({} as Stripe, {
+  get(_target, prop: string) {
+    const instance = getStripeInstance();
+    const val = (instance as any)[prop];
+    return typeof val === 'function' ? val.bind(instance) : val;
   },
 });
 
@@ -77,8 +83,8 @@ export async function createSubscriptionCheckout(
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/account?session_id={CHECKOUT_SESSION_ID}&success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pricing?canceled=true`,
+      success_url: `${process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/account?session_id={CHECKOUT_SESSION_ID}&success=true`,
+      cancel_url: `${process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pricing?canceled=true`,
       metadata: {
         userId,
         planType,
@@ -118,8 +124,8 @@ export async function createCreditCheckout(
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/account?session_id={CHECKOUT_SESSION_ID}&credits_purchased=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?canceled=true`,
+      success_url: `${process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/account?session_id={CHECKOUT_SESSION_ID}&credits_purchased=true`,
+      cancel_url: `${process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pricing?canceled=true`,
       metadata: {
         userId,
         credits: credits.toString(),
