@@ -131,13 +131,20 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     stripeSubscriptionId: subscription.id,
     stripePriceId: subscription.items.data[0]?.price.id,
     status: subscription.status,
-    currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
-    currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
+    currentPeriodStart: (subscription as any).current_period_start
+      ? new Date((subscription as any).current_period_start * 1000)
+      : undefined,
+    currentPeriodEnd: (subscription as any).current_period_end
+      ? new Date((subscription as any).current_period_end * 1000)
+      : undefined,
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
   };
 
   if (planType) updateData.planType = planType;
   if (billingCycle) updateData.billingCycle = billingCycle;
+
+  // Remove undefined values so Mongoose doesn't try to cast them
+  Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
 
   await Subscription.findOneAndUpdate(
     { userId },
