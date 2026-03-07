@@ -20,7 +20,6 @@ import {
   X,
   Info
 } from "lucide-react";
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 
 interface Point {
@@ -339,15 +338,14 @@ export function DoodleTemplate({ title = "Doodle Pad", notebookId }: DoodleTempl
   };
 
   return (
-    <div className="min-h-screen bg-neutral-100 dark:bg-neutral-950 flex flex-col">
-      <TemplateHeader title={title} />
+    <div className="h-full min-h-0 bg-neutral-100 dark:bg-neutral-950 flex flex-col">
       {saving && (
         <div className="fixed top-20 right-6 flex items-center gap-2 text-sm text-neutral-500 bg-white dark:bg-neutral-800 px-3 py-2 rounded-lg shadow-lg z-50">
           <Loader2 className="w-4 h-4 animate-spin" />
           Saving...
         </div>
       )}
-      <div className="flex-1 overflow-y-auto p-8">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-8">
         <div className="max-w-6xl mx-auto space-y-6">
           {/* Toolbar */}
           <div className="w-16 bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800 flex flex-col items-center py-4 gap-2">

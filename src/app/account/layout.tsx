@@ -1,6 +1,6 @@
 import { AppHeader } from "@/components/layout/app-header"
 
-export default function DashboardLayout({
+export default function AccountLayout({
   children,
 }: {
   children: React.ReactNode

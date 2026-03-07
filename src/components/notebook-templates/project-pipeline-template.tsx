@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Workflow, Plus, ArrowRight, CheckCircle, Clock, AlertCircle, Info, X, Trash2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 import { Button } from '@/components/ui/button';
 
@@ -110,12 +109,11 @@ export function ProjectPipelineTemplate({ title, notebookId }: ProjectPipelineTe
   const teamMembers = Array.from(new Set(tasks.filter(t => t.assignee).map(t => t.assignee)));
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-950 via-cyan-950 to-slate-900 relative overflow-hidden">
-      <TemplateHeader title={title} />
+    <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-slate-950 via-cyan-950 to-slate-900 relative overflow-hidden">
       {/* Animated background grid */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.03)_1px,transparent_1px)] bg-[size:50px_50px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
       
-      <div className="flex-1 overflow-y-auto relative">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden relative">
         <div className="max-w-7xl mx-auto p-8 space-y-6 relative z-10">
           {/* Header */}
           <div className="text-center mb-8">

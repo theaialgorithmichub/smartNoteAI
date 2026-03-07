@@ -21,7 +21,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 
 interface Milestone {
@@ -203,6 +202,19 @@ export function GoalTrackerTemplate({ title, notebookId }: GoalTrackerTemplatePr
     ));
   };
 
+  const updateMilestone = (goalId: string, milestoneId: string, updates: Partial<Milestone>) => {
+    setGoals(prev => prev.map(g => 
+      g.id === goalId 
+        ? {
+            ...g,
+            milestones: g.milestones.map(m =>
+              m.id === milestoneId ? { ...m, ...updates } : m
+            ),
+          }
+        : g
+    ));
+  };
+
   const filteredGoals = goals.filter(goal => {
     if (filterCategory !== 'all' && goal.category !== filterCategory) return false;
     if (filterStatus !== 'all' && goal.status !== filterStatus) return false;
@@ -232,10 +244,8 @@ export function GoalTrackerTemplate({ title, notebookId }: GoalTrackerTemplatePr
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-neutral-900 dark:to-indigo-950">
-      <TemplateHeader title={title} />
-
-      <div className="flex-1 overflow-y-auto p-8">
+    <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-neutral-900 dark:to-indigo-950">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-8">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -451,7 +461,9 @@ export function GoalTrackerTemplate({ title, notebookId }: GoalTrackerTemplatePr
                                       className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-neutral-800 rounded-lg"
                                     >
                                       <button
+                                        type="button"
                                         onClick={() => toggleMilestone(goal.id, milestone.id)}
+                                        className="flex-shrink-0"
                                       >
                                         {milestone.completed ? (
                                           <CheckCircle2 className="w-5 h-5 text-green-500" />
@@ -459,16 +471,27 @@ export function GoalTrackerTemplate({ title, notebookId }: GoalTrackerTemplatePr
                                           <Circle className="w-5 h-5 text-slate-400" />
                                         )}
                                       </button>
-                                      <span className={`flex-1 ${milestone.completed ? 'line-through text-slate-500' : 'text-slate-900 dark:text-white'}`}>
-                                        {milestone.title}
-                                      </span>
-                                      <span className="text-sm text-slate-500">
-                                        {new Date(milestone.dueDate).toLocaleDateString()}
-                                      </span>
+                                      <input
+                                        type="text"
+                                        value={milestone.title}
+                                        onChange={(e) => updateMilestone(goal.id, milestone.id, { title: e.target.value })}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className={`flex-1 min-w-0 px-2 py-1 rounded bg-white dark:bg-neutral-700 border border-transparent hover:border-slate-300 dark:hover:border-neutral-600 focus:border-blue-500 focus:outline-none text-sm ${milestone.completed ? 'line-through text-slate-500' : 'text-slate-900 dark:text-white'}`}
+                                        placeholder="Milestone title"
+                                      />
+                                      <input
+                                        type="date"
+                                        value={milestone.dueDate}
+                                        onChange={(e) => updateMilestone(goal.id, milestone.id, { dueDate: e.target.value })}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="text-sm text-slate-600 dark:text-slate-300 bg-white dark:bg-neutral-700 border border-transparent hover:border-slate-300 dark:hover:border-neutral-600 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
+                                      />
                                       <Button
                                         onClick={() => deleteMilestone(goal.id, milestone.id)}
                                         variant="ghost"
                                         size="sm"
+                                        type="button"
+                                        className="flex-shrink-0"
                                       >
                                         <Trash2 className="w-4 h-4 text-red-500" />
                                       </Button>

@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 
 interface Section {
@@ -347,24 +346,10 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
   const currentProject = projects.find(p => p.id === selectedProject);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-neutral-950 dark:to-neutral-900">
-      <TemplateHeader title={title} />
-      <div className="flex-1 overflow-y-auto p-8">
+    <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-neutral-950 dark:to-neutral-900">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-8">
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center">
-                <BookOpen className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  {title}
-                </h1>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                  Create step-by-step tutorials with images and text
-                </p>
-              </div>
-            </div>
+          <div className="flex justify-end mb-4">
             <button
               onClick={() => setShowDocumentation(true)}
               className="p-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors"
@@ -377,11 +362,20 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
               <Card className="p-6 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border-neutral-200 dark:border-neutral-800">
-                <div className="flex items-center justify-between mb-4">
+                <div className="mb-4 pb-4 border-b border-neutral-200 dark:border-neutral-700">
                   <h2 className="text-lg font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-indigo-500" />
+                    {title}
+                  </h2>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                    Create step-by-step tutorials with images and text
+                  </p>
+                </div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
                     <Layers className="w-5 h-5 text-indigo-500" />
                     Projects
-                  </h2>
+                  </h3>
                   <Button
                     onClick={() => setIsAddingProject(true)}
                     size="sm"

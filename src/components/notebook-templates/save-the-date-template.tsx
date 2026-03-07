@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Plus, Bell, Trash2, X, Info, BellRing, AlertCircle, CalendarDays, Clock, MapPin, Check } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 import { Button } from '@/components/ui/button';
 
@@ -163,9 +162,8 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-rose-50 to-pink-50 dark:from-neutral-900 dark:to-neutral-800">
-      <TemplateHeader title={title} />
-      <div className="flex-1 overflow-y-auto p-8">
+    <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-rose-50 to-pink-50 dark:from-neutral-900 dark:to-neutral-800">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-8">
         <div className="max-w-6xl mx-auto space-y-6">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-2">

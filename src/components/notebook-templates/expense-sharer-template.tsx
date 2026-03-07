@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Plus, DollarSign, UserPlus, TrendingUp, CheckCircle, Info, X, Trash2, Calendar, ArrowRight, Edit } from 'lucide-react';
 import { Card } from '@/components/ui/card';
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 import { Button } from '@/components/ui/button';
 
@@ -280,9 +279,8 @@ export function ExpenseSharerTemplate({ title, notebookId }: ExpenseSharerTempla
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-neutral-900 dark:to-neutral-800">
-      <TemplateHeader title={title} />
-      <div className="flex-1 overflow-y-auto p-8">
+    <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-neutral-900 dark:to-neutral-800">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-8">
         <div className="max-w-5xl mx-auto space-y-6">
           {/* Header */}
           <div className="text-center mb-8">

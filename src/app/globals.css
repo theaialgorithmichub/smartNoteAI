@@ -1,6 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:wght@400;700&family=Lato:wght@400;700&family=Oswald:wght@400;700&family=Merriweather:wght@400;700&family=Raleway:wght@400;700&family=Ubuntu:wght@400;700&family=Nunito:wght@400;700&family=Poppins:wght@400;700&family=Crimson+Text:wght@400;700&family=Pacifico&family=Montserrat:wght@400;700&family=Inter:wght@400;700&family=Open+Sans:wght@400;700&family=Source+Sans+3:wght@400;700&family=Work+Sans:wght@400;700&family=DM+Sans:wght@400;700&display=swap');
 
-/* Quill font format classes - must be global for editor content rendering */
+/* Quill font format classes - global and scoped inside editor so fonts apply to content */
 .ql-font-arial { font-family: Arial, sans-serif !important; }
 .ql-font-georgia { font-family: Georgia, serif !important; }
 .ql-font-verdana { font-family: Verdana, sans-serif !important; }
@@ -26,6 +26,33 @@
 .ql-font-sourcesans { font-family: 'Source Sans 3', sans-serif !important; }
 .ql-font-worksans { font-family: 'Work Sans', sans-serif !important; }
 .ql-font-dmsans { font-family: 'DM Sans', sans-serif !important; }
+
+/* Ensure font and color apply inside editor content (higher specificity) */
+.quill-container .ql-editor .ql-font-arial { font-family: Arial, sans-serif !important; }
+.quill-container .ql-editor .ql-font-georgia { font-family: Georgia, serif !important; }
+.quill-container .ql-editor .ql-font-verdana { font-family: Verdana, sans-serif !important; }
+.quill-container .ql-editor .ql-font-tahoma { font-family: Tahoma, sans-serif !important; }
+.quill-container .ql-editor .ql-font-trebuchet { font-family: 'Trebuchet MS', sans-serif !important; }
+.quill-container .ql-editor .ql-font-impact { font-family: Impact, sans-serif !important; }
+.quill-container .ql-editor .ql-font-courier { font-family: 'Courier New', monospace !important; }
+.quill-container .ql-editor .ql-font-times { font-family: 'Times New Roman', serif !important; }
+.quill-container .ql-editor .ql-font-palatino { font-family: Palatino, serif !important; }
+.quill-container .ql-editor .ql-font-garamond { font-family: Garamond, serif !important; }
+.quill-container .ql-editor .ql-font-roboto { font-family: 'Roboto', sans-serif !important; }
+.quill-container .ql-editor .ql-font-lato { font-family: 'Lato', sans-serif !important; }
+.quill-container .ql-editor .ql-font-poppins { font-family: 'Poppins', sans-serif !important; }
+.quill-container .ql-editor .ql-font-montserrat { font-family: 'Montserrat', sans-serif !important; }
+.quill-container .ql-editor .ql-font-inter { font-family: 'Inter', sans-serif !important; }
+.quill-container .ql-editor .ql-font-raleway { font-family: 'Raleway', sans-serif !important; }
+.quill-container .ql-editor .ql-font-nunito { font-family: 'Nunito', sans-serif !important; }
+.quill-container .ql-editor .ql-font-oswald { font-family: 'Oswald', sans-serif !important; }
+.quill-container .ql-editor .ql-font-merriweather { font-family: 'Merriweather', serif !important; }
+.quill-container .ql-editor .ql-font-ubuntu { font-family: 'Ubuntu', sans-serif !important; }
+.quill-container .ql-editor .ql-font-playfair { font-family: 'Playfair Display', serif !important; }
+.quill-container .ql-editor .ql-font-opensans { font-family: 'Open Sans', sans-serif !important; }
+.quill-container .ql-editor .ql-font-sourcesans { font-family: 'Source Sans 3', sans-serif !important; }
+.quill-container .ql-editor .ql-font-worksans { font-family: 'Work Sans', sans-serif !important; }
+.quill-container .ql-editor .ql-font-dmsans { font-family: 'DM Sans', sans-serif !important; }
 
 @tailwind base;
 @tailwind components;
@@ -446,16 +473,36 @@ input, textarea, [contenteditable] {
 .quill-container .ql-container {
   flex: 1;
   overflow-y: auto;
-  font-size: 14px;
+  font-size: 16px;
   font-family: inherit;
   border: none !important;
   background: transparent;
 }
 
+/* Default editor text: dark, readable; default font is Inter (not Arial) */
 .quill-container .ql-editor {
   min-height: 100%;
-  padding: 0;
-  line-height: 1.8;
+  padding: 28px 32px;
+  line-height: 1.75;
+  color: #1a1a1a;
+  font-size: 16px;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Simple notebook paper: always readable dark text even if app is in dark mode */
+.notebook-paper-editor .quill-container .ql-editor {
+  color: #1a1a1a !important;
+  font-size: 16px;
+}
+.notebook-paper-editor .quill-container .ql-editor.ql-blank::before {
+  color: #6b7280 !important;
+}
+/* Override dark mode on paper so text stays dark and readable */
+.dark .notebook-paper-editor .quill-container .ql-editor {
+  color: #1a1a1a !important;
+}
+.dark .notebook-paper-editor .quill-container .ql-editor.ql-blank::before {
+  color: #6b7280 !important;
 }
 
 .quill-container .ql-editor.ql-blank::before {
@@ -591,6 +638,13 @@ input, textarea, [contenteditable] {
   border-color: #e5d5c5;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10001;
+  pointer-events: auto;
+}
+.quill-container .ql-snow .ql-picker.ql-color .ql-picker-options,
+.quill-container .ql-snow .ql-picker.ql-background .ql-picker-options {
+  z-index: 10002;
+  pointer-events: auto;
 }
 
 .quill-container .ql-editor img {
@@ -617,11 +671,17 @@ input, textarea, [contenteditable] {
 
 .quill-container .ql-editor h1,
 .quill-container .ql-editor h2,
-.quill-container .ql-editor h3 {
+.quill-container .ql-editor h3,
+.quill-container .ql-editor h4 {
   color: #92400e;
   margin-top: 16px;
   margin-bottom: 8px;
+  font-weight: 600;
 }
+.quill-container .ql-editor h1 { font-size: 1.875rem; line-height: 1.2; }
+.quill-container .ql-editor h2 { font-size: 1.5rem; line-height: 1.3; }
+.quill-container .ql-editor h3 { font-size: 1.25rem; line-height: 1.4; }
+.quill-container .ql-editor h4 { font-size: 1.125rem; line-height: 1.4; }
 
 .quill-container .ql-editor a {
   color: #b45309;
