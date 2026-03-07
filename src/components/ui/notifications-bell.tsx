@@ -3,21 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Bell, X, Check, UserPlus, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { notificationsAPI } from '@/lib/api/sharing';
-
-interface Notification {
-  _id: string;
-  type: 'notebook_shared' | 'friend_request' | 'friend_accepted';
-  title: string;
-  message: string;
-  read: boolean;
-  createdAt: string;
-  actionData?: {
-    notebookId?: string;
-    requestId?: string;
-    userId?: string;
-  };
-}
+import { notificationsAPI, type Notification } from '@/lib/api/sharing';
 
 export function NotificationsBell() {
   const [open, setOpen] = useState(false);
@@ -31,7 +17,7 @@ export function NotificationsBell() {
     try {
       setLoading(true);
       const data = await notificationsAPI.getNotifications();
-      setNotifications(Array.isArray(data) ? (data as Notification[]) : []);
+      setNotifications(Array.isArray(data) ? data : []);
     } catch {
       // keep previous state on error
     } finally {

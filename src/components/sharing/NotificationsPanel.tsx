@@ -6,11 +6,11 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 interface Notification {
-  id: string;
+  _id: string;
   type: 'notebook_shared' | 'friend_request' | 'friend_accepted';
   title: string;
   message: string;
-  timestamp: string;
+  createdAt: string;
   read: boolean;
   actionData?: {
     notebookId?: string;
@@ -97,7 +97,7 @@ export function NotificationsPanel({
         <div className="space-y-3">
           {notifications.map(notification => (
             <Card
-              key={notification.id}
+              key={notification._id}
               className={`p-4 transition-all ${
                 notification.read
                   ? 'bg-white dark:bg-neutral-800'
@@ -118,7 +118,7 @@ export function NotificationsPanel({
                     <h4 className="font-bold text-neutral-900 dark:text-white">{notification.title}</h4>
                     <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                       <Clock className="h-3 w-3" />
-                      {getTimeAgo(notification.timestamp)}
+                      {getTimeAgo(notification.createdAt)}
                     </div>
                   </div>
                   <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-3">{notification.message}</p>
@@ -129,7 +129,7 @@ export function NotificationsPanel({
                       <Button
                         onClick={() => {
                           onViewNotebook(notification.actionData!.notebookId!);
-                          onMarkAsRead(notification.id);
+                          onMarkAsRead(notification._id);
                         }}
                         className="text-sm bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:opacity-90"
                       >
@@ -142,7 +142,7 @@ export function NotificationsPanel({
                         <Button
                           onClick={() => {
                             onAcceptFriendRequest(notification.actionData!.requestId!);
-                            onMarkAsRead(notification.id);
+                            onMarkAsRead(notification._id);
                           }}
                           className="text-sm bg-green-500 text-white hover:bg-green-600"
                         >
@@ -152,7 +152,7 @@ export function NotificationsPanel({
                         <Button
                           onClick={() => {
                             onRejectFriendRequest(notification.actionData!.requestId!);
-                            onMarkAsRead(notification.id);
+                            onMarkAsRead(notification._id);
                           }}
                           className="text-sm bg-red-500 text-white hover:bg-red-600"
                         >
@@ -164,7 +164,7 @@ export function NotificationsPanel({
 
                     {!notification.read && (
                       <Button
-                        onClick={() => onMarkAsRead(notification.id)}
+                        onClick={() => onMarkAsRead(notification._id)}
                         className="text-sm bg-neutral-200 dark:bg-neutral-700 text-neutral-900 dark:text-white hover:bg-neutral-300 dark:hover:bg-neutral-600"
                       >
                         Mark as read

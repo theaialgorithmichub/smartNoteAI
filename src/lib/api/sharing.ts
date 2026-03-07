@@ -16,12 +16,12 @@ export interface FriendRequest {
 }
 
 export interface Notification {
-  id: string;
+  _id: string;
   type: 'notebook_shared' | 'friend_request' | 'friend_accepted';
   title: string;
   message: string;
-  timestamp: string;
   read: boolean;
+  createdAt: string;
   actionData?: {
     notebookId?: string;
     requestId?: string;
