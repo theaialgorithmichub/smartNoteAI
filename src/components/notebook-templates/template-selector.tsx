@@ -16,6 +16,7 @@ import {
   Mic
 } from "lucide-react";
 import { NOTEBOOK_TEMPLATES, NotebookTemplateType } from "@/types/notebook-templates";
+import { TEMPLATE_POINTS } from "@/config/template-points";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   BookOpen,
@@ -193,6 +194,27 @@ export function TemplateSelector({ onSelect, selectedTemplate }: TemplateSelecto
               <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
                 {template.description}
               </p>
+
+              {/* Points/Tier Badge */}
+              {(() => {
+                const tp = TEMPLATE_POINTS[template.id as keyof typeof TEMPLATE_POINTS];
+                if (!tp) return null;
+                const tierColors: Record<string, string> = {
+                  basic: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300',
+                  standard: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+                  premium: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
+                  elite: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+                };
+                const tierIcons: Record<string, string> = { basic: '⭐', standard: '🔷', premium: '💎', elite: '👑' };
+                return (
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${tierColors[tp.tier]}`}>
+                      {tierIcons[tp.tier]} {tp.tier.charAt(0).toUpperCase() + tp.tier.slice(1)}
+                    </span>
+                    <span className="text-xs text-neutral-400 dark:text-neutral-500">{tp.points} pts</span>
+                  </div>
+                );
+              })()}
 
               {/* Features */}
               <div className="flex flex-wrap gap-2">

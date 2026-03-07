@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2, Upload, X, ImageIcon, BookOpen, Users, FileText, LayoutDashboard, Code, Calendar, Brain, Check, CalendarDays, PenTool, Blocks, Pencil, FolderKanban, LayoutGrid, BookText, GraduationCap, Layers, PenLine, ChefHat, Wallet, Plane, CheckSquare, Film, Workflow, Video, Link, Type, Mic, Target, Dumbbell, DollarSign, ShoppingCart, MessageSquare, Bell, Languages, Search, UtensilsCrossed, Trophy, StickyNote, Sparkles, GitBranch, Zap } from "lucide-react"
+import { Loader2, Upload, X, ImageIcon, BookOpen, Users, FileText, LayoutDashboard, Code, Calendar, Brain, Check, CalendarDays, PenTool, Blocks, Pencil, FolderKanban, LayoutGrid, BookText, GraduationCap, Layers, PenLine, ChefHat, Wallet, Plane, CheckSquare, Film, Workflow, Video, Link, Type, Mic, Target, Dumbbell, DollarSign, ShoppingCart, MessageSquare, Bell, Languages, Search, UtensilsCrossed, Trophy, StickyNote, Sparkles, GitBranch, Zap, Crown } from "lucide-react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 
@@ -138,6 +138,8 @@ export function CreateNotebookDialog({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [limitReached, setLimitReached] = useState(false)
+  const [limitInfo, setLimitInfo] = useState<{ planType: string; maxNotebooks: number } | null>(null)
   const [title, setTitle] = useState("")
   const [category, setCategory] = useState("Personal")
   const [themeColor, setThemeColor] = useState("#8B4513")
@@ -174,7 +176,12 @@ export function CreateNotebookDialog({
       
       if (!res.ok) {
         console.error('[CREATE NOTEBOOK] Error:', data.error)
-        alert(`Failed to create notebook: ${data.error || 'Unknown error'}`)
+        if (data.limitReached) {
+          setLimitReached(true)
+          setLimitInfo({ planType: data.planType, maxNotebooks: data.maxNotebooks })
+        } else {
+          alert(`Failed to create notebook: ${data.error || 'Unknown error'}`)
+        }
         return
       }
       
@@ -205,6 +212,8 @@ export function CreateNotebookDialog({
     setPaperPattern("lined")
     setCoverImageUrl(null)
     setSelectedTemplate("simple")
+    setLimitReached(false)
+    setLimitInfo(null)
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -257,7 +266,41 @@ export function CreateNotebookDialog({
           </div>
         </DialogHeader>
 
-        <div className="space-y-8 py-6">
+        {/* Limit Reached Banner */}
+        {limitReached && limitInfo && (
+          <div className="mx-1 mt-2 p-5 rounded-xl bg-gradient-to-r from-amber-900/40 to-orange-900/40 border-2 border-amber-500/50">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center flex-shrink-0">
+                <Crown className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-amber-300 mb-1">Notebook Limit Reached</h3>
+                <p className="text-sm text-amber-200/80 mb-4">
+                  Your <span className="font-semibold capitalize">{limitInfo.planType}</span> plan allows up to{" "}
+                  <span className="font-semibold">{limitInfo.maxNotebooks} notebook{limitInfo.maxNotebooks === 1 ? "" : "s"}</span>.
+                  Upgrade to create more.
+                </p>
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => { onOpenChange(false); resetForm(); router.push("/pricing"); }}
+                    className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-semibold px-5"
+                  >
+                    <Crown className="w-4 h-4 mr-2" /> Upgrade Plan
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setLimitReached(false)}
+                    className="border-amber-500/40 text-amber-300 hover:bg-amber-900/30"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className={`space-y-8 py-6 ${limitReached ? "opacity-30 pointer-events-none" : ""}`}>
           {/* Template Selection */}
           <div className="space-y-4">
             <label className="text-base font-bold text-cyan-300 flex items-center gap-2 uppercase tracking-wider">

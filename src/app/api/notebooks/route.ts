@@ -2,6 +2,8 @@ import { auth } from "@clerk/nextjs/server"
 import { NextRequest, NextResponse } from "next/server"
 import connectDB from "@/lib/db/mongodb"
 import { Notebook, Page } from "@/lib/models"
+import { Subscription } from "@/lib/models/subscription"
+import { PLAN_CONFIG } from "@/config/template-points"
 
 // GET /api/notebooks - List all notebooks for user
 export async function GET(req: NextRequest) {
@@ -66,6 +68,37 @@ export async function POST(req: NextRequest) {
     }
 
     await connectDB()
+
+    // --- Plan limit enforcement ---
+    let subscription = await Subscription.findOne({ userId })
+    if (!subscription) {
+      subscription = await Subscription.create({
+        userId,
+        planType: 'free',
+        status: 'active',
+        credits: 0,
+        notebooksCreated: 0,
+        selectedTemplates: [],
+      })
+    }
+
+    const planConfig = PLAN_CONFIG[subscription.planType as keyof typeof PLAN_CONFIG]
+
+    if (planConfig.maxNotebooks !== -1) {
+      const actualCount = await Notebook.countDocuments({ userId, isTrashed: false })
+      if (actualCount >= planConfig.maxNotebooks) {
+        return NextResponse.json(
+          {
+            error: `Notebook limit reached. Your ${planConfig.name} plan allows up to ${planConfig.maxNotebooks} notebook${planConfig.maxNotebooks === 1 ? '' : 's'}. Upgrade your plan to create more.`,
+            limitReached: true,
+            planType: subscription.planType,
+            maxNotebooks: planConfig.maxNotebooks,
+          },
+          { status: 403 }
+        )
+      }
+    }
+    // --- End plan limit enforcement ---
 
     const body = await req.json()
     const { title, category, appearance, template } = body

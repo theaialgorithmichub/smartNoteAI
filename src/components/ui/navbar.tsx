@@ -144,7 +144,7 @@ export function Navbar() {
     {
       icon: DollarSign,
       label: "Pricing",
-      href: "#pricing",
+      href: "/pricing",
       gradient: "radial-gradient(circle, rgba(249,115,22,0.15) 0%, rgba(234,88,12,0.06) 50%, rgba(194,65,12,0) 100%)",
       iconColor: "text-orange-500",
     },
@@ -238,7 +238,7 @@ export function Navbar() {
                 Features
               </Link>
               <Link 
-                href="#pricing" 
+                href="/pricing" 
                 className="block px-3 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:text-amber-600 dark:hover:text-amber-400 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800"
               >
                 Pricing
