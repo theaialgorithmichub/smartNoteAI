@@ -540,46 +540,6 @@ export function QuillEditor({
         </div>
       )}
 
-      {/* Voice recorder + AI suggestion bar */}
-      {isEditing && (
-        <div className="flex items-center gap-3 mb-2 flex-shrink-0 px-1">
-          <VoiceRecorder
-            onTranscription={handleVoiceTranscription}
-            disabled={!isEditing}
-          />
-          {isLoadingSuggestion && (
-            <span className="flex items-center gap-1 text-xs text-purple-400 dark:text-purple-500">
-              <Loader2 className="w-3 h-3 animate-spin" />
-              AI thinking…
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Inline AI autocomplete suggestion */}
-      {aiSuggestion && isEditing && (
-        <div className="flex items-start gap-2 mb-2 px-3 py-2 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg flex-shrink-0">
-          <Wand2 className="w-3.5 h-3.5 text-purple-500 flex-shrink-0 mt-0.5" />
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-purple-700 dark:text-purple-300 italic line-clamp-2">{aiSuggestion}</p>
-          </div>
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <button
-              onClick={acceptSuggestion}
-              className="text-xs px-2 py-0.5 bg-purple-500 hover:bg-purple-600 text-white rounded font-medium transition-colors"
-            >
-              Tab ↵
-            </button>
-            <button
-              onClick={() => setAiSuggestion("")}
-              className="text-xs px-1.5 py-0.5 text-purple-400 hover:text-purple-600 transition-colors"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Quill Editor - Full height and scrollable */}
       <div className="flex-1 min-h-0 quill-container">
         <style jsx global>{`
@@ -605,6 +565,35 @@ export function QuillEditor({
             min-height: 100%;
             padding: 20px;
           }
+          .quill-container .ql-toolbar {
+            background: #f8f8f8;
+            border-bottom: 1px solid #ccc;
+          }
+          .ql-font-arial { font-family: Arial, sans-serif !important; }
+          .ql-font-georgia { font-family: Georgia, serif !important; }
+          .ql-font-verdana { font-family: Verdana, sans-serif !important; }
+          .ql-font-tahoma { font-family: Tahoma, sans-serif !important; }
+          .ql-font-trebuchet { font-family: 'Trebuchet MS', sans-serif !important; }
+          .ql-font-impact { font-family: Impact, sans-serif !important; }
+          .ql-font-courier { font-family: 'Courier New', monospace !important; }
+          .ql-font-times { font-family: 'Times New Roman', serif !important; }
+          .ql-font-palatino { font-family: Palatino, serif !important; }
+          .ql-font-garamond { font-family: Garamond, serif !important; }
+          .ql-font-roboto { font-family: 'Roboto', sans-serif !important; }
+          .ql-font-lato { font-family: 'Lato', sans-serif !important; }
+          .ql-font-poppins { font-family: 'Poppins', sans-serif !important; }
+          .ql-font-montserrat { font-family: 'Montserrat', sans-serif !important; }
+          .ql-font-inter { font-family: 'Inter', sans-serif !important; }
+          .ql-font-raleway { font-family: 'Raleway', sans-serif !important; }
+          .ql-font-nunito { font-family: 'Nunito', sans-serif !important; }
+          .ql-font-oswald { font-family: 'Oswald', sans-serif !important; }
+          .ql-font-merriweather { font-family: 'Merriweather', serif !important; }
+          .ql-font-ubuntu { font-family: 'Ubuntu', sans-serif !important; }
+          .ql-font-playfair { font-family: 'Playfair Display', serif !important; }
+          .ql-font-opensans { font-family: 'Open Sans', sans-serif !important; }
+          .ql-font-sourcesans { font-family: 'Source Sans 3', sans-serif !important; }
+          .ql-font-worksans { font-family: 'Work Sans', sans-serif !important; }
+          .ql-font-dmsans { font-family: 'DM Sans', sans-serif !important; }
         `}</style>
         <ReactQuill
           forwardedRef={quillRef}
@@ -618,6 +607,30 @@ export function QuillEditor({
           className="h-full"
         />
       </div>
+
+      {/* Voice recorder + AI suggestion — shown below editor toolbar */}
+      {isEditing && (
+        <div className="flex-shrink-0 border-t border-amber-100 dark:border-neutral-700 bg-white/80 dark:bg-neutral-900/80 px-4 py-1.5 flex items-center gap-3">
+          <VoiceRecorder
+            onTranscription={handleVoiceTranscription}
+            disabled={!isEditing}
+          />
+          {isLoadingSuggestion && (
+            <span className="flex items-center gap-1 text-xs text-purple-400">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              AI thinking…
+            </span>
+          )}
+          {aiSuggestion && (
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <Wand2 className="w-3.5 h-3.5 text-purple-500 flex-shrink-0" />
+              <p className="text-xs text-purple-700 dark:text-purple-300 italic truncate flex-1">{aiSuggestion}</p>
+              <button onClick={acceptSuggestion} className="text-xs px-2 py-0.5 bg-purple-500 hover:bg-purple-600 text-white rounded font-medium flex-shrink-0">Tab ↵</button>
+              <button onClick={() => setAiSuggestion("")} className="text-xs text-purple-400 hover:text-purple-600 flex-shrink-0">✕</button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Save indicator */}
       {isSaving && (

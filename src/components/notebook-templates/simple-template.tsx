@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { TemplateHeader } from './template-header'
-import { ChevronLeft, ChevronRight, Plus, List, Save, Download, Palette } from "lucide-react"
+import { ChevronLeft, ChevronRight, Plus, List, Save, Download, Sparkles } from "lucide-react"
+import { AIToolbar } from "@/components/ai/AIToolbar"
 import { QuillEditor } from "@/components/notebook/quill-editor"
 
 interface Page {
@@ -36,6 +37,7 @@ export function SimpleTemplate({
   appearance 
 }: ModernFlipNotebookProps) {
   const [currentPage, setCurrentPage] = useState(0)
+  const [isAIOpen, setIsAIOpen] = useState(false)
   const [isFlipping, setIsFlipping] = useState(false)
   const [flipDirection, setFlipDirection] = useState<'next' | 'prev'>('next')
   const [showTOC, setShowTOC] = useState(false)
@@ -133,6 +135,16 @@ export function SimpleTemplate({
           </div>
           
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsAIOpen(o => !o)}
+              className={`px-3 py-1.5 rounded-lg text-sm transition-colors flex items-center gap-2 ${
+                isAIOpen ? 'bg-purple-600 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-200'
+              }`}
+              title="AI Assistant"
+            >
+              <Sparkles className="h-4 w-4" />
+              AI
+            </button>
             <button
               onClick={() => setShowTOC(true)}
               className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg text-sm transition-colors flex items-center gap-2"
@@ -405,6 +417,20 @@ export function SimpleTemplate({
           </AnimatePresence>
         </div>
       </div>
+
+      {/* AI Toolbar overlay */}
+      <AnimatePresence>
+        {isAIOpen && (
+          <AIToolbar
+            selectedText=""
+            notebookId={notebookId}
+            notebookTitle={title}
+            currentPageContent={pages[currentPage]?.content || ""}
+            onApply={() => setIsAIOpen(false)}
+            onClose={() => setIsAIOpen(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Table of Contents Modal */}
       <AnimatePresence>
