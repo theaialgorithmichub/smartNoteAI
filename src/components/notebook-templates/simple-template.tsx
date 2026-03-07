@@ -170,7 +170,7 @@ export function SimpleTemplate({
       </div>
 
       {/* Main Content - Maximum Space */}
-      <div className="flex-1 relative overflow-hidden" style={{ perspective: '1500px' }}>
+      <div className="flex-1 relative overflow-hidden">
         {/* Navigation Arrows */}
         <button
           onClick={handlePrevPage}
@@ -193,26 +193,10 @@ export function SimpleTemplate({
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={currentPage}
-              initial={{
-                rotateY: flipDirection === 'next' ? 180 : -180,
-                opacity: 0,
-              }}
-              animate={{
-                rotateY: 0,
-                opacity: 1,
-              }}
-              exit={{
-                rotateY: flipDirection === 'next' ? -180 : 180,
-                opacity: 0,
-              }}
-              transition={{
-                duration: 0.6,
-                ease: [0.43, 0.13, 0.23, 0.96],
-              }}
-              style={{
-                transformStyle: 'preserve-3d',
-                backfaceVisibility: 'hidden',
-              }}
+              initial={{ opacity: 0, x: flipDirection === 'next' ? 40 : -40 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: flipDirection === 'next' ? -40 : 40 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
               className="w-full h-full max-w-[1400px]"
             >
               {/* Paper Page */}
@@ -383,7 +367,7 @@ export function SimpleTemplate({
                     `}</style>
 
                   {/* Content Area - QuillEditor has its own built-in toolbar */}
-                  <div className="flex-1 overflow-y-auto px-12 py-8">
+                  <div className="flex-1 min-h-0 overflow-hidden">
                     {page ? (
                       <QuillEditor
                         pageId={page._id}
