@@ -1,6 +1,6 @@
 import { UserButton } from "@clerk/nextjs"
 import Link from "next/link"
-import { BookOpen, Trash2, Settings } from "lucide-react"
+import { BookOpen, Trash2, Settings, CreditCard } from "lucide-react"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 export default function DashboardLayout({
@@ -34,6 +34,14 @@ export default function DashboardLayout({
                 title="Settings"
               >
                 <Settings className="h-5 w-5" />
+              </Link>
+              <Link
+                href="/account"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
+                title="Subscription"
+              >
+                <CreditCard className="h-4 w-4" />
+                <span>Subscription</span>
               </Link>
               <UserButton afterSignOutUrl="/" />
             </div>

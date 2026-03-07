@@ -38,7 +38,8 @@ import {
   RefreshCw,
   Boxes,
   Brain,
-  Target
+  Target,
+  GitBranch
 } from 'lucide-react';
 import { NotebookTemplateType } from '@/types/notebook-templates';
 import { useRouter } from 'next/navigation';
@@ -105,6 +106,10 @@ const templateIconMap: Record<NotebookTemplateType, React.ReactNode> = {
   'meals-planner': <UtensilsCrossed size={20} />,
   'games-scorecard': <Trophy size={20} />,
   'sticker-book': <StickyNote size={20} />,
+  'tutorial-learn': <BookOpen size={20} />,
+  'mind-map': <GitBranch size={20} />,
+  'goal-tracker': <Target size={20} />,
+  'ai-prompt-studio': <Brain size={20} />,
 };
 
 interface DockItemProps {

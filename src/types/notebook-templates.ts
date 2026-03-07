@@ -43,7 +43,11 @@ export type NotebookTemplateType =
   | 'dictionary'
   | 'meals-planner'
   | 'games-scorecard'
-  | 'sticker-book';
+  | 'sticker-book'
+  | 'tutorial-learn'
+  | 'mind-map'
+  | 'goal-tracker'
+  | 'ai-prompt-studio';
 
 export interface NotebookTemplate {
   id: NotebookTemplateType;
@@ -374,6 +378,38 @@ export const NOTEBOOK_TEMPLATES: NotebookTemplate[] = [
     icon: 'StickyNote',
     color: 'lime',
     features: ['Sticky notes', 'Drag & drop', 'Color coding', 'Infinite canvas'],
+  },
+  {
+    id: 'tutorial-learn',
+    name: 'Tutorial Learn',
+    description: 'Create step-by-step tutorials with images and text, export to PDF',
+    icon: 'BookOpen',
+    color: 'indigo',
+    features: ['Project organization', 'Step-by-step guides', 'Image upload', 'PDF export'],
+  },
+  {
+    id: 'mind-map',
+    name: 'Mind Map',
+    description: 'Visual brainstorming tool with nodes and connections',
+    icon: 'GitBranch',
+    color: 'purple',
+    features: ['Visual nodes', 'Hierarchical structure', 'Color coding', 'Zoom controls', 'Export to JSON'],
+  },
+  {
+    id: 'goal-tracker',
+    name: 'Goal Tracker',
+    description: 'Track SMART goals with milestones and progress monitoring',
+    icon: 'Target',
+    color: 'blue',
+    features: ['SMART goals', 'Milestone tracking', 'Progress bars', 'Category organization', 'Statistics dashboard'],
+  },
+  {
+    id: 'ai-prompt-studio',
+    name: 'AI Prompt Studio',
+    description: 'Advanced AI prompt engineering and testing platform',
+    icon: 'Brain',
+    color: 'violet',
+    features: ['Version control', 'Multi-model support', 'Test automation', 'Performance metrics', 'Cost tracking', 'Prompt optimization'],
   },
 ];
 

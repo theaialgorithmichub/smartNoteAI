@@ -1,17 +1,26 @@
 "use client"
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
+import React, { useState, useEffect, useCallback, useRef } from "react"
 import dynamic from "next/dynamic"
 import { Loader2 } from "lucide-react"
 import "react-quill-new/dist/quill.snow.css"
-import { FONT_WHITELIST } from "./quill-register-fonts"
 
 // Dynamic import for Quill (client-only) with font registration
 const ReactQuill = dynamic(
   async () => {
     const { default: RQ, Quill } = await import("react-quill-new")
-    const { registerFonts, FONT_WHITELIST } = await import("./quill-register-fonts")
-    registerFonts(Quill)
+    
+    // Register fonts BEFORE any Quill instance is created
+    const Font = Quill.import("formats/font") as any
+    Font.whitelist = [
+      "arial", "georgia", "verdana", "tahoma", "trebuchet",
+      "impact", "courier", "times", "palatino", "garamond",
+      "roboto", "lato", "poppins", "montserrat", "inter",
+      "raleway", "nunito", "oswald", "merriweather", "ubuntu",
+      "playfair", "opensans", "sourcesans", "worksans", "dmsans",
+    ]
+    Quill.register({ "formats/font": Font }, true)
+    
     return ({ forwardedRef, ...props }: any) => <RQ ref={forwardedRef} {...props} />
   },
   {
@@ -65,33 +74,34 @@ export function QuillEditor({
   useEffect(() => { notebookIdRef.current = notebookId }, [notebookId])
 
 
-  // Quill modules configuration
-  const modules = useMemo(
-    () => ({
-      toolbar: {
-        container: [
-          [{ font: FONT_WHITELIST }, { header: [1, 2, 3, false] }],
-          [{ size: ["small", false, "large", "huge"] }],
-          ["bold", "italic", "underline", "strike"],
-          [{ color: [] }, { background: [] }],
-          [{ list: "ordered" }, { list: "bullet" }],
-          [{ align: [] }],
-          ["blockquote", "code-block"],
-          ["link", "image"],
-          ["clean"],
-        ],
-        handlers: {
-          image: () => {
-            fileInputRef.current?.click()
-          },
+  // Quill modules configuration - built-in toolbar (reliable)
+  const modules = {
+    toolbar: {
+      container: [
+        [{ font: [
+          "arial", "georgia", "verdana", "tahoma", "trebuchet",
+          "impact", "courier", "times", "palatino", "garamond",
+          "roboto", "lato", "poppins", "montserrat", "inter",
+          "raleway", "nunito", "oswald", "merriweather", "ubuntu",
+          "playfair", "opensans", "sourcesans", "worksans", "dmsans",
+        ]}, { header: [1, 2, 3, 4, false] }],
+        ["bold", "italic", "underline", "strike"],
+        [{ color: [] }, { background: [] }],
+        [{ list: "ordered" }, { list: "bullet" }],
+        [{ align: [] }],
+        ["link", "image"],
+        ["clean"],
+      ],
+      handlers: {
+        image: () => {
+          fileInputRef.current?.click()
         },
       },
-      clipboard: {
-        matchVisual: false,
-      },
-    }),
-    []
-  )
+    },
+    clipboard: {
+      matchVisual: false,
+    },
+  }
 
   // Quill formats
   const formats = [
@@ -427,9 +437,9 @@ export function QuillEditor({
   }, [])
 
   return (
-    <div className="h-full flex flex-col p-4 relative">
+    <div className="h-full flex flex-col p-6 relative min-h-0">
       {/* Page Number */}
-      <div className="text-right text-xs text-amber-400 dark:text-amber-600 mb-2">
+      <div className="text-right text-xs text-amber-400 dark:text-amber-600 mb-2 flex-shrink-0">
         Page {pageNumber}
       </div>
 
@@ -439,7 +449,7 @@ export function QuillEditor({
         onChange={(e) => setTitle(e.target.value)}
         onBlur={saveTitle}
         placeholder="Page Title"
-        className="text-xl font-semibold text-amber-900 dark:text-amber-200 bg-transparent border-none outline-none mb-3 placeholder:text-amber-300 dark:placeholder:text-amber-700"
+        className="text-xl font-semibold text-amber-900 dark:text-amber-200 bg-transparent border-none outline-none mb-4 placeholder:text-amber-300 dark:placeholder:text-amber-700 flex-shrink-0"
         disabled={!isEditing}
       />
 
@@ -454,14 +464,38 @@ export function QuillEditor({
 
       {/* Upload indicator */}
       {isUploading && (
-        <div className="flex items-center gap-2 mb-2 text-amber-600 text-sm">
+        <div className="flex items-center gap-2 mb-2 text-amber-600 text-sm flex-shrink-0">
           <Loader2 className="h-4 w-4 animate-spin" />
           Uploading image...
         </div>
       )}
 
-      {/* Quill Editor */}
-      <div className="flex-1 overflow-hidden quill-container">
+      {/* Quill Editor - Full height and scrollable */}
+      <div className="flex-1 min-h-0 quill-container">
+        <style jsx global>{`
+          .quill-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+          }
+          .quill-container .quill {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+          }
+          .quill-container .ql-toolbar {
+            flex-shrink: 0;
+          }
+          .quill-container .ql-container {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+          }
+          .quill-container .ql-editor {
+            min-height: 100%;
+            padding: 20px;
+          }
+        `}</style>
         <ReactQuill
           forwardedRef={quillRef}
           theme="snow"
@@ -477,7 +511,7 @@ export function QuillEditor({
 
       {/* Save indicator */}
       {isSaving && (
-        <div className="absolute bottom-4 right-4 text-xs text-amber-500 flex items-center gap-1">
+        <div className="absolute bottom-4 right-4 text-xs text-amber-500 flex items-center gap-1 z-50">
           <Loader2 className="h-3 w-3 animate-spin" />
           Saving...
         </div>

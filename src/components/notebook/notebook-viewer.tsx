@@ -67,6 +67,10 @@ import { DictionaryTemplate } from "@/components/notebook-templates/dictionary-t
 import { MealsPlannerTemplate } from "@/components/notebook-templates/meals-planner-template"
 import { GamesScoreCardTemplate } from "@/components/notebook-templates/games-scorecard-template"
 import { StickerBookTemplate } from "@/components/notebook-templates/sticker-book-template"
+import { TutorialLearnTemplate } from "@/components/notebook-templates/tutorial-learn-template"
+import { MindMapTemplate } from "@/components/notebook-templates/mind-map-template"
+import { GoalTrackerTemplate } from "@/components/notebook-templates/goal-tracker-template"
+import { AIPromptStudioTemplate } from "@/components/notebook-templates/ai-prompt-studio-template"
 import { LoadingCubes } from "@/components/ui/loading-cubes"
 import { SimpleTemplate } from "@/components/notebook-templates/simple-template"
 
@@ -600,6 +604,14 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
           return <GamesScoreCardTemplate title={notebook.title} notebookId={notebookId} />
         case 'sticker-book':
           return <StickerBookTemplate title={notebook.title} notebookId={notebookId} />
+        case 'tutorial-learn':
+          return <TutorialLearnTemplate title={notebook.title} notebookId={notebookId} />
+        case 'mind-map':
+          return <MindMapTemplate title={notebook.title} notebookId={notebookId} />
+        case 'goal-tracker':
+          return <GoalTrackerTemplate title={notebook.title} notebookId={notebookId} />
+        case 'ai-prompt-studio':
+          return <AIPromptStudioTemplate title={notebook.title} notebookId={notebookId} />
         default:
           return null
       }

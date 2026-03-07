@@ -2,9 +2,11 @@
 // It registers custom fonts on the Quill instance used by react-quill-new
 
 export const FONT_WHITELIST = [
-  "sans", "serif", "mono", "handwriting",
-  "roboto", "playfair", "lato", "oswald", "merriweather",
-  "raleway", "ubuntu", "nunito", "poppins", "crimson",
+  "arial", "georgia", "verdana", "tahoma", "trebuchet",
+  "impact", "courier", "times", "palatino", "garamond",
+  "roboto", "lato", "poppins", "montserrat", "inter",
+  "raleway", "nunito", "oswald", "merriweather", "ubuntu",
+  "playfair", "opensans", "sourcesans", "worksans", "dmsans",
 ]
 
 export function registerFonts(Quill: any) {

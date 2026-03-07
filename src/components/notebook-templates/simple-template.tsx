@@ -3,8 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { TemplateHeader } from './template-header'
-import { TemplateFooter } from './template-footer'
-import { ChevronLeft, ChevronRight, Plus, List, Hash, BookOpen, Save, Palette } from "lucide-react"
+import { ChevronLeft, ChevronRight, Plus, List, Save, Download, Palette } from "lucide-react"
 import { QuillEditor } from "@/components/notebook/quill-editor"
 
 interface Page {
@@ -15,172 +14,18 @@ interface Page {
   chapterId?: string
 }
 
-interface SimpleTemplateProps {
+interface ModernFlipNotebookProps {
   title: string
   notebookId: string
   pages: Page[]
   onUpdate: () => void
   onAddPage: () => void
-  appearance: {
-    themeColor: string
-    pageColor: string
-    paperPattern: string
+  appearance?: {
+    themeColor?: string
+    pageColor?: string
+    paperPattern?: string
   }
 }
-
-interface TOCPage {
-  pageNumber: number
-  title: string
-  _id: string
-}
-
-interface Theme {
-  name: string
-  background: string
-  headerBg: string
-  headerText: string
-  contentBg: string
-  contentText: string
-  accent: string
-}
-
-const THEMES: Theme[] = [
-  {
-    name: "Classic",
-    background: "from-slate-900 via-slate-800 to-slate-900",
-    headerBg: "bg-slate-800/90",
-    headerText: "text-slate-200",
-    contentBg: "bg-white dark:bg-slate-900",
-    contentText: "text-slate-900 dark:text-slate-100",
-    accent: "from-purple-500 to-cyan-500"
-  },
-  {
-    name: "Ocean",
-    background: "from-blue-900 via-cyan-900 to-blue-900",
-    headerBg: "bg-cyan-800/90",
-    headerText: "text-cyan-100",
-    contentBg: "bg-cyan-50 dark:bg-blue-950",
-    contentText: "text-blue-900 dark:text-cyan-100",
-    accent: "from-blue-500 to-cyan-400"
-  },
-  {
-    name: "Forest",
-    background: "from-green-900 via-emerald-900 to-green-900",
-    headerBg: "bg-emerald-800/90",
-    headerText: "text-emerald-100",
-    contentBg: "bg-green-50 dark:bg-green-950",
-    contentText: "text-green-900 dark:text-emerald-100",
-    accent: "from-green-500 to-emerald-400"
-  },
-  {
-    name: "Sunset",
-    background: "from-orange-900 via-rose-900 to-orange-900",
-    headerBg: "bg-rose-800/90",
-    headerText: "text-rose-100",
-    contentBg: "bg-orange-50 dark:bg-rose-950",
-    contentText: "text-orange-900 dark:text-rose-100",
-    accent: "from-orange-500 to-rose-400"
-  },
-  {
-    name: "Lavender",
-    background: "from-purple-900 via-violet-900 to-purple-900",
-    headerBg: "bg-violet-800/90",
-    headerText: "text-violet-100",
-    contentBg: "bg-purple-50 dark:bg-violet-950",
-    contentText: "text-purple-900 dark:text-violet-100",
-    accent: "from-purple-500 to-violet-400"
-  },
-  {
-    name: "Amber",
-    background: "from-amber-900 via-yellow-900 to-amber-900",
-    headerBg: "bg-yellow-800/90",
-    headerText: "text-amber-100",
-    contentBg: "bg-amber-50 dark:bg-amber-950",
-    contentText: "text-amber-900 dark:text-amber-100",
-    accent: "from-amber-500 to-yellow-400"
-  },
-  {
-    name: "Midnight",
-    background: "from-indigo-950 via-slate-950 to-indigo-950",
-    headerBg: "bg-indigo-900/90",
-    headerText: "text-indigo-100",
-    contentBg: "bg-indigo-50 dark:bg-indigo-950",
-    contentText: "text-indigo-900 dark:text-indigo-100",
-    accent: "from-indigo-500 to-blue-500"
-  },
-  {
-    name: "Rose Gold",
-    background: "from-pink-900 via-rose-900 to-pink-900",
-    headerBg: "bg-pink-800/90",
-    headerText: "text-pink-100",
-    contentBg: "bg-pink-50 dark:bg-pink-950",
-    contentText: "text-pink-900 dark:text-pink-100",
-    accent: "from-pink-500 to-rose-400"
-  },
-  {
-    name: "Mint",
-    background: "from-teal-900 via-green-900 to-teal-900",
-    headerBg: "bg-teal-800/90",
-    headerText: "text-teal-100",
-    contentBg: "bg-teal-50 dark:bg-teal-950",
-    contentText: "text-teal-900 dark:text-teal-100",
-    accent: "from-teal-500 to-green-400"
-  },
-  {
-    name: "Crimson",
-    background: "from-red-900 via-rose-900 to-red-900",
-    headerBg: "bg-red-800/90",
-    headerText: "text-red-100",
-    contentBg: "bg-red-50 dark:bg-red-950",
-    contentText: "text-red-900 dark:text-red-100",
-    accent: "from-red-500 to-rose-400"
-  },
-  {
-    name: "Sky",
-    background: "from-sky-900 via-blue-900 to-sky-900",
-    headerBg: "bg-sky-800/90",
-    headerText: "text-sky-100",
-    contentBg: "bg-sky-50 dark:bg-sky-950",
-    contentText: "text-sky-900 dark:text-sky-100",
-    accent: "from-sky-500 to-blue-400"
-  },
-  {
-    name: "Lime",
-    background: "from-lime-900 via-green-900 to-lime-900",
-    headerBg: "bg-lime-800/90",
-    headerText: "text-lime-100",
-    contentBg: "bg-lime-50 dark:bg-lime-950",
-    contentText: "text-lime-900 dark:text-lime-100",
-    accent: "from-lime-500 to-green-400"
-  },
-  {
-    name: "Fuchsia",
-    background: "from-fuchsia-900 via-purple-900 to-fuchsia-900",
-    headerBg: "bg-fuchsia-800/90",
-    headerText: "text-fuchsia-100",
-    contentBg: "bg-fuchsia-50 dark:bg-fuchsia-950",
-    contentText: "text-fuchsia-900 dark:text-fuchsia-100",
-    accent: "from-fuchsia-500 to-purple-400"
-  },
-  {
-    name: "Chocolate",
-    background: "from-stone-900 via-amber-950 to-stone-900",
-    headerBg: "bg-stone-800/90",
-    headerText: "text-amber-100",
-    contentBg: "bg-amber-50 dark:bg-stone-950",
-    contentText: "text-stone-900 dark:text-amber-100",
-    accent: "from-amber-600 to-orange-500"
-  },
-  {
-    name: "Slate Blue",
-    background: "from-slate-900 via-blue-950 to-slate-900",
-    headerBg: "bg-slate-800/90",
-    headerText: "text-blue-200",
-    contentBg: "bg-slate-50 dark:bg-slate-950",
-    contentText: "text-slate-900 dark:text-blue-100",
-    accent: "from-slate-500 to-blue-500"
-  }
-]
 
 export function SimpleTemplate({ 
   title,
@@ -189,268 +34,376 @@ export function SimpleTemplate({
   onUpdate, 
   onAddPage,
   appearance 
-}: SimpleTemplateProps) {
+}: ModernFlipNotebookProps) {
   const [currentPage, setCurrentPage] = useState(0)
-  const [showTOC, setShowTOC] = useState(false)
-  const [showGotoPage, setShowGotoPage] = useState(false)
-  const [gotoPageNumber, setGotoPageNumber] = useState('')
-  const [isSaving, setIsSaving] = useState(false)
   const [isFlipping, setIsFlipping] = useState(false)
   const [flipDirection, setFlipDirection] = useState<'next' | 'prev'>('next')
-  const [currentTheme, setCurrentTheme] = useState<Theme>(THEMES[0])
-  const [showThemeSelector, setShowThemeSelector] = useState(false)
-  const [notebookTitle, setNotebookTitle] = useState('My Notebook')
-  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [showTOC, setShowTOC] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  
   const flushRef = useRef<(() => Promise<void>) | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  const handleNextPage = () => {
-    if (currentPage < pages.length - 1 && !isFlipping) {
-      setIsFlipping(true)
-      setFlipDirection('next')
-      setTimeout(() => {
-        setCurrentPage(currentPage + 1)
-        setIsFlipping(false)
-      }, 400)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      audioRef.current = new Audio('/sounds/page-flip.mp3')
+      audioRef.current.volume = 0.2
+    }
+  }, [])
+
+  const playFlipSound = () => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = 0
+      audioRef.current.play().catch(() => {})
     }
   }
 
-  const handlePrevPage = () => {
+  const handlePrevPage = async () => {
     if (currentPage > 0 && !isFlipping) {
+      if (flushRef.current) {
+        await flushRef.current()
+      }
       setIsFlipping(true)
       setFlipDirection('prev')
+      playFlipSound()
       setTimeout(() => {
         setCurrentPage(currentPage - 1)
-        setIsFlipping(false)
-      }, 400)
+        setTimeout(() => setIsFlipping(false), 100)
+      }, 300)
     }
   }
 
-  const handleGotoPage = () => {
-    const pageNum = parseInt(gotoPageNumber)
-    if (pageNum >= 1 && pageNum <= pages.length && !isFlipping) {
+  const handleNextPage = async () => {
+    if (currentPage < pages.length - 1 && !isFlipping) {
+      if (flushRef.current) {
+        await flushRef.current()
+      }
       setIsFlipping(true)
-      setFlipDirection(pageNum > currentPage + 1 ? 'next' : 'prev')
+      setFlipDirection('next')
+      playFlipSound()
       setTimeout(() => {
-        setCurrentPage(pageNum - 1)
-        setShowGotoPage(false)
-        setGotoPageNumber('')
-        setIsFlipping(false)
-      }, 400)
+        setCurrentPage(currentPage + 1)
+        setTimeout(() => setIsFlipping(false), 100)
+      }, 300)
     }
   }
 
-  const handleContentChange = async (pageId: string, content: string, title: string) => {
-    // Trigger parent refresh to update TOC when title changes
-    // QuillEditor auto-saves, but we need to refresh the pages data
-    onUpdate()
+  const handleExportPDF = async () => {
+    try {
+      const { PDFExporter } = await import('@/lib/pdf-export')
+      const exporter = new PDFExporter({
+        title: title,
+        author: 'SmartNote AI',
+        includeHeader: true,
+        includeFooter: true,
+        includePageNumbers: true,
+      })
+
+      for (const page of pages) {
+        exporter.addHeading(page.title || `Page ${page.pageNumber}`, 1)
+        const tempDiv = document.createElement('div')
+        tempDiv.innerHTML = page.content
+        const textContent = tempDiv.textContent || tempDiv.innerText || ''
+        if (textContent.trim()) {
+          exporter.addText(textContent)
+        }
+        exporter.addHorizontalLine()
+      }
+
+      exporter.save(`${title}.pdf`)
+    } catch (error) {
+      console.error('Failed to export PDF:', error)
+    }
   }
 
   const page = pages[currentPage]
-  const tocPages: TOCPage[] = pages.map(p => ({
-    pageNumber: p.pageNumber,
-    title: p.title || `Page ${p.pageNumber}`,
-    _id: p._id
-  }))
-  
-  // Refresh TOC when pages data changes (after title updates)
-  useEffect(() => {
-    // Force re-render of TOC when pages change
-  }, [pages])
-  
-  // Check if we're on the first page (TOC page)
-  const isOnTOCPage = currentPage === 0
 
   return (
-    <div className={`min-h-screen flex flex-col bg-gradient-to-br ${currentTheme.background} relative overflow-hidden transition-colors duration-500`}>
+    <div className="h-screen flex flex-col bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <TemplateHeader title={title} />
-      <div className="flex-1 overflow-y-auto">
-      {/* Header Section */}
-      <div className={`flex-shrink-0 ${currentTheme.headerBg} backdrop-blur-sm border-b border-slate-700/50 transition-colors duration-500`}>
-        {/* Notebook Title Header */}
-        <div className="px-6 py-4 border-b border-slate-700/30">
-          {isEditingTitle ? (
-            <input
-              type="text"
-              value={notebookTitle}
-              onChange={(e) => setNotebookTitle(e.target.value)}
-              onBlur={() => setIsEditingTitle(false)}
-              onKeyDown={(e) => e.key === 'Enter' && setIsEditingTitle(false)}
-              className={`text-2xl font-bold ${currentTheme.headerText} bg-transparent border-b-2 border-white/30 outline-none px-2 py-1`}
-              autoFocus
-            />
-          ) : (
-            <h1 
-              onClick={() => setIsEditingTitle(true)}
-              className={`text-2xl font-bold ${currentTheme.headerText} cursor-pointer hover:opacity-80 transition-opacity`}
-            >
-              {notebookTitle}
-            </h1>
-          )}
-        </div>
-        
-        {/* Toolbar */}
-        <div className="px-6 py-3 flex items-center justify-between">
+      
+      {/* Compact Header */}
+      <div className="flex-shrink-0 bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/50 px-6 py-3">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <BookOpen className={`h-5 w-5 ${currentTheme.headerText} opacity-80`} />
-            <span className={`text-sm font-semibold ${currentTheme.headerText}`}>
-              Page {currentPage + 1} of {pages.length}
+            <h1 className="text-2xl font-bold text-white">{title}</h1>
+            <span className="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm font-medium">
+              Page {currentPage + 1} / {pages.length}
             </span>
           </div>
           
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowTOC(!showTOC)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${currentTheme.headerText} bg-white/10 hover:bg-white/20 text-sm transition-colors`}
+              onClick={() => setShowTOC(true)}
+              className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg text-sm transition-colors flex items-center gap-2"
             >
               <List className="h-4 w-4" />
-              Table of Contents
+              Contents
             </button>
-            
             <button
-              onClick={() => setShowGotoPage(!showGotoPage)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${currentTheme.headerText} bg-white/10 hover:bg-white/20 text-sm transition-colors`}
+              onClick={handleExportPDF}
+              className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg text-sm transition-colors flex items-center gap-2"
             >
-              <Hash className="h-4 w-4" />
-              Go to Page
+              <Download className="h-4 w-4" />
+              PDF
             </button>
-            
-            <button
-              onClick={() => setShowThemeSelector(!showThemeSelector)}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${currentTheme.headerText} bg-white/10 hover:bg-white/20 text-sm transition-colors`}
-            >
-              <Palette className="h-4 w-4" />
-              Theme
-            </button>
-            
             {isSaving && (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-500/20 text-green-300 text-sm">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/20 text-green-300 rounded-lg text-sm">
                 <Save className="h-4 w-4 animate-pulse" />
-                Saving...
+                Saving
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex items-center justify-center p-6 relative overflow-hidden">
-        {/* Navigation Buttons */}
+      {/* Main Content - Maximum Space */}
+      <div className="flex-1 relative overflow-hidden" style={{ perspective: '1500px' }}>
+        {/* Navigation Arrows */}
         <button
           onClick={handlePrevPage}
-          disabled={currentPage === 0}
-          className="absolute left-4 z-10 p-3 rounded-full bg-slate-700/80 hover:bg-slate-600/80 border border-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          disabled={currentPage === 0 || isFlipping}
+          className="absolute left-6 top-1/2 -translate-y-1/2 z-50 p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:opacity-50 rounded-full shadow-2xl transition-all disabled:cursor-not-allowed"
         >
-          <ChevronLeft className="h-6 w-6 text-slate-200" />
+          <ChevronLeft className="h-6 w-6 text-white" />
         </button>
 
         <button
           onClick={handleNextPage}
-          disabled={currentPage === pages.length - 1}
-          className="absolute right-4 z-10 p-3 rounded-full bg-slate-700/80 hover:bg-slate-600/80 border border-slate-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          disabled={currentPage === pages.length - 1 || isFlipping}
+          className="absolute right-6 top-1/2 -translate-y-1/2 z-50 p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:opacity-50 rounded-full shadow-2xl transition-all disabled:cursor-not-allowed"
         >
-          <ChevronRight className="h-6 w-6 text-slate-200" />
+          <ChevronRight className="h-6 w-6 text-white" />
         </button>
 
-        {/* Page Container - Maximum writing space */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentPage}
-            initial={{
-              rotateY: flipDirection === 'next' ? 90 : -90,
-              opacity: 0
-            }}
-            animate={{
-              rotateY: 0,
-              opacity: 1
-            }}
-            exit={{
-              rotateY: flipDirection === 'next' ? -90 : 90,
-              opacity: 0
-            }}
-            transition={{
-              duration: 0.4,
-              ease: [0.43, 0.13, 0.23, 0.96]
-            }}
-            className="w-full max-w-[1400px] h-full"
-            style={{ transformStyle: 'preserve-3d' }}
-          >
-            <div className={`w-full h-full ${currentTheme.contentBg} rounded-lg shadow-2xl border border-slate-700/50 overflow-hidden flex flex-col transition-colors duration-500`}>
-              {/* Page Content */}
-              <div className="flex-1 overflow-auto">
-                {isOnTOCPage ? (
-                  // First Page: Table of Contents
-                  <div className="p-12">
-                    <div className="mb-8">
-                      <h1 className={`text-4xl font-bold ${currentTheme.contentText} mb-2`}>Table of Contents</h1>
-                      <p className={`${currentTheme.contentText} opacity-60`}>Click any page to navigate</p>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      {tocPages.slice(1).map((tocPage, index) => (
-                        <button
-                          key={tocPage._id}
-                          onClick={() => {
-                            if (!isFlipping) {
-                              setIsFlipping(true)
-                              setFlipDirection('next')
-                              setTimeout(() => {
-                                setCurrentPage(index + 1)
-                                setIsFlipping(false)
-                              }, 400)
-                            }
-                          }}
-                          className="w-full flex items-center justify-between px-6 py-4 rounded-xl bg-white/50 dark:bg-slate-800/50 hover:bg-white/70 dark:hover:bg-slate-700/70 border border-slate-200 dark:border-slate-600 transition-all group"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${currentTheme.accent} flex items-center justify-center text-white font-bold`}>
-                              {tocPage.pageNumber}
-                            </div>
-                            <span className={`font-medium ${currentTheme.contentText} transition-colors`}>
-                              {tocPage.title}
-                            </span>
-                          </div>
-                          <ChevronRight className={`h-5 w-5 ${currentTheme.contentText} opacity-40 group-hover:opacity-100 group-hover:translate-x-1 transition-all`} />
-                        </button>
-                      ))}
-                    </div>
+        {/* Page Container with Flip Effect */}
+        <div className="h-full flex items-center justify-center p-4">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={currentPage}
+              initial={{
+                rotateY: flipDirection === 'next' ? 180 : -180,
+                opacity: 0,
+              }}
+              animate={{
+                rotateY: 0,
+                opacity: 1,
+              }}
+              exit={{
+                rotateY: flipDirection === 'next' ? -180 : 180,
+                opacity: 0,
+              }}
+              transition={{
+                duration: 0.6,
+                ease: [0.43, 0.13, 0.23, 0.96],
+              }}
+              style={{
+                transformStyle: 'preserve-3d',
+                backfaceVisibility: 'hidden',
+              }}
+              className="w-full h-full max-w-[1400px]"
+            >
+              {/* Paper Page */}
+              <div 
+                className="relative w-full h-full bg-gradient-to-br from-white via-amber-50 to-orange-50 rounded-lg shadow-2xl"
+                style={{
+                  boxShadow: '0 20px 60px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.6)',
+                }}
+              >
+                {/* Page Number Badge */}
+                <div className="absolute top-4 right-4 px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-semibold shadow-lg z-10">
+                  {currentPage + 1}
+                </div>
+
+                {/* Editor Area - Maximum Space */}
+                <div className="h-full flex flex-col overflow-hidden">
+                  <style jsx global>{`
+                      /* Google Fonts import */
+                      @import url('https://fonts.googleapis.com/css2?family=Roboto&family=Lato&family=Poppins&family=Montserrat&family=Inter&family=Raleway&family=Nunito&family=Oswald&family=Merriweather&family=Ubuntu&family=Playfair+Display&family=Open+Sans&family=Source+Sans+3&family=Work+Sans&family=DM+Sans&display=swap');
+
+                      /* Font picker scrollable */
+                      .ql-snow .ql-picker.ql-font .ql-picker-options {
+                        max-height: 300px !important;
+                        overflow-y: auto !important;
+                        width: 160px !important;
+                      }
+
+                      /* Font dropdown labels - lowercase values */
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=arial]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=arial]::before { content: 'Arial'; font-family: Arial; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=georgia]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=georgia]::before { content: 'Georgia'; font-family: Georgia; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=verdana]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=verdana]::before { content: 'Verdana'; font-family: Verdana; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=tahoma]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=tahoma]::before { content: 'Tahoma'; font-family: Tahoma; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=trebuchet]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=trebuchet]::before { content: 'Trebuchet'; font-family: 'Trebuchet MS'; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=impact]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=impact]::before { content: 'Impact'; font-family: Impact; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=courier]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=courier]::before { content: 'Courier'; font-family: 'Courier New'; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=times]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=times]::before { content: 'Times'; font-family: 'Times New Roman'; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=palatino]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=palatino]::before { content: 'Palatino'; font-family: Palatino; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=garamond]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=garamond]::before { content: 'Garamond'; font-family: Garamond; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=roboto]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=roboto]::before { content: 'Roboto'; font-family: 'Roboto'; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=lato]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=lato]::before { content: 'Lato'; font-family: 'Lato'; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=poppins]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=poppins]::before { content: 'Poppins'; font-family: 'Poppins'; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=montserrat]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=montserrat]::before { content: 'Montserrat'; font-family: 'Montserrat'; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=inter]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=inter]::before { content: 'Inter'; font-family: 'Inter'; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=raleway]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=raleway]::before { content: 'Raleway'; font-family: 'Raleway'; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=nunito]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=nunito]::before { content: 'Nunito'; font-family: 'Nunito'; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=oswald]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=oswald]::before { content: 'Oswald'; font-family: 'Oswald'; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=merriweather]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=merriweather]::before { content: 'Merriweather'; font-family: 'Merriweather'; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=ubuntu]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=ubuntu]::before { content: 'Ubuntu'; font-family: 'Ubuntu'; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=playfair]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=playfair]::before { content: 'Playfair'; font-family: 'Playfair Display'; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=opensans]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=opensans]::before { content: 'Open Sans'; font-family: 'Open Sans'; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=sourcesans]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=sourcesans]::before { content: 'Source Sans'; font-family: 'Source Sans 3'; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=worksans]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=worksans]::before { content: 'Work Sans'; font-family: 'Work Sans'; }
+                      .ql-snow .ql-picker.ql-font .ql-picker-label[data-value=dmsans]::before,
+                      .ql-snow .ql-picker.ql-font .ql-picker-item[data-value=dmsans]::before { content: 'DM Sans'; font-family: 'DM Sans'; }
+
+                      /* Apply fonts to editor content - must match whitelist exactly */
+                      .ql-font-arial { font-family: Arial, sans-serif !important; }
+                      .ql-font-georgia { font-family: Georgia, serif !important; }
+                      .ql-font-verdana { font-family: Verdana, sans-serif !important; }
+                      .ql-font-tahoma { font-family: Tahoma, sans-serif !important; }
+                      .ql-font-trebuchet { font-family: 'Trebuchet MS', sans-serif !important; }
+                      .ql-font-impact { font-family: Impact, sans-serif !important; }
+                      .ql-font-courier { font-family: 'Courier New', monospace !important; }
+                      .ql-font-times { font-family: 'Times New Roman', serif !important; }
+                      .ql-font-palatino { font-family: Palatino, serif !important; }
+                      .ql-font-garamond { font-family: Garamond, serif !important; }
+                      .ql-font-roboto { font-family: 'Roboto', sans-serif !important; }
+                      .ql-font-lato { font-family: 'Lato', sans-serif !important; }
+                      .ql-font-poppins { font-family: 'Poppins', sans-serif !important; }
+                      .ql-font-montserrat { font-family: 'Montserrat', sans-serif !important; }
+                      .ql-font-inter { font-family: 'Inter', sans-serif !important; }
+                      .ql-font-raleway { font-family: 'Raleway', sans-serif !important; }
+                      .ql-font-nunito { font-family: 'Nunito', sans-serif !important; }
+                      .ql-font-oswald { font-family: 'Oswald', sans-serif !important; }
+                      .ql-font-merriweather { font-family: 'Merriweather', serif !important; }
+                      .ql-font-ubuntu { font-family: 'Ubuntu', sans-serif !important; }
+                      .ql-font-playfair { font-family: 'Playfair Display', serif !important; }
+                      .ql-font-opensans { font-family: 'Open Sans', sans-serif !important; }
+                      .ql-font-sourcesans { font-family: 'Source Sans 3', sans-serif !important; }
+                      .ql-font-worksans { font-family: 'Work Sans', sans-serif !important; }
+                      .ql-font-dmsans { font-family: 'DM Sans', sans-serif !important; }
+                      
+                      #quill-toolbar {
+                        position: relative !important;
+                        z-index: 10000 !important;
+                      }
+                      #quill-toolbar .ql-picker {
+                        position: relative !important;
+                      }
+                      #quill-toolbar .ql-picker-label,
+                      #quill-toolbar .ql-picker-item {
+                        color: #1f2937 !important;
+                        cursor: pointer !important;
+                      }
+                      #quill-toolbar .ql-picker-options {
+                        background-color: white !important;
+                        border: 1px solid #e5e7eb !important;
+                        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2) !important;
+                        z-index: 999999 !important;
+                        position: absolute !important;
+                        top: 100% !important;
+                        left: 0 !important;
+                        pointer-events: auto !important;
+                        user-select: none !important;
+                      }
+                      #quill-toolbar .ql-picker.ql-expanded .ql-picker-options {
+                        display: block !important;
+                        visibility: visible !important;
+                        opacity: 1 !important;
+                      }
+                      #quill-toolbar .ql-picker:not(.ql-expanded) .ql-picker-options {
+                        display: none !important;
+                      }
+                      #quill-toolbar .ql-picker-item {
+                        padding: 8px 12px !important;
+                        pointer-events: auto !important;
+                        cursor: pointer !important;
+                        user-select: none !important;
+                      }
+                      #quill-toolbar .ql-picker-item:hover {
+                        background-color: #f3f4f6 !important;
+                      }
+                      #quill-toolbar .ql-color-picker .ql-picker-item {
+                        width: 20px !important;
+                        height: 20px !important;
+                        padding: 2px !important;
+                        margin: 2px !important;
+                      }
+                      #quill-toolbar .ql-stroke {
+                        stroke: #1f2937 !important;
+                      }
+                      #quill-toolbar .ql-fill {
+                        fill: #1f2937 !important;
+                      }
+                      #quill-toolbar button {
+                        cursor: pointer !important;
+                      }
+                      #quill-toolbar button:hover {
+                        background-color: #f3f4f6 !important;
+                      }
+                      #quill-toolbar .ql-active {
+                        background-color: #dbeafe !important;
+                      }
+                    `}</style>
+
+                  {/* Content Area - QuillEditor has its own built-in toolbar */}
+                  <div className="flex-1 overflow-y-auto px-12 py-8">
+                    {page ? (
+                      <QuillEditor
+                        pageId={page._id}
+                        notebookId={notebookId}
+                        initialContent={page.content}
+                        initialTitle={page.title}
+                        pageNumber={page.pageNumber}
+                        isEditing={true}
+                        onSave={onUpdate}
+                        flushRef={flushRef}
+                        onContentChange={() => {}}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-gray-400">
+                        <p>No page selected</p>
+                      </div>
+                    )}
                   </div>
-                ) : page ? (
-                  // Regular Pages: QuillEditor
-                  <QuillEditor
-                    pageId={page._id}
-                    notebookId={notebookId}
-                    initialContent={page.content}
-                    initialTitle={page.title}
-                    pageNumber={page.pageNumber}
-                    isEditing={true}
-                    onSave={onUpdate}
-                    flushRef={flushRef}
-                    onContentChange={handleContentChange}
-                  />
-                ) : (
-                  <div className={`flex items-center justify-center h-full ${currentTheme.contentText} opacity-40`}>
-                    <p>No page selected</p>
-                  </div>
-                )}
+                </div>
+
+                {/* Add Page Button */}
+                <button
+                  onClick={onAddPage}
+                  className="absolute bottom-6 right-6 flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition-all"
+                >
+                  <Plus className="h-4 w-4" />
+                  New Page
+                </button>
               </div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      {/* Bottom Bar */}
-      <div className={`flex-shrink-0 ${currentTheme.headerBg} backdrop-blur-sm border-t border-slate-700/50 px-6 py-3 flex items-center justify-between transition-colors duration-500`}>
-        <div className="flex items-center gap-2">
-          <span className={`text-xs ${currentTheme.headerText} opacity-70`}>Total Pages: {pages.length}</span>
+            </motion.div>
+          </AnimatePresence>
         </div>
-        
-        <button
-          onClick={onAddPage}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r ${currentTheme.accent} hover:opacity-90 text-white text-sm font-medium transition-all shadow-lg`}
-        >
-          <Plus className="h-4 w-4" />
-          Add New Page
-        </button>
       </div>
 
       {/* Table of Contents Modal */}
@@ -460,166 +413,34 @@ export function SimpleTemplate({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-6"
             onClick={() => setShowTOC(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-slate-800 rounded-xl border border-slate-700 shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col"
+              className="bg-gray-800 rounded-xl shadow-2xl border border-gray-700 p-6 max-w-2xl w-full max-h-[70vh] overflow-y-auto"
             >
-              <div className="px-6 py-4 border-b border-slate-700 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-200">Table of Contents</h3>
-                <button
-                  onClick={() => setShowTOC(false)}
-                  className="text-slate-400 hover:text-slate-200 transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-              
-              <div className="flex-1 overflow-auto p-6">
-                <div className="space-y-2">
-                  {tocPages.map((tocPage, index) => (
-                    <button
-                      key={tocPage._id}
-                      onClick={() => {
-                        if (!isFlipping) {
-                          setIsFlipping(true)
-                          setFlipDirection(index > currentPage ? 'next' : 'prev')
-                          setTimeout(() => {
-                            setCurrentPage(index)
-                            setShowTOC(false)
-                            setIsFlipping(false)
-                          }, 400)
-                        }
-                      }}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all ${
-                        index === currentPage
-                          ? 'bg-white/20 border border-white/40 text-white'
-                          : 'bg-slate-700/50 hover:bg-slate-700 text-slate-300'
-                      }`}
-                    >
-                      <span className="font-medium">{tocPage.title}</span>
-                      <span className="text-sm opacity-60">Page {tocPage.pageNumber}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Go to Page Modal */}
-      <AnimatePresence>
-        {showGotoPage && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6"
-            onClick={() => setShowGotoPage(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-slate-800 rounded-xl border border-slate-700 shadow-2xl p-6 max-w-md w-full"
-            >
-              <h3 className="text-lg font-semibold text-slate-200 mb-4">Go to Page</h3>
-              
-              <div className="space-y-4">
-                <input
-                  type="number"
-                  min="1"
-                  max={pages.length}
-                  value={gotoPageNumber}
-                  onChange={(e) => setGotoPageNumber(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleGotoPage()}
-                  placeholder={`Enter page number (1-${pages.length})`}
-                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 placeholder-slate-400 focus:outline-none focus:border-cyan-500"
-                  autoFocus
-                />
-                
-                <div className="flex gap-2">
+              <h2 className="text-xl font-bold text-white mb-4">Table of Contents</h2>
+              <div className="space-y-2">
+                {pages.map((p, idx) => (
                   <button
-                    onClick={handleGotoPage}
-                    className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white rounded-lg font-medium transition-all"
-                  >
-                    Go
-                  </button>
-                  <button
+                    key={p._id}
                     onClick={() => {
-                      setShowGotoPage(false)
-                      setGotoPageNumber('')
+                      setCurrentPage(idx)
+                      setShowTOC(false)
                     }}
-                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg font-medium transition-all"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Theme Selector Modal */}
-      <AnimatePresence>
-        {showThemeSelector && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6"
-            onClick={() => setShowThemeSelector(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-slate-800 rounded-xl border border-slate-700 shadow-2xl p-6 max-w-2xl w-full"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-slate-200">Choose Theme</h3>
-                <button
-                  onClick={() => setShowThemeSelector(false)}
-                  className="text-slate-400 hover:text-slate-200 transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {THEMES.map((theme) => (
-                  <button
-                    key={theme.name}
-                    onClick={() => {
-                      setCurrentTheme(theme)
-                      setShowThemeSelector(false)
-                    }}
-                    className={`relative p-6 rounded-xl border-2 transition-all ${
-                      currentTheme.name === theme.name
-                        ? 'border-white shadow-lg scale-105'
-                        : 'border-slate-600 hover:border-slate-500'
+                    className={`w-full text-left px-4 py-3 rounded-lg transition-all ${
+                      idx === currentPage
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                     }`}
                   >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${theme.background} rounded-xl opacity-50`} />
-                    <div className="relative">
-                      <div className={`w-full h-20 rounded-lg bg-gradient-to-br ${theme.accent} mb-3`} />
-                      <p className="text-sm font-semibold text-white text-center">{theme.name}</p>
-                      {currentTheme.name === theme.name && (
-                        <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
-                          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                      )}
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{p.title || `Page ${p.pageNumber}`}</span>
+                      <span className="text-sm opacity-70">Page {p.pageNumber}</span>
                     </div>
                   </button>
                 ))}
@@ -628,8 +449,6 @@ export function SimpleTemplate({
           </motion.div>
         )}
       </AnimatePresence>
-      </div>
-      <TemplateFooter />
     </div>
   )
 }

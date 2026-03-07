@@ -1,4 +1,31 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:wght@400;700&family=Lato:wght@400;700&family=Oswald:wght@400;700&family=Merriweather:wght@400;700&family=Raleway:wght@400;700&family=Ubuntu:wght@400;700&family=Nunito:wght@400;700&family=Poppins:wght@400;700&family=Crimson+Text:wght@400;700&family=Pacifico&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:wght@400;700&family=Lato:wght@400;700&family=Oswald:wght@400;700&family=Merriweather:wght@400;700&family=Raleway:wght@400;700&family=Ubuntu:wght@400;700&family=Nunito:wght@400;700&family=Poppins:wght@400;700&family=Crimson+Text:wght@400;700&family=Pacifico&family=Montserrat:wght@400;700&family=Inter:wght@400;700&family=Open+Sans:wght@400;700&family=Source+Sans+3:wght@400;700&family=Work+Sans:wght@400;700&family=DM+Sans:wght@400;700&display=swap');
+
+/* Quill font format classes - must be global for editor content rendering */
+.ql-font-arial { font-family: Arial, sans-serif !important; }
+.ql-font-georgia { font-family: Georgia, serif !important; }
+.ql-font-verdana { font-family: Verdana, sans-serif !important; }
+.ql-font-tahoma { font-family: Tahoma, sans-serif !important; }
+.ql-font-trebuchet { font-family: 'Trebuchet MS', sans-serif !important; }
+.ql-font-impact { font-family: Impact, sans-serif !important; }
+.ql-font-courier { font-family: 'Courier New', monospace !important; }
+.ql-font-times { font-family: 'Times New Roman', serif !important; }
+.ql-font-palatino { font-family: Palatino, serif !important; }
+.ql-font-garamond { font-family: Garamond, serif !important; }
+.ql-font-roboto { font-family: 'Roboto', sans-serif !important; }
+.ql-font-lato { font-family: 'Lato', sans-serif !important; }
+.ql-font-poppins { font-family: 'Poppins', sans-serif !important; }
+.ql-font-montserrat { font-family: 'Montserrat', sans-serif !important; }
+.ql-font-inter { font-family: 'Inter', sans-serif !important; }
+.ql-font-raleway { font-family: 'Raleway', sans-serif !important; }
+.ql-font-nunito { font-family: 'Nunito', sans-serif !important; }
+.ql-font-oswald { font-family: 'Oswald', sans-serif !important; }
+.ql-font-merriweather { font-family: 'Merriweather', serif !important; }
+.ql-font-ubuntu { font-family: 'Ubuntu', sans-serif !important; }
+.ql-font-playfair { font-family: 'Playfair Display', serif !important; }
+.ql-font-opensans { font-family: 'Open Sans', sans-serif !important; }
+.ql-font-sourcesans { font-family: 'Source Sans 3', sans-serif !important; }
+.ql-font-worksans { font-family: 'Work Sans', sans-serif !important; }
+.ql-font-dmsans { font-family: 'DM Sans', sans-serif !important; }
 
 @tailwind base;
 @tailwind components;

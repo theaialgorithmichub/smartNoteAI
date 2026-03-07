@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { friendsAPI, notebooksAPI, notificationsAPI } from '@/lib/api/sharing';
 import type { User, FriendRequest, Notification, SharedNotebook } from '@/lib/api/sharing';
 
@@ -7,24 +7,37 @@ export function useFriends() {
   const [friends, setFriends] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isFetchingRef = useRef(false);
+  const hasFetchedRef = useRef(false);
 
   const fetchFriends = useCallback(async () => {
+    if (isFetchingRef.current || hasFetchedRef.current) {
+      console.log('[useFriends] Already fetching or fetched, skipping...');
+      return;
+    }
+
     try {
+      isFetchingRef.current = true;
       setLoading(true);
+      console.log('[useFriends] Fetching friends...');
       const data = await friendsAPI.getFriends();
       setFriends(data);
       setError(null);
+      hasFetchedRef.current = true;
+      console.log('[useFriends] Friends fetched successfully:', data.length);
     } catch (err) {
+      console.error('[useFriends] Error fetching friends:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch friends');
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, []);
 
   useEffect(() => {
+    console.log('[useFriends] Hook mounted, fetching friends once');
     fetchFriends();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run once on mount
+  }, [fetchFriends])
 
   const removeFriend = useCallback(async (friendId: string) => {
     try {

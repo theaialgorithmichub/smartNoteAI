@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2, Upload, X, ImageIcon, BookOpen, Users, FileText, LayoutDashboard, Code, Calendar, Brain, Check, CalendarDays, PenTool, Blocks, Pencil, FolderKanban, LayoutGrid, BookText, GraduationCap, Layers, PenLine, ChefHat, Wallet, Plane, CheckSquare, Film, Workflow, Video, Link, Type, Mic, Target, Dumbbell, DollarSign, ShoppingCart, MessageSquare, Bell, Languages, Search, UtensilsCrossed, Trophy, StickyNote, Sparkles } from "lucide-react"
+import { Loader2, Upload, X, ImageIcon, BookOpen, Users, FileText, LayoutDashboard, Code, Calendar, Brain, Check, CalendarDays, PenTool, Blocks, Pencil, FolderKanban, LayoutGrid, BookText, GraduationCap, Layers, PenLine, ChefHat, Wallet, Plane, CheckSquare, Film, Workflow, Video, Link, Type, Mic, Target, Dumbbell, DollarSign, ShoppingCart, MessageSquare, Bell, Languages, Search, UtensilsCrossed, Trophy, StickyNote, Sparkles, GitBranch, Zap } from "lucide-react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 
@@ -67,6 +67,10 @@ const templates = [
   { id: "meals-planner", name: "Meals Planner", icon: UtensilsCrossed, color: "from-orange-500 to-amber-500" },
   { id: "games-scorecard", name: "Games Scorecard", icon: Trophy, color: "from-yellow-500 to-amber-500" },
   { id: "sticker-book", name: "Sticker Book", icon: StickyNote, color: "from-lime-500 to-green-500" },
+  { id: "mind-map", name: "Mind Map", icon: GitBranch, color: "from-violet-500 to-purple-600" },
+  { id: "goal-tracker", name: "Goal Tracker", icon: Target, color: "from-blue-500 to-indigo-600" },
+  { id: "ai-prompt-studio", name: "AI Prompt Studio", icon: Zap, color: "from-yellow-500 to-orange-600" },
+  { id: "tutorial-learn", name: "Tutorial Learn", icon: GraduationCap, color: "from-indigo-500 to-blue-600" },
 ]
 
 const themeColors = [
@@ -164,16 +168,30 @@ export function CreateNotebookDialog({
         }),
       })
 
+      console.log('[CREATE NOTEBOOK] Response status:', res.status)
       const data = await res.json()
+      console.log('[CREATE NOTEBOOK] Response data:', data)
+      
+      if (!res.ok) {
+        console.error('[CREATE NOTEBOOK] Error:', data.error)
+        alert(`Failed to create notebook: ${data.error || 'Unknown error'}`)
+        return
+      }
       
       if (data.notebook) {
+        console.log('[CREATE NOTEBOOK] Notebook created successfully:', data.notebook._id)
+        console.log('[CREATE NOTEBOOK] Navigating to:', `/dashboard/notebook/${data.notebook._id}`)
         onCreated()
         onOpenChange(false)
         resetForm()
         router.push(`/dashboard/notebook/${data.notebook._id}`)
+      } else {
+        console.error('[CREATE NOTEBOOK] No notebook in response')
+        alert('Failed to create notebook: No notebook returned')
       }
     } catch (error) {
-      console.error("Failed to create notebook:", error)
+      console.error("[CREATE NOTEBOOK] Failed to create notebook:", error)
+      alert(`Failed to create notebook: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setLoading(false)
     }

@@ -48,6 +48,10 @@ import { DictionaryTemplate } from "@/components/notebook-templates/dictionary-t
 import { MealsPlannerTemplate } from "@/components/notebook-templates/meals-planner-template";
 import { GamesScoreCardTemplate } from "@/components/notebook-templates/games-scorecard-template";
 import { StickerBookTemplate } from "@/components/notebook-templates/sticker-book-template";
+import { TutorialLearnTemplate } from "@/components/notebook-templates/tutorial-learn-template";
+import { MindMapTemplate } from "@/components/notebook-templates/mind-map-template";
+import { GoalTrackerTemplate } from "@/components/notebook-templates/goal-tracker-template";
+import { AIPromptStudioTemplate } from "@/components/notebook-templates/ai-prompt-studio-template";
 import { NotebookTemplateType } from "@/types/notebook-templates";
 
 export default function TemplatesPage() {
@@ -138,6 +142,14 @@ export default function TemplatesPage() {
         return <GamesScoreCardTemplate title="Games Scorecard" />;
       case 'sticker-book':
         return <StickerBookTemplate title="Sticker Book" />;
+      case 'tutorial-learn':
+        return <TutorialLearnTemplate title="Tutorial Learn" />;
+      case 'mind-map':
+        return <MindMapTemplate title="Mind Map" />;
+      case 'goal-tracker':
+        return <GoalTrackerTemplate title="Goal Tracker" />;
+      case 'ai-prompt-studio':
+        return <AIPromptStudioTemplate title="AI Prompt Studio" />;
       default:
         return (
           <div className="flex items-center justify-center h-full">
