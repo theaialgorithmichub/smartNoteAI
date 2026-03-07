@@ -654,6 +654,15 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
             <Button
               variant="ghost"
               size="icon"
+              onClick={() => { setSelectedText(""); setIsAIOpen(o => !o) }}
+              className={isAIOpen ? "bg-purple-100 dark:bg-purple-900/30" : ""}
+              title="AI Assistant"
+            >
+              <Sparkles className="h-5 w-5 text-purple-500" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setIsShareOpen(true)}
               title="Share notebook"
             >
@@ -708,9 +717,18 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
               <ArrowLeft className="h-5 w-5 text-amber-700" />
             </button>
             <h1 className="font-semibold text-amber-900 truncate">{notebook.title}</h1>
-            <button onClick={() => setIsChatOpen(true)} className="p-2">
-              <MessageSquare className="h-5 w-5 text-amber-700" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => { setSelectedText(""); setIsAIOpen(o => !o) }}
+                className={`p-2 rounded-lg transition-colors ${isAIOpen ? "bg-purple-100 text-purple-600" : "text-amber-700 hover:bg-amber-50"}`}
+                title="AI Assistant"
+              >
+                <Sparkles className="h-5 w-5" />
+              </button>
+              <button onClick={() => setIsChatOpen(true)} className="p-2">
+                <MessageSquare className="h-5 w-5 text-amber-700" />
+              </button>
+            </div>
           </div>
         </header>
 
