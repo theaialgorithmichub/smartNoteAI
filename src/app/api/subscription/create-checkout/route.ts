@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/mongodb';
 import { Subscription } from '@/lib/models/subscription';
@@ -6,7 +6,7 @@ import { getOrCreateStripeCustomer, createSubscriptionCheckout, createCreditChec
 
 export async function POST(req: Request) {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     await connectDB();
 
     // Get user email from Clerk
-    const { user } = await auth();
+    const user = await currentUser();
     if (!user?.emailAddresses?.[0]?.emailAddress) {
       return NextResponse.json({ error: 'User email not found' }, { status: 400 });
     }

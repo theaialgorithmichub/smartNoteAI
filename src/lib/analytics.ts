@@ -90,7 +90,7 @@ export class Analytics {
       if (stats.templatesUsed.size > 0) {
         let maxCount = 0;
         let favorite = '';
-        stats.templatesUsed.forEach((count, template) => {
+        stats.templatesUsed.forEach((count: number, template: string) => {
           if (count > maxCount) {
             maxCount = count;
             favorite = template;
@@ -173,7 +173,7 @@ export class Analytics {
       const stats = await UserStats.findOne({ userId });
       if (!stats || !stats.templatesUsed) return [];
 
-      return Array.from(stats.templatesUsed.entries())
+      return Array.from(stats.templatesUsed.entries() as Iterable<[string, number]>)
         .map(([template, count]) => ({ template, count }))
         .sort((a, b) => b.count - a.count);
     } catch (error) {
@@ -228,10 +228,10 @@ export class Analytics {
       const stats = await UserStats.findOne({ userId });
       const last30Days = await this.getActivityHeatmap(userId, 30);
       
-      const totalActivity = last30Days.reduce((sum, day) => sum + day.count, 0);
+      const totalActivity = last30Days.reduce((sum: number, day: any) => sum + day.count, 0);
       const avgPerDay = totalActivity / 30;
       
-      const activeDays = last30Days.filter(day => day.count > 0).length;
+      const activeDays = last30Days.filter((day: any) => day.count > 0).length;
       const consistencyScore = (activeDays / 30) * 100;
 
       return {

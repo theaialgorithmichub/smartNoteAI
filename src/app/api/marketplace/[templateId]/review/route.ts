@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import connectDB from '@/lib/mongodb';
 import { MarketplaceTemplate, TemplateReview } from '@/lib/models/marketplace-template';
 
@@ -8,7 +8,7 @@ export async function POST(
   { params }: { params: { templateId: string } }
 ) {
   try {
-    const { userId, user } = await auth();
+    const { userId } = await auth();
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -51,13 +51,14 @@ export async function POST(
       await existingReview.save();
     } else {
       // Create new review
+      const clerkUser = await currentUser();
       const review = await TemplateReview.create({
         templateId: params.templateId,
         userId,
-        userName: user?.firstName && user?.lastName 
-          ? `${user.firstName} ${user.lastName}`
-          : user?.username || 'Anonymous',
-        userAvatar: user?.imageUrl,
+        userName: clerkUser?.firstName && clerkUser?.lastName 
+          ? `${clerkUser.firstName} ${clerkUser.lastName}`
+          : clerkUser?.username || 'Anonymous',
+        userAvatar: clerkUser?.imageUrl,
         rating,
         comment,
         helpful: 0,

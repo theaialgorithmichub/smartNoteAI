@@ -57,7 +57,7 @@ const CustomTemplateSchema = new mongoose.Schema<ICustomTemplate>({
   },
   tags: [String],
   components: {
-    type: [mongoose.Schema.Types.Mixed],
+    type: mongoose.Schema.Types.Mixed,
     default: [],
   },
   settings: {

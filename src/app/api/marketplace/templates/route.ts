@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import connectDB from '@/lib/mongodb';
 import { MarketplaceTemplate } from '@/lib/models/marketplace-template';
 
@@ -81,7 +81,8 @@ export async function GET(req: NextRequest) {
 // Submit a new template to marketplace
 export async function POST(req: NextRequest) {
   try {
-    const { userId, user } = await auth();
+    const { userId } = await auth();
+    const user = await currentUser();
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

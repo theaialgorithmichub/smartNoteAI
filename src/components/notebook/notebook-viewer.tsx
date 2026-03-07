@@ -136,6 +136,10 @@ type NotebookTemplateType =
   | 'meals-planner'
   | 'games-scorecard'
   | 'sticker-book'
+  | 'tutorial-learn'
+  | 'mind-map'
+  | 'goal-tracker'
+  | 'ai-prompt-studio'
 
 interface Notebook {
   _id: string

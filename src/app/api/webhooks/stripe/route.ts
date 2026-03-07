@@ -110,8 +110,8 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
     stripeSubscriptionId: subscription.id,
     stripePriceId: subscription.items.data[0].price.id,
     status: subscription.status as 'active' | 'canceled' | 'past_due' | 'trialing',
-    currentPeriodStart: new Date(subscription.current_period_start * 1000),
-    currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+    currentPeriodStart: new Date((subscription as any).current_period_start * 1000),
+    currentPeriodEnd: new Date((subscription as any).current_period_end * 1000),
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
   };
 
@@ -139,7 +139,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
 }
 
 async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
-  const subscriptionId = invoice.subscription as string;
+  const subscriptionId = (invoice as any).subscription as string;
   if (!subscriptionId) return;
 
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
@@ -153,7 +153,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
     amount: invoice.amount_paid / 100,
     currency: invoice.currency,
     stripeInvoiceId: invoice.id,
-    stripePaymentIntentId: invoice.payment_intent as string,
+    stripePaymentIntentId: (invoice as any).payment_intent as string,
     status: 'completed',
     metadata: {
       planType: subscription.metadata.planType,
@@ -175,7 +175,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
 }
 
 async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
-  const subscriptionId = invoice.subscription as string;
+  const subscriptionId = (invoice as any).subscription as string;
   if (!subscriptionId) return;
 
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);

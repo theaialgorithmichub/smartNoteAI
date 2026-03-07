@@ -6,7 +6,7 @@ import { PLAN_CONFIG } from '@/config/template-points';
 
 export async function GET() {
   try {
-    const { userId } = auth();
+    const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -27,7 +27,7 @@ export async function GET() {
       });
     }
 
-    const planConfig = PLAN_CONFIG[subscription.planType];
+    const planConfig = PLAN_CONFIG[subscription.planType as keyof typeof PLAN_CONFIG];
 
     return NextResponse.json({
       subscription: {
