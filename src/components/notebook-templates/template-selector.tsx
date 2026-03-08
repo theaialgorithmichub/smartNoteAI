@@ -13,7 +13,8 @@ import {
   Check,
   ArrowRight,
   Sparkles,
-  Mic
+  Mic,
+  Music
 } from "lucide-react";
 import { NOTEBOOK_TEMPLATES, NotebookTemplateType } from "@/types/notebook-templates";
 import { TEMPLATE_POINTS } from "@/config/template-points";
@@ -27,6 +28,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Calendar,
   Brain,
   Mic,
+  Music,
 };
 
 const colorMap: Record<string, { bg: string; border: string; text: string; gradient: string }> = {

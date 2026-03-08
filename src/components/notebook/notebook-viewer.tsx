@@ -73,6 +73,8 @@ import { TutorialLearnTemplate } from "@/components/notebook-templates/tutorial-
 import { MindMapTemplate } from "@/components/notebook-templates/mind-map-template"
 import { GoalTrackerTemplate } from "@/components/notebook-templates/goal-tracker-template"
 import { AIPromptStudioTemplate } from "@/components/notebook-templates/ai-prompt-studio-template"
+import { PianoNotesTemplate } from "@/components/notebook-templates/piano-notes-template"
+import { VocabularyTemplate } from "@/components/notebook-templates/vocabulary-template"
 import { LoadingCubes } from "@/components/ui/loading-cubes"
 import { SimpleTemplate } from "@/components/notebook-templates/simple-template"
 import { AppHeader } from "@/components/layout/app-header"
@@ -150,6 +152,8 @@ type NotebookTemplateType =
   | 'mind-map'
   | 'goal-tracker'
   | 'ai-prompt-studio'
+  | 'piano-notes'
+  | 'vocabulary'
 
 interface Notebook {
   _id: string
@@ -631,6 +635,10 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
           return <GoalTrackerTemplate title={notebook.title} notebookId={notebookId} />
         case 'ai-prompt-studio':
           return <AIPromptStudioTemplate title={notebook.title} notebookId={notebookId} />
+        case 'piano-notes':
+          return <PianoNotesTemplate title={notebook.title} notebookId={notebookId} />
+        case 'vocabulary':
+          return <VocabularyTemplate title={notebook.title} notebookId={notebookId} />
         default:
           return null
       }

@@ -338,7 +338,7 @@ export function PlannerTemplate({ title = "Untitled Plan", notebookId }: Planner
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/*  Left: Calendar + Context  */}
         <div className="w-72 flex-shrink-0 flex flex-col gap-4 p-4 overflow-y-auto border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
           {/* Calendar */}

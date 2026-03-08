@@ -402,7 +402,7 @@ export function JournalTemplate({ title = "My Journal", notebookId }: JournalTem
       </div>
 
       {/* Main Editor */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
         {selectedEntry ? (
           <>
             {/* Entry Header */}

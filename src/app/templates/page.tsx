@@ -49,6 +49,8 @@ import { TutorialLearnTemplate } from "@/components/notebook-templates/tutorial-
 import { MindMapTemplate } from "@/components/notebook-templates/mind-map-template";
 import { GoalTrackerTemplate } from "@/components/notebook-templates/goal-tracker-template";
 import { AIPromptStudioTemplate } from "@/components/notebook-templates/ai-prompt-studio-template";
+import { PianoNotesTemplate } from "@/components/notebook-templates/piano-notes-template";
+import { VocabularyTemplate } from "@/components/notebook-templates/vocabulary-template";
 import { NotebookTemplateType } from "@/types/notebook-templates";
 
 export default function TemplatesPage() {
@@ -147,6 +149,10 @@ export default function TemplatesPage() {
         return <GoalTrackerTemplate title="Goal Tracker" />;
       case 'ai-prompt-studio':
         return <AIPromptStudioTemplate title="AI Prompt Studio" />;
+      case 'piano-notes':
+        return <PianoNotesTemplate title="Piano Notes" />;
+      case 'vocabulary':
+        return <VocabularyTemplate title="Vocabulary" />;
       default:
         return (
           <div className="flex items-center justify-center h-full">
@@ -221,15 +227,15 @@ export default function TemplatesPage() {
               </div>
             </div>
 
-            {/* Template Preview */}
-            <div className="border-t border-neutral-200 dark:border-neutral-800">
+            {/* Template Preview — scrollable so long templates can be viewed */}
+            <div className="border-t border-neutral-200 dark:border-neutral-800 h-[calc(100vh-180px)] overflow-y-auto">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={previewTemplate}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="min-h-[calc(100vh-200px)]"
+                  className="min-h-full"
                 >
                   {renderTemplatePreview(previewTemplate)}
                 </motion.div>

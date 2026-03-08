@@ -482,7 +482,7 @@ export function DashboardTemplate({ title, notebookId }: DashboardTemplateProps)
       </AnimatePresence>
 
       {/*  Main  */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-3 px-6 py-4 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 flex-shrink-0">
           {!sidebarOpen && (

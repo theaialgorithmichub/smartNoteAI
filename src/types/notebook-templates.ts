@@ -47,7 +47,9 @@ export type NotebookTemplateType =
   | 'tutorial-learn'
   | 'mind-map'
   | 'goal-tracker'
-  | 'ai-prompt-studio';
+  | 'ai-prompt-studio'
+  | 'piano-notes'
+  | 'vocabulary';
 
 export interface NotebookTemplate {
   id: NotebookTemplateType;
@@ -410,6 +412,22 @@ export const NOTEBOOK_TEMPLATES: NotebookTemplate[] = [
     icon: 'Brain',
     color: 'violet',
     features: ['Version control', 'Multi-model support', 'Test automation', 'Performance metrics', 'Cost tracking', 'Prompt optimization'],
+  },
+  {
+    id: 'piano-notes',
+    name: 'Piano Notes',
+    description: 'Track repertoire, practice sessions, and technique notes for piano',
+    icon: 'Music',
+    color: 'slate',
+    features: ['Repertoire list', 'Practice log', 'Technique & exercises', 'General notes'],
+  },
+  {
+    id: 'vocabulary',
+    name: 'Vocabulary',
+    description: 'Build and review word lists with definitions and example sentences',
+    icon: 'BookOpen',
+    color: 'indigo',
+    features: ['Word lists', 'Definitions', 'Example sentences', 'Tags & categories'],
   },
 ];
 

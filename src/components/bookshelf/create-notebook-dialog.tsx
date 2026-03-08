@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2, Upload, X, ImageIcon, BookOpen, Users, FileText, LayoutDashboard, Code, Calendar, Brain, Check, CalendarDays, PenTool, Blocks, Pencil, FolderKanban, LayoutGrid, BookText, GraduationCap, Layers, PenLine, ChefHat, Wallet, Plane, CheckSquare, Film, Workflow, Video, Link, Type, Mic, Target, Dumbbell, DollarSign, ShoppingCart, MessageSquare, Bell, Languages, Search, UtensilsCrossed, Trophy, StickyNote, Sparkles, GitBranch, Zap, Crown } from "lucide-react"
+import { Loader2, Upload, X, ImageIcon, BookOpen, Users, FileText, LayoutDashboard, Code, Calendar, Brain, Check, CalendarDays, PenTool, Blocks, Pencil, FolderKanban, LayoutGrid, BookText, GraduationCap, Layers, PenLine, ChefHat, Wallet, Plane, CheckSquare, Film, Workflow, Video, Link, Type, Mic, Target, Dumbbell, DollarSign, ShoppingCart, MessageSquare, Bell, Languages, Search, UtensilsCrossed, Trophy, StickyNote, Sparkles, GitBranch, Zap, Crown, Music } from "lucide-react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 
@@ -71,6 +71,8 @@ const templates = [
   { id: "goal-tracker", name: "Goal Tracker", icon: Target, color: "from-blue-500 to-indigo-600" },
   { id: "ai-prompt-studio", name: "AI Prompt Studio", icon: Zap, color: "from-yellow-500 to-orange-600" },
   { id: "tutorial-learn", name: "Tutorial Learn", icon: GraduationCap, color: "from-indigo-500 to-blue-600" },
+  { id: "piano-notes", name: "Piano Notes", icon: Music, color: "from-slate-500 to-slate-700" },
+  { id: "vocabulary", name: "Vocabulary", icon: BookOpen, color: "from-indigo-500 to-purple-600" },
 ]
 
 const themeColors = [

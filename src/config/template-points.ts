@@ -253,6 +253,16 @@ export const TEMPLATE_POINTS: Record<NotebookTemplateType, TemplatePointsConfig>
     points: 8,
     tier: 'elite',
   },
+  'piano-notes': {
+    templateId: 'piano-notes',
+    points: 3,
+    tier: 'standard',
+  },
+  'vocabulary': {
+    templateId: 'vocabulary',
+    points: 2,
+    tier: 'basic',
+  },
 };
 
 // Plan configurations
