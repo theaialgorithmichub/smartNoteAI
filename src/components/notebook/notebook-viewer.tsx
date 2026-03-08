@@ -78,6 +78,7 @@ import { VocabularyTemplate } from "@/components/notebook-templates/vocabulary-t
 import { LoadingCubes } from "@/components/ui/loading-cubes"
 import { SimpleTemplate } from "@/components/notebook-templates/simple-template"
 import { AppHeader } from "@/components/layout/app-header"
+import { NotebookHeader } from "@/components/layout/notebook-header"
 import { ShareManager } from "@/components/share/share-manager"
 import { AIToolbar } from "@/components/ai/AIToolbar"
 import { CollaborationProvider } from "@/components/collaboration/CollaborationProvider"
@@ -521,24 +522,21 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
     )
   }
 
-  // Render SimpleTemplate for simple notebooks
-  if (notebook.template === 'simple') {
-    return (
-      <SimpleTemplate
-        title={notebook.title}
-        notebookId={notebookId}
-        pages={pages}
-        onUpdate={fetchNotebookData}
-        onAddPage={addNewPage}
-        appearance={notebook.appearance}
-      />
-    )
-  }
-
-  // Render template-specific views for other templates
+  // Render template-specific views (including simple — same layout with AppHeader)
   if (notebook.template) {
     const renderTemplateView = () => {
       switch (notebook.template) {
+        case 'simple':
+          return (
+            <SimpleTemplate
+              title={notebook.title}
+              notebookId={notebookId}
+              pages={pages}
+              onUpdate={fetchNotebookData}
+              onAddPage={addNewPage}
+              appearance={notebook.appearance}
+            />
+          )
         case 'meeting-notes':
           return <MeetingNotesTemplate title={notebook.title} notebookId={notebookId} />
         case 'document':
@@ -646,37 +644,12 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
 
     return (
       <div className="h-full flex flex-col relative overflow-hidden">
-        <AppHeader
-          homeHref="/dashboard"
-          extraRight={
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => { setSelectedText(""); setIsAIOpen(o => !o) }}
-                className={isAIOpen ? "bg-purple-100 dark:bg-purple-900/30" : ""}
-                title="AI Assistant"
-              >
-                <Sparkles className="h-5 w-5 text-purple-500" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsShareOpen(true)}
-                title="Share notebook"
-              >
-                <Share2 className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsChatOpen(!isChatOpen)}
-                className={isChatOpen ? "bg-amber-100 dark:bg-amber-900/30" : ""}
-              >
-                <MessageSquare className="h-5 w-5" />
-              </Button>
-            </>
-          }
+        <NotebookHeader
+          onAIClick={() => { setSelectedText(""); setIsAIOpen(o => !o); }}
+          onShareClick={() => setIsShareOpen(true)}
+          onChatClick={() => setIsChatOpen(!isChatOpen)}
+          isAIActive={isAIOpen}
+          isChatActive={isChatOpen}
         />
         <ShareManager
           notebookId={notebookId}
@@ -689,10 +662,23 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
           {renderTemplateView()}
         </div>
 
-        {/* Chat Sidebar — absolute overlay so it doesn't affect layout */}
+        {/* AI Assistant panel — above header so it's always visible */}
+        <AnimatePresence>
+          {isAIOpen && (
+            <AIToolbar
+              selectedText={selectedText}
+              notebookId={notebookId}
+              notebookTitle={notebook?.title}
+              onApply={() => setIsAIOpen(false)}
+              onClose={() => setIsAIOpen(false)}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Chat Sidebar — absolute overlay */}
         <AnimatePresence>
           {isChatOpen && (
-            <div className="absolute top-0 right-0 bottom-0 w-[380px] z-30 flex">
+            <div className="absolute top-0 right-0 bottom-0 w-[380px] z-[100] flex">
               <ChatSidebar
                 open={isChatOpen}
                 onClose={() => setIsChatOpen(false)}
@@ -853,77 +839,48 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
         onSelectChapter={(pageNum) => goToPage(pageNum)}
       />
 
-      {/* Main Book Area */}
+      {/* Main Book Area — same NotebookHeader as template view so AI/Share/Chat always work */}
       <div className="flex-1 flex flex-col h-full">
-        {/* Header */}
-        <header className="flex items-center justify-between px-6 py-3 bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm border-b border-amber-100 dark:border-neutral-800 flex-shrink-0">
-          <div className="flex items-center gap-4">
-            {/* Logo + App Name → home */}
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-            >
-              <BookOpen className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-              <span className="text-sm font-bold text-amber-700 dark:text-amber-300 hidden sm:block">SmartNote AI</span>
-            </button>
-            <span className="text-amber-300 dark:text-neutral-600">|</span>
-            <h1 className="text-xl font-semibold text-amber-900 dark:text-amber-200">{notebook.title}</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <CollaboratorsPresence />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                const sel = window.getSelection()?.toString().trim() || ""
-                setSelectedText(sel)
-                setIsAIOpen(o => !o)
-              }}
-              className={isAIOpen ? "bg-purple-100 dark:bg-purple-900/30" : ""}
-              title="AI Assistant"
-            >
-              <Sparkles className="h-5 w-5 text-purple-500" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={addNewPage} title="Add page">
-              <Plus className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsCommentsOpen(o => !o)}
-              className={isCommentsOpen ? "bg-amber-100 dark:bg-amber-900/30" : ""}
-              title="Comments"
-            >
-              <MessageSquare className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsShareOpen(true)}
-              title="Share notebook"
-            >
-              <Share2 className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsThemePanelOpen(!isThemePanelOpen)}
-              className={isThemePanelOpen ? "bg-amber-100 dark:bg-amber-900/30" : ""}
-              title="Notebook theme"
-            >
-              <Palette className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsChatOpen(!isChatOpen)}
-              className={isChatOpen ? "bg-amber-100 dark:bg-amber-900/30" : ""}
-              title="AI Chat"
-            >
-              <MessageSquare className="h-5 w-5" />
-            </Button>
-          </div>
-        </header>
+        <NotebookHeader
+          title={notebook.title}
+          onAIClick={() => {
+            const sel = typeof window !== "undefined" ? window.getSelection()?.toString().trim() || "" : ""
+            setSelectedText(sel)
+            setIsAIOpen(o => !o)
+          }}
+          onShareClick={() => setIsShareOpen(true)}
+          onChatClick={() => setIsChatOpen(!isChatOpen)}
+          isAIActive={isAIOpen}
+          isChatActive={isChatOpen}
+          extraActions={
+            <>
+              <CollaboratorsPresence />
+              <Button type="button" variant="ghost" size="icon" onClick={addNewPage} title="Add page">
+                <Plus className="h-5 w-5" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsCommentsOpen(o => !o)}
+                className={isCommentsOpen ? "bg-amber-100 dark:bg-amber-900/30" : ""}
+                title="Comments"
+              >
+                <MessageSquare className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsThemePanelOpen(!isThemePanelOpen)}
+                className={isThemePanelOpen ? "bg-amber-100 dark:bg-amber-900/30" : ""}
+                title="Notebook theme"
+              >
+                <Palette className="h-5 w-5" />
+              </Button>
+            </>
+          }
+        />
         <ShareManager
           notebookId={notebookId}
           isOpen={isShareOpen}

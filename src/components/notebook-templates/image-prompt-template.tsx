@@ -365,7 +365,6 @@ export function ImagePromptTemplate({ title = "Image Prompts", notebookId }: Ima
 
   return (
     <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 dark:from-neutral-950 dark:to-neutral-900">
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
       {saving && (
         <div className="fixed top-20 right-6 flex items-center gap-2 text-sm text-neutral-500 bg-white dark:bg-neutral-800 px-3 py-2 rounded-lg shadow-lg z-50">
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -396,22 +395,20 @@ export function ImagePromptTemplate({ title = "Image Prompts", notebookId }: Ima
         </div>
       )}
 
-      {/* Header */}
-      <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border-b border-neutral-200 dark:border-neutral-800 sticky top-0 z-40">
+      <header className="flex-shrink-0 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border-b border-neutral-200 dark:border-neutral-800 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
                 <ImageIcon className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="font-bold text-neutral-900 dark:text-white">{title}</h1>
+                <h1 className="font-bold text-neutral-900 dark:text-white">Image Prompts</h1>
                 <p className="text-xs text-neutral-500">
-                  {activeProject ? `${activeProject.prompts.length} prompts` : 'No project selected'}
+                  {activeProject ? `${activeProject.prompts.length} prompts` : "No project selected"}
                 </p>
               </div>
             </div>
-            
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowDocumentation(true)}
@@ -421,20 +418,19 @@ export function ImagePromptTemplate({ title = "Image Prompts", notebookId }: Ima
                 <Info className="h-4 w-4" />
               </button>
             </div>
-            
             <div className="flex gap-1 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
               {[
-                { id: 'projects', label: 'Projects', icon: FolderOpen },
-                { id: 'prompts', label: 'Prompts', icon: Wand2 },
-                { id: 'gallery', label: 'Gallery', icon: Grid3x3 },
+                { id: "projects", label: "Projects", icon: FolderOpen },
+                { id: "prompts", label: "Prompts", icon: Wand2 },
+                { id: "gallery", label: "Gallery", icon: Grid3x3 },
               ].map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as typeof activeTab)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all ${
                     activeTab === tab.id
-                      ? 'bg-white dark:bg-neutral-700 text-purple-600 shadow-sm'
-                      : 'text-neutral-600 dark:text-neutral-400'
+                      ? "bg-white dark:bg-neutral-700 text-purple-600 shadow-sm"
+                      : "text-neutral-600 dark:text-neutral-400"
                   }`}
                 >
                   <tab.icon className="w-4 h-4" />
@@ -444,8 +440,9 @@ export function ImagePromptTemplate({ title = "Image Prompts", notebookId }: Ima
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Projects Tab */}
         {activeTab === 'projects' && (

@@ -31,6 +31,8 @@ const templates = [
   { id: "ai-research", name: "AI Research", icon: Brain, color: "from-rose-500 to-pink-500" },
   { id: "diary", name: "Diary", icon: CalendarDays, color: "from-pink-500 to-rose-500" },
   { id: "journal", name: "Journal", icon: PenTool, color: "from-stone-500 to-stone-700" },
+  { id: "piano-notes", name: "Piano Notes", icon: Music, color: "from-slate-500 to-slate-700" },
+  { id: "vocabulary", name: "Vocabulary", icon: BookOpen, color: "from-indigo-500 to-purple-600" },
   { id: "custom", name: "Custom Page", icon: Blocks, color: "from-indigo-500 to-violet-500" },
   { id: "doodle", name: "Doodle Pad", icon: Pencil, color: "from-cyan-500 to-blue-500" },
   { id: "project", name: "Project Hub", icon: FolderKanban, color: "from-indigo-500 to-purple-600" },
@@ -71,8 +73,6 @@ const templates = [
   { id: "goal-tracker", name: "Goal Tracker", icon: Target, color: "from-blue-500 to-indigo-600" },
   { id: "ai-prompt-studio", name: "AI Prompt Studio", icon: Zap, color: "from-yellow-500 to-orange-600" },
   { id: "tutorial-learn", name: "Tutorial Learn", icon: GraduationCap, color: "from-indigo-500 to-blue-600" },
-  { id: "piano-notes", name: "Piano Notes", icon: Music, color: "from-slate-500 to-slate-700" },
-  { id: "vocabulary", name: "Vocabulary", icon: BookOpen, color: "from-indigo-500 to-purple-600" },
 ]
 
 const themeColors = [
