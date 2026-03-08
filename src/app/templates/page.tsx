@@ -3,11 +3,8 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { 
-  BookOpen, 
-  ArrowLeft,
-  Eye
-} from "lucide-react";
+import { BookOpen, ArrowLeft, Eye } from "lucide-react";
+import { UnifiedHeader } from "@/components/layout/unified-header";
 import { TemplateSelector } from "@/components/notebook-templates";
 import { MeetingNotesTemplate } from "@/components/notebook-templates/meeting-notes-template";
 import { DocumentTemplate } from "@/components/notebook-templates/document-template";
@@ -169,26 +166,7 @@ export default function TemplatesPage() {
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950">
-      {/* Header */}
-      <header className="bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <Link href="/dashboard" className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors">
-                <ArrowLeft className="w-5 h-5" />
-                <span className="text-sm">Back to Dashboard</span>
-              </Link>
-            </div>
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-6 w-6 text-amber-500" />
-              <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-500">
-                Notebook Templates
-              </span>
-            </div>
-            <div className="w-32" />
-          </div>
-        </div>
-      </header>
+      <UnifiedHeader homeHref="/dashboard" />
 
       {/* Main Content */}
       <main className="py-8">
