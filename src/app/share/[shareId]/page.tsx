@@ -27,6 +27,7 @@ export default function SharedNotebookPage() {
   const [error, setError] = useState('');
   const [shareData, setShareData] = useState<any>(null);
   const [notebookData, setNotebookData] = useState<any>(null);
+  const [pagesData, setPagesData] = useState<any[]>([]);
 
   useEffect(() => {
     checkShare();
@@ -58,9 +59,10 @@ export default function SharedNotebookPage() {
       }
 
       setShareData(data.share);
+      if (pwd) setPassword(pwd);
       
-      // Fetch notebook data
-      await fetchNotebook(data.share.notebookId);
+      // Fetch notebook + pages via share API (no auth required)
+      await fetchSharedNotebook(pwd);
       
       setLoading(false);
     } catch (err) {
@@ -70,15 +72,22 @@ export default function SharedNotebookPage() {
     }
   };
 
-  const fetchNotebook = async (notebookId: string) => {
+  const fetchSharedNotebook = async (pwd?: string) => {
     try {
-      const response = await fetch(`/api/notebooks/${notebookId}`);
-      if (response.ok) {
-        const data = await response.json();
+      const url = new URL(`/api/share/${shareId}/notebook`, window.location.origin);
+      if (pwd) url.searchParams.set('password', pwd);
+      const response = await fetch(url.toString());
+      const data = await response.json();
+      if (response.ok && data?.notebook) {
         setNotebookData(data.notebook);
+        setPagesData(Array.isArray(data.pages) ? data.pages : []);
+      } else {
+        if (response.status === 401 && data?.requiresPassword) {
+          setRequiresPassword(true);
+        }
       }
     } catch (err) {
-      console.error('Error fetching notebook:', err);
+      console.error('Error fetching shared notebook:', err);
     }
   };
 
@@ -260,20 +269,30 @@ export default function SharedNotebookPage() {
           )}
 
           <div className="prose dark:prose-invert max-w-none">
-            {notebookData ? (
+            {notebookData && typeof notebookData === 'object' && 'title' in notebookData ? (
               <div>
-                <h2 className="text-3xl font-bold mb-4">{notebookData.title}</h2>
-                {notebookData.description && (
-                  <p className="text-slate-600 dark:text-slate-300 mb-6">
-                    {notebookData.description}
-                  </p>
+                {Array.isArray(pagesData) && pagesData.length > 0 ? (
+                  pagesData.map((page: { _id: string; title?: string; content?: string; pageNumber?: number }) => (
+                    <div key={page._id} className="mb-10 last:mb-0">
+                      <h2 className="text-2xl font-bold mb-3 text-slate-900 dark:text-white">
+                        {page.title || `Page ${page.pageNumber ?? 1}`}
+                      </h2>
+                      <div
+                        className="prose dark:prose-invert max-w-none text-slate-700 dark:text-slate-300"
+                        dangerouslySetInnerHTML={{ __html: typeof page.content === 'string' ? page.content : '<p class="text-slate-500 italic">No content</p>' }}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+                    <p className="mb-2">This notebook does not have page-based content yet.</p>
+                    <p className="text-sm">
+                      Template: <span className="font-medium">{String(notebookData.template || 'simple')}</span>
+                    </p>
+                  </div>
                 )}
-                {/* Render notebook content based on template type */}
-                <div className="whitespace-pre-wrap">
-                  {JSON.stringify(notebookData, null, 2)}
-                </div>
               </div>
-            ) : (
+            ) : !shareData ? null : (
               <p className="text-center text-slate-500">Loading notebook content...</p>
             )}
           </div>
