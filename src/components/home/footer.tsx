@@ -110,7 +110,7 @@ export function Footer() {
           <BookOpen className="h-8 w-8 text-amber-500" />
         </Link>
         <p className="bg-transparent text-center text-xs leading-5 text-neutral-500 dark:text-neutral-400 md:text-left max-w-2xl">
-          Welcome to SmartNote AI, where traditional note-taking meets cutting-edge AI technology. 
+          Welcome to smartDigitalNotes, where traditional note-taking meets cutting-edge AI technology. 
           Experience the nostalgic feel of physical notebooks combined with powerful AI assistance. 
           Organize your thoughts, flip through pages, and let AI be your research companion. 
           Transform the way you capture and organize knowledge.
@@ -222,11 +222,11 @@ export function Footer() {
           </Link>
           <span>-</span>
           <Link 
-            aria-label="SmartNote AI" 
+            aria-label="smartDigitalNotes" 
             className="hover:text-amber-500 transition-colors" 
             href="/"
           >
-            SmartNote AI
+            smartDigitalNotes
           </Link>
         </div>
       </div>

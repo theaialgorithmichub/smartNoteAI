@@ -107,7 +107,7 @@ export default function PricingPage() {
               Choose Your Perfect Plan
             </h1>
             <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-8">
-              Unlock the full potential of SmartNote AI with powerful features and unlimited creativity
+              Unlock the full potential of smartDigitalNotes with powerful features and unlimited creativity
             </p>
 
             {/* Billing Toggle */}

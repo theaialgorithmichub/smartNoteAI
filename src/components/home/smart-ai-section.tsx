@@ -115,7 +115,7 @@ export function SmartAISection() {
                 Ask Note E Anything
               </h2>
               <p className="text-lg md:text-xl text-white/90 drop-shadow-lg">
-                Your intelligent companion for all things SmartNote AI
+                Your intelligent companion for all things smartDigitalNotes
               </p>
             </div>
           </div>

@@ -10,7 +10,7 @@ export class TwoFactorService {
     backupCodes: string[];
   } {
     const secret = speakeasy.generateSecret({
-      name: `SmartNote AI (${userEmail})`,
+      name: `smartDigitalNotes (${userEmail})`,
       length: 32,
     });
 

@@ -67,7 +67,7 @@ ${notebookContext}`,
         messages: [
           {
             role: "system",
-            content: `You are a creative writing assistant for a digital notebook called SmartNote AI.
+            content: `You are a creative writing assistant for a digital notebook called smartDigitalNotes.
 The user wants you to generate content to be written into their notebook pages.
 Return a JSON object with:
 - "response": a short confirmation message (e.g. "Here's the story I wrote for you!")
@@ -517,7 +517,7 @@ ${notebookContext}`,
       messages: [
         {
           role: "system",
-          content: `You are a helpful AI assistant for a digital notebook called SmartNote AI.
+          content: `You are a helpful AI assistant for a digital notebook called smartDigitalNotes.
 Answer questions based on the notebook content. When referencing information, mention the page number.
 Be concise but thorough.
 

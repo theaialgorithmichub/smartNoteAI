@@ -327,7 +327,7 @@ export async function exportNotebookToPDF(
 ) {
   const exporter = new PDFExporter({
     title: notebookTitle,
-    author: 'SmartNote AI',
+    author: 'smartDigitalNotes',
     ...options,
   });
 

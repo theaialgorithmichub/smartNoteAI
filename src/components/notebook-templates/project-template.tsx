@@ -801,7 +801,7 @@ Recent Tickets: ${project.tickets.slice(0, 5).map(t => `${t.title} (${t.status})
                 <div>
                   <label className="text-xs font-semibold text-neutral-500 mb-1 block uppercase tracking-wide">Project Name *</label>
                   <input value={formData.name || ""} onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
-                    placeholder="e.g. SmartNotes App" className="w-full px-4 py-3 bg-neutral-50 dark:bg-neutral-800 rounded-xl outline-none text-sm"/>
+                    placeholder="e.g. smartDigitalNotes App" className="w-full px-4 py-3 bg-neutral-50 dark:bg-neutral-800 rounded-xl outline-none text-sm"/>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-neutral-500 mb-1 block uppercase tracking-wide">Project Key (e.g. SNA)</label>

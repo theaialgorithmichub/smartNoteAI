@@ -8,7 +8,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'SmartNote AI - Digital Notebook',
+  title: 'smartDigitalNotes - Digital Notebook',
   description: 'A knowledge management platform combining the nostalgic feel of physical notebooks with the power of Generative AI',
 }
 

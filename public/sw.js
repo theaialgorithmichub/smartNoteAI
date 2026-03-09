@@ -124,7 +124,7 @@ self.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : {};
   
   const options = {
-    body: data.body || 'New notification from SmartNote AI',
+    body: data.body || 'New notification from smartDigitalNotes',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/badge-72x72.png',
     vibrate: [200, 100, 200],
@@ -133,7 +133,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'SmartNote AI', options)
+    self.registration.showNotification(data.title || 'smartDigitalNotes', options)
   );
 });
 

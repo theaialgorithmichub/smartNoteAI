@@ -197,7 +197,7 @@ export default function SharedNotebookPage() {
                   {notebookData?.title || 'Shared Notebook'}
                 </h1>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Shared via SmartNote AI
+                  Shared via smartDigitalNotes
                 </p>
               </div>
             </div>
@@ -282,7 +282,7 @@ export default function SharedNotebookPage() {
         {/* Footer */}
         <div className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
           <p>
-            Powered by <span className="font-semibold">SmartNote AI</span>
+            Powered by <span className="font-semibold">smartDigitalNotes</span>
           </p>
           <p className="mt-1">
             <a href="/" className="text-blue-600 dark:text-blue-400 hover:underline">
