@@ -11,7 +11,7 @@ interface TemplateHeaderProps {
   showBackButton?: boolean
 }
 
-export function TemplateHeader({ title = "SmartNote AI", showBackButton = true }: TemplateHeaderProps) {
+export function TemplateHeader({ title = "SmartNotes", showBackButton = true }: TemplateHeaderProps) {
   return (
     <header className="sticky top-0 z-50 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-neutral-200 dark:border-neutral-800 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
