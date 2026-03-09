@@ -57,6 +57,7 @@ export function UnifiedHeader({
   const [mounted, setMounted] = useState(false);
   const [activeNav, setActiveNav] = useState("Home");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [loggedInMobileOpen, setLoggedInMobileOpen] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
@@ -211,50 +212,72 @@ export function UnifiedHeader({
     );
   }
 
-  /* Logged-in: Image 1 style — logo left, right: Image 2 + theme, notifications, community, trash, settings, Subscription, avatar */
+  /* Logged-in: desktop row + mobile menu with account/sign out */
   return (
     <header className={sharedHeaderClass}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {logo}
 
-          <div className="flex items-center gap-2 sm:gap-4">
+          {/* Desktop: full row */}
+          <div className="hidden md:flex items-center gap-2 sm:gap-4">
             {image2Icons}
             <div className="hidden sm:block w-px h-6 bg-neutral-200 dark:bg-neutral-700" />
             <ThemeToggle />
             <NotificationsBell />
-            <Link
-              href="/dashboard/workspaces"
-              className="hidden sm:flex p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
-              title="Workspaces"
-            >
+            <Link href="/dashboard/workspaces" className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors" title="Workspaces">
               <Users className="h-5 w-5" />
             </Link>
-            <Link
-              href="/dashboard/trash"
-              className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
-              title="Trash"
-            >
+            <Link href="/dashboard/trash" className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors" title="Trash">
               <Trash2 className="h-5 w-5" />
             </Link>
-            <Link
-              href="/dashboard/settings"
-              className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
-              title="Settings"
-            >
+            <Link href="/dashboard/settings" className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors" title="Settings">
               <Settings className="h-5 w-5" />
             </Link>
-            <Link
-              href="/account"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
-              title="Subscription"
-            >
+            <Link href="/account" className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors" title="Account / Subscription">
               <CreditCard className="h-4 w-4" />
               <span>Subscription</span>
             </Link>
             <UserButton afterSignOutUrl="/" />
           </div>
+
+          {/* Mobile: icons + hamburger that opens menu with Account / Sign out */}
+          <div className="flex md:hidden items-center gap-1">
+            {image2Icons}
+            <ThemeToggle />
+            <NotificationsBell />
+            <button
+              type="button"
+              onClick={() => setLoggedInMobileOpen(!loggedInMobileOpen)}
+              className="p-2 rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              aria-label="Menu"
+            >
+              {loggedInMobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+            <UserButton afterSignOutUrl="/" />
+          </div>
         </div>
+
+        {/* Mobile dropdown: Workspaces, Trash, Settings, Account */}
+        {loggedInMobileOpen && (
+          <div className="md:hidden border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-4 py-3 space-y-1">
+            <Link href="/dashboard/workspaces" onClick={() => setLoggedInMobileOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
+              <Users className="w-4 h-4" /> Workspaces
+            </Link>
+            <Link href="/dashboard/trash" onClick={() => setLoggedInMobileOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
+              <Trash2 className="w-4 h-4" /> Trash
+            </Link>
+            <Link href="/dashboard/settings" onClick={() => setLoggedInMobileOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
+              <Settings className="w-4 h-4" /> Settings
+            </Link>
+            <Link href="/account" onClick={() => setLoggedInMobileOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-amber-600 dark:text-amber-400 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20">
+              <CreditCard className="w-4 h-4" /> Account / Subscription
+            </Link>
+            <div className="pt-2 mt-2 border-t border-neutral-200 dark:border-neutral-800">
+              <p className="px-3 py-1 text-xs text-neutral-500 dark:text-neutral-400">Sign out using the account icon above</p>
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );
