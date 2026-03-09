@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Plus, Bell, Trash2, X, Info, BellRing, AlertCircle, CalendarDays, Clock, MapPin, Check } from 'lucide-react';
+import { Calendar, Plus, Bell, Trash2, X, Info, BellRing, AlertCircle, CalendarDays, Clock, MapPin, Check, Search } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { TemplateFooter } from './template-footer';
 import { Button } from '@/components/ui/button';
@@ -43,8 +43,12 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
   const [saving, setSaving] = useState(false);
   const [searchDate, setSearchDate] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
+  const [searchEventTitle, setSearchEventTitle] = useState('');
   const [editingEventId, setEditingEventId] = useState<number | null>(null);
+  const [showAddEventPopup, setShowAddEventPopup] = useState(false);
+  const [showSearchFilterPopup, setShowSearchFilterPopup] = useState(false);
   const saveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const pageIdRef = React.useRef<string | null>(null);
 
   const normalizeUrl = (value: string) => {
     const trimmed = value.trim();
@@ -55,43 +59,67 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
 
   const isSafeUrl = (value?: string) => !!value && /^https?:\/\//i.test(value);
 
-  const saveData = () => {
+  const TEMPLATE_PAGE_TITLE = '__save_the_date_template__';
+
+  // Load from DB
+  useEffect(() => {
     if (!notebookId) return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/notebooks/${notebookId}/pages`);
+        const json = await res.json();
+        const pages: any[] = json.pages ?? [];
+        const existing = pages.find((p: any) => p.title === TEMPLATE_PAGE_TITLE);
+        if (existing) {
+          pageIdRef.current = existing._id;
+          try {
+            const data = typeof existing.content === 'string' ? JSON.parse(existing.content || '{}') : existing.content || {};
+            const list = Array.isArray(data.events) ? data.events : (data.events ? [] : []);
+            const loaded: Event[] = list.map((e: any) => ({
+              ...e,
+              rawDate: e.rawDate || e.date,
+            }));
+            setEvents(loaded);
+          } catch {
+            await fetch(`/api/notebooks/${notebookId}/pages/${existing._id}`, { method: 'DELETE' });
+          }
+        } else {
+          const cr = await fetch(`/api/notebooks/${notebookId}/pages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: TEMPLATE_PAGE_TITLE, content: JSON.stringify({ events: [] }) }),
+          });
+          const created = await cr.json();
+          pageIdRef.current = created.page?._id ?? null;
+        }
+      } catch (err) {
+        console.error('Save the Date load failed:', err);
+      }
+    })();
+  }, [notebookId]);
+
+  const persistToDb = useCallback(() => {
+    if (!notebookId || !pageIdRef.current) return;
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    
-    saveTimeoutRef.current = setTimeout(() => {
+    saveTimeoutRef.current = setTimeout(async () => {
       setSaving(true);
       try {
-        localStorage.setItem(`save-the-date-${notebookId}`, JSON.stringify({ events }));
-      } catch (error) {
-        console.error("Failed to save:", error);
+        await fetch(`/api/notebooks/${notebookId}/pages/${pageIdRef.current}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: TEMPLATE_PAGE_TITLE, content: JSON.stringify({ events }) }),
+        });
+      } catch (err) {
+        console.error('Save the Date persist failed:', err);
       } finally {
         setSaving(false);
       }
     }, 500);
-  };
+  }, [notebookId, events]);
 
   useEffect(() => {
-    if (!notebookId) return;
-    try {
-      const saved = localStorage.getItem(`save-the-date-${notebookId}`);
-      if (saved) {
-        const data = JSON.parse(saved);
-        const loaded: Event[] = (data.events || []).map((e: any) => ({
-          ...e,
-          // Backwards compatibility for older data
-          rawDate: e.rawDate || e.date,
-        }));
-        setEvents(loaded);
-      }
-    } catch (error) {
-      console.error("Failed to load:", error);
-    }
-  }, [notebookId]);
-
-  useEffect(() => {
-    saveData();
-  }, [events]);
+    persistToDb();
+  }, [events, persistToDb]);
 
   // Calculate days until event
   const calculateDaysUntil = (eventDate: string) => {
@@ -167,6 +195,7 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
       description: '',
       url: '',
     });
+    setShowAddEventPopup(false);
   };
 
   const toggleReminder = (id: number) => {
@@ -197,12 +226,23 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
     }
   };
 
-  // Filter events based on search date and category
+  // Filter events: title, date, category
   const filteredEvents = events.filter(event => {
+    const matchesTitle = !searchEventTitle || event.title.toLowerCase().includes(searchEventTitle.toLowerCase());
     const matchesDate = !searchDate || event.date.includes(new Date(searchDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
     const matchesCategory = filterCategory === 'All' || event.category === filterCategory;
-    return matchesDate && matchesCategory;
+    return matchesTitle && matchesDate && matchesCategory;
   });
+
+  // Sort: upcoming first (soonest first), then past (most recent past first)
+  const sortedFilteredEvents = [...filteredEvents].sort((a, b) => {
+    if (a.daysUntil >= 0 && b.daysUntil >= 0) return a.daysUntil - b.daysUntil;
+    if (a.daysUntil < 0 && b.daysUntil < 0) return b.daysUntil - a.daysUntil;
+    return a.daysUntil >= 0 ? -1 : 1;
+  });
+
+  // This Week: only future/current (0 <= daysUntil <= 7), exclude past
+  const thisWeekCount = events.filter(e => e.daysUntil >= 0 && e.daysUntil <= 7).length;
 
   // Quick date selection helper
   const setQuickDate = (daysFromNow: number) => {
@@ -262,7 +302,7 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
           </Card>
           <Card className="p-4 bg-gradient-to-br from-amber-500 to-orange-500 text-white">
             <p className="text-sm opacity-90 mb-1">This Week</p>
-            <p className="text-3xl font-bold">{events.filter(e => e.daysUntil <= 7).length}</p>
+            <p className="text-3xl font-bold">{thisWeekCount}</p>
           </Card>
           <Card className="p-4 bg-gradient-to-br from-purple-500 to-pink-500 text-white">
             <p className="text-sm opacity-90 mb-1">Reminders Set</p>
@@ -270,129 +310,23 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
           </Card>
         </div>
 
-        <Card className="p-6 bg-white dark:bg-neutral-800">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Add New Event</h3>
-            <div className="flex gap-2">
-              <button onClick={() => setQuickDate(0)} className="px-3 py-1 text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors">Today</button>
-              <button onClick={() => setQuickDate(1)} className="px-3 py-1 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors">Tomorrow</button>
-              <button onClick={() => setQuickDate(7)} className="px-3 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors">Next Week</button>
-            </div>
-          </div>
-          <div className="space-y-3">
-            <div className="grid md:grid-cols-2 gap-3">
-              <input 
-                type="text" 
-                placeholder="Event title..." 
-                value={newEvent.title}
-                onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500" 
-              />
-              <select
-                value={newEvent.category}
-                onChange={(e) => setNewEvent({ ...newEvent, category: e.target.value })}
-                className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
-              >
-                <option value="Personal">Personal</option>
-                <option value="Work">Work</option>
-                <option value="Health">Health</option>
-                <option value="Social">Social</option>
-              </select>
-            </div>
-            <div className="space-y-3">
-              <textarea
-                placeholder="Description (optional)"
-                value={newEvent.description}
-                onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
-                rows={2}
-              />
-              <input
-                type="url"
-                placeholder="Event website URL (optional)"
-                value={newEvent.url}
-                onChange={(e) => setNewEvent({ ...newEvent, url: e.target.value })}
-                className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
-              />
-            </div>
-            <div className="grid md:grid-cols-4 gap-3">
-              <input 
-                type="date" 
-                value={newEvent.date}
-                onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })}
-                className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500" 
-              />
-              <input 
-                type="time" 
-                value={newEvent.time}
-                onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
-                className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500" 
-              />
-              <input 
-                type="text" 
-                placeholder="Location (optional)" 
-                value={newEvent.location}
-                onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
-                className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500" 
-              />
-              <Button 
-                onClick={handleSaveEvent}
-                className="bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:opacity-90"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {editingEventId ? 'Save Changes' : 'Add Event'}
-              </Button>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-6 bg-white dark:bg-neutral-800">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Search & Filter Events</h3>
-          </div>
-          <div className="grid md:grid-cols-3 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">Search by Date</label>
-              <input 
-                type="date" 
-                value={searchDate}
-                onChange={(e) => setSearchDate(e.target.value)}
-                className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500" 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">Filter by Category</label>
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
-              >
-                <option value="All">All Categories</option>
-                <option value="Personal">Personal</option>
-                <option value="Work">Work</option>
-                <option value="Health">Health</option>
-                <option value="Social">Social</option>
-              </select>
-            </div>
-            <div className="flex items-end">
-              <Button 
-                onClick={() => { setSearchDate(''); setFilterCategory('All'); }}
-                className="w-full bg-neutral-500 text-white hover:bg-neutral-600"
-              >
-                Clear Filters
-              </Button>
-            </div>
-          </div>
-          {(searchDate || filterCategory !== 'All') && (
-            <div className="mt-3 p-3 bg-rose-50 dark:bg-rose-900/20 rounded-lg border border-rose-200 dark:border-rose-800">
-              <p className="text-sm text-rose-700 dark:text-rose-400">
-                Showing {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''}
-                {searchDate && ` on ${new Date(searchDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`}
-                {filterCategory !== 'All' && ` in ${filterCategory} category`}
-              </p>
-            </div>
-          )}
-        </Card>
+        <div className="flex flex-wrap gap-3">
+          <Button
+            onClick={() => { setEditingEventId(null); setNewEvent({ title: '', date: '', time: '', location: '', category: 'Personal', description: '', url: '' }); setShowAddEventPopup(true); }}
+            className="bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:opacity-90"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Create event
+          </Button>
+          <Button
+            onClick={() => setShowSearchFilterPopup(true)}
+            variant="outline"
+            className="border-neutral-300 dark:border-neutral-600 text-neutral-700 dark:text-neutral-300"
+          >
+            <Search className="h-4 w-4 mr-2" />
+            Search and Filter Events
+          </Button>
+        </div>
 
         {events.length === 0 ? (
           <Card className="p-12 bg-white dark:bg-neutral-800 text-center">
@@ -408,7 +342,7 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
           </Card>
         ) : (
           <div className="space-y-3">
-            {filteredEvents.sort((a, b) => a.daysUntil - b.daysUntil).map(event => {
+            {sortedFilteredEvents.map(event => {
               const color = getCategoryColor(event.category);
               const isPast = event.daysUntil < 0;
               return (
@@ -430,6 +364,7 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
                               url: event.url || '',
                             });
                             setEditingEventId(event.id);
+                            setShowAddEventPopup(true);
                           }}
                           className="px-2 py-1 text-xs bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors"
                         >
@@ -520,6 +455,79 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
                 </Card>
               );
             })}
+          </div>
+        )}
+
+        {/* Add New Event popup */}
+        {showAddEventPopup && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <Card className="max-w-lg w-full max-h-[90vh] overflow-y-auto bg-white dark:bg-neutral-800">
+              <div className="sticky top-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-4 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Add New Event</h3>
+                <button onClick={() => { setShowAddEventPopup(false); setEditingEventId(null); setNewEvent({ title: '', date: '', time: '', location: '', category: 'Personal', description: '', url: '' }); }} className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg"><X className="h-5 w-5" /></button>
+              </div>
+              <div className="p-4 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input type="text" placeholder="Event title..." value={newEvent.title} onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })} className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500" />
+                  <select value={newEvent.category} onChange={(e) => setNewEvent({ ...newEvent, category: e.target.value })} className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500">
+                    <option value="Personal">Personal</option><option value="Work">Work</option><option value="Health">Health</option><option value="Social">Social</option>
+                  </select>
+                </div>
+                <textarea placeholder="Description (optional)" value={newEvent.description} onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })} className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none" rows={2} />
+                <input type="url" placeholder="Event website URL (optional)" value={newEvent.url} onChange={(e) => setNewEvent({ ...newEvent, url: e.target.value })} className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500" />
+                <div className="flex gap-2 flex-wrap">
+                  <button onClick={() => setQuickDate(0)} className="px-3 py-1 text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg">Today</button>
+                  <button onClick={() => setQuickDate(1)} className="px-3 py-1 text-xs bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-lg">Tomorrow</button>
+                  <button onClick={() => setQuickDate(7)} className="px-3 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg">Next Week</button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <input type="date" value={newEvent.date} onChange={(e) => setNewEvent({ ...newEvent, date: e.target.value })} className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500" />
+                  <input type="time" value={newEvent.time} onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })} className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500" />
+                  <input type="text" placeholder="Location (optional)" value={newEvent.location} onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })} className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500" />
+                </div>
+                <Button onClick={handleSaveEvent} className="w-full bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:opacity-90">
+                  <Plus className="h-4 w-4 mr-2" />
+                  {editingEventId ? 'Save Changes' : 'Add Event'}
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Search and Filter Events popup */}
+        {showSearchFilterPopup && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <Card className="max-w-md w-full bg-white dark:bg-neutral-800">
+              <div className="p-4 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
+                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Search and filter events</h3>
+                <button onClick={() => setShowSearchFilterPopup(false)} className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg"><X className="h-5 w-5" /></button>
+              </div>
+              <div className="p-4 space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">Filter by event title</label>
+                  <input type="text" placeholder="Event title..." value={searchEventTitle} onChange={(e) => setSearchEventTitle(e.target.value)} className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">Search by date</label>
+                  <input type="date" value={searchDate} onChange={(e) => setSearchDate(e.target.value)} className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">Filter by category</label>
+                  <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500">
+                    <option value="All">All Categories</option>
+                    <option value="Personal">Personal</option>
+                    <option value="Work">Work</option>
+                    <option value="Health">Health</option>
+                    <option value="Social">Social</option>
+                  </select>
+                </div>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400">Events are ordered with upcoming first, then past. This week counts only future events (0–7 days).</p>
+                <div className="flex gap-2">
+                  <Button onClick={() => { setSearchEventTitle(''); setSearchDate(''); setFilterCategory('All'); }} className="flex-1 bg-neutral-500 text-white hover:bg-neutral-600">Clear filters</Button>
+                  <Button onClick={() => setShowSearchFilterPopup(false)} className="flex-1 bg-rose-500 text-white hover:bg-rose-600">Done</Button>
+                </div>
+              </div>
+            </Card>
           </div>
         )}
 

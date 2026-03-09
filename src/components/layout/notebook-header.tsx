@@ -55,41 +55,34 @@ export function NotebookHeader({
             )}
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={onAIClick}
-              className={isAIActive ? "bg-purple-100 dark:bg-purple-900/30" : ""}
-              title="AI Assistant"
-              aria-label="Open AI Assistant"
-            >
+          {/* Desktop: all in row */}
+          <div className="hidden sm:flex items-center gap-2 sm:gap-4">
+            <Button type="button" variant="ghost" size="icon" onClick={onAIClick} className={isAIActive ? "bg-purple-100 dark:bg-purple-900/30" : ""} title="AI Assistant" aria-label="Open AI Assistant">
               <Sparkles className="h-5 w-5 text-purple-500" />
             </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={onShareClick}
-              title="Share notebook"
-              aria-label="Share notebook"
-            >
+            <Button type="button" variant="ghost" size="icon" onClick={onShareClick} title="Share notebook" aria-label="Share notebook">
               <Share2 className="h-5 w-5" />
             </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={onChatClick}
-              className={isChatActive ? "bg-amber-100 dark:bg-amber-900/30" : ""}
-              title="Chat"
-              aria-label="Open chat"
-            >
+            <Button type="button" variant="ghost" size="icon" onClick={onChatClick} className={isChatActive ? "bg-amber-100 dark:bg-amber-900/30" : ""} title="Chat" aria-label="Open chat">
               <MessageSquare className="h-5 w-5" />
             </Button>
             {extraActions}
-            <div className="hidden sm:block w-px h-6 bg-neutral-200 dark:bg-neutral-700" />
+            <div className="w-px h-6 bg-neutral-200 dark:bg-neutral-700" />
+            <ThemeToggle />
+            <UserButton afterSignOutUrl="/" />
+          </div>
+
+          {/* Mobile: icons + menu so account/sign out are visible */}
+          <div className="flex sm:hidden items-center gap-1">
+            <Button type="button" variant="ghost" size="icon" onClick={onAIClick} className={isAIActive ? "bg-purple-100 dark:bg-purple-900/30" : ""} title="AI">
+              <Sparkles className="h-5 w-5 text-purple-500" />
+            </Button>
+            <Button type="button" variant="ghost" size="icon" onClick={onShareClick} title="Share">
+              <Share2 className="h-5 w-5" />
+            </Button>
+            <Button type="button" variant="ghost" size="icon" onClick={onChatClick} className={isChatActive ? "bg-amber-100 dark:bg-amber-900/30" : ""} title="Chat">
+              <MessageSquare className="h-5 w-5" />
+            </Button>
             <ThemeToggle />
             <UserButton afterSignOutUrl="/" />
           </div>
