@@ -501,7 +501,7 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
               className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
               <BookOpen className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-              <span className="text-sm font-bold text-amber-700 dark:text-amber-300 hidden sm:block">SmartNote AI</span>
+              <span className="text-sm font-bold text-amber-700 dark:text-amber-300 hidden sm:block">SmartNotes</span>
             </button>
             <span className="text-amber-300 dark:text-neutral-600">|</span>
             <h1 className="text-xl font-semibold text-amber-900 dark:text-amber-200">Loading...</h1>
@@ -764,7 +764,7 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
               className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
               <BookOpen className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-              <span className="text-sm font-bold text-amber-700 dark:text-amber-300 hidden sm:block">SmartNote AI</span>
+              <span className="text-sm font-bold text-amber-700 dark:text-amber-300 hidden sm:block">SmartNotes</span>
             </button>
             <span className="text-amber-300 dark:text-neutral-600">|</span>
             <h1 className="text-xl font-semibold text-amber-900 dark:text-amber-200">{notebook.title}</h1>

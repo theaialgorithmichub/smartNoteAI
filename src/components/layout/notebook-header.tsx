@@ -42,7 +42,7 @@ export function NotebookHeader({
             >
               <BookOpen className="h-7 w-7 text-amber-500 sm:h-8 sm:w-8" />
               <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-500">
-                SmartNote AI
+                SmartNotes
               </span>
             </Link>
             {title && (
