@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, Plus, FileText, CheckCircle, Sparkles, TrendingUp, BookOpen, Lightbulb, Search, Info, X, Trash2, Edit2, List } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 
 interface Chapter {
@@ -227,9 +226,8 @@ Key Insights:
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-violet-50 to-purple-50 dark:from-neutral-900 dark:to-neutral-800">
-      <TemplateHeader title={title} />
-      <div className="flex-1 overflow-y-auto">
+    <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-violet-50 to-purple-50 dark:from-neutral-900 dark:to-neutral-800">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
         <div className="max-w-7xl mx-auto p-8 space-y-6">
         {/* Header */}
         <div className="text-center mb-8">

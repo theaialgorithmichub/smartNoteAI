@@ -1,22 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { Bell, X, Check, BookOpen, UserPlus, Share2 } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Bell, X, Check, UserPlus, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-interface Notification {
-  _id: string;
-  type: 'notebook_shared' | 'friend_request' | 'friend_accepted';
-  title: string;
-  message: string;
-  read: boolean;
-  createdAt: string;
-  actionData?: {
-    notebookId?: string;
-    requestId?: string;
-    userId?: string;
-  };
-}
+import { notificationsAPI, type Notification } from '@/lib/api/sharing';
 
 export function NotificationsBell() {
   const [open, setOpen] = useState(false);
@@ -26,12 +13,30 @@ export function NotificationsBell() {
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  const fetchNotifications = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await notificationsAPI.getNotifications();
+      setNotifications(Array.isArray(data) ? data : []);
+    } catch {
+      // keep previous state on error
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Single fetch on mount for badge; no polling when closed (bookshelf hook polls)
   useEffect(() => {
     fetchNotifications();
-    // Poll every 30s
-    const interval = setInterval(fetchNotifications, 30_000);
+  }, [fetchNotifications]);
+
+  // When dropdown opens, refresh; poll only while open to avoid duplicate calls
+  useEffect(() => {
+    if (!open) return;
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60_000);
     return () => clearInterval(interval);
-  }, []);
+  }, [open, fetchNotifications]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -43,27 +48,17 @@ export function NotificationsBell() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  const fetchNotifications = async () => {
-    try {
-      const res = await fetch('/api/notifications');
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(Array.isArray(data) ? data : []);
-      }
-    } catch {}
-  };
-
   const markAllRead = async () => {
     try {
-      await fetch('/api/notifications/read-all', { method: 'POST' });
+      await notificationsAPI.markAllAsRead();
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } catch {}
   };
 
   const markRead = async (id: string) => {
     try {
-      await fetch(`/api/notifications/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ read: true }) });
-      setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
+      await notificationsAPI.markAsRead(id);
+      setNotifications(prev => prev.map(n => (n._id === id ? { ...n, read: true } : n)));
     } catch {}
   };
 

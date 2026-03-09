@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Loader2, Upload, X, ImageIcon, BookOpen, Users, FileText, LayoutDashboard, Code, Calendar, Brain, Check, CalendarDays, PenTool, Blocks, Pencil, FolderKanban, LayoutGrid, BookText, GraduationCap, Layers, PenLine, ChefHat, Wallet, Plane, CheckSquare, Film, Workflow, Video, Link, Type, Mic, Target, Dumbbell, DollarSign, ShoppingCart, MessageSquare, Bell, Languages, Search, UtensilsCrossed, Trophy, StickyNote, Sparkles, GitBranch, Zap, Crown } from "lucide-react"
+import { Loader2, Upload, X, ImageIcon, BookOpen, Users, FileText, LayoutDashboard, Code, Calendar, Brain, Check, CalendarDays, PenTool, Blocks, Pencil, FolderKanban, LayoutGrid, BookText, GraduationCap, Layers, PenLine, ChefHat, Wallet, Plane, CheckSquare, Film, Workflow, Video, Link, Type, Mic, Target, Dumbbell, DollarSign, ShoppingCart, MessageSquare, Bell, Languages, Search, UtensilsCrossed, Trophy, StickyNote, Sparkles, GitBranch, Zap, Crown, Music } from "lucide-react"
 import Image from "next/image"
 import { motion } from "framer-motion"
 
@@ -31,6 +31,8 @@ const templates = [
   { id: "ai-research", name: "AI Research", icon: Brain, color: "from-rose-500 to-pink-500" },
   { id: "diary", name: "Diary", icon: CalendarDays, color: "from-pink-500 to-rose-500" },
   { id: "journal", name: "Journal", icon: PenTool, color: "from-stone-500 to-stone-700" },
+  { id: "piano-notes", name: "Piano Notes", icon: Music, color: "from-slate-500 to-slate-700" },
+  { id: "vocabulary", name: "Vocabulary", icon: BookOpen, color: "from-indigo-500 to-purple-600" },
   { id: "custom", name: "Custom Page", icon: Blocks, color: "from-indigo-500 to-violet-500" },
   { id: "doodle", name: "Doodle Pad", icon: Pencil, color: "from-cyan-500 to-blue-500" },
   { id: "project", name: "Project Hub", icon: FolderKanban, color: "from-indigo-500 to-purple-600" },

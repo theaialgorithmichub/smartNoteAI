@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react"
 import dynamic from "next/dynamic"
-import { Loader2, Wand2 } from "lucide-react"
+import { Loader2, Wand2, X } from "lucide-react"
 import "react-quill-new/dist/quill.snow.css"
 import { VoiceRecorder } from "@/components/ai/VoiceRecorder"
 
@@ -44,7 +44,25 @@ interface QuillEditorProps {
   onSave?: () => void
   flushRef?: React.MutableRefObject<(() => Promise<void>) | null>
   onContentChange?: (pageId: string, content: string, title: string) => void
+  /** When set, Quill renders the toolbar into this selector (e.g. "#quill-toolbar") instead of inside the editor. */
+  toolbarContainerId?: string
 }
+
+const TOOLBAR_ITEMS = [
+  [{ font: [
+    "arial", "georgia", "verdana", "tahoma", "trebuchet",
+    "impact", "courier", "times", "palatino", "garamond",
+    "roboto", "lato", "poppins", "montserrat", "inter",
+    "raleway", "nunito", "oswald", "merriweather", "ubuntu",
+    "playfair", "opensans", "sourcesans", "worksans", "dmsans",
+  ]}, { header: [1, 2, 3, 4, false] }],
+  ["bold", "italic", "underline", "strike"],
+  [{ color: [] }, { background: [] }],
+  [{ list: "ordered" }, { list: "bullet" }],
+  [{ align: [] }],
+  ["link", "image"],
+  ["clean"],
+]
 
 export function QuillEditor({
   pageId,
@@ -56,9 +74,13 @@ export function QuillEditor({
   onSave,
   flushRef,
   onContentChange,
+  toolbarContainerId,
 }: QuillEditorProps) {
   const [content, setContent] = useState(initialContent || "")
   const [title, setTitle] = useState(initialTitle || "")
+  const [titleColor, setTitleColor] = useState("#1a1a1a")
+  const [titleFont, setTitleFont] = useState("Inter, system-ui, sans-serif")
+  const [pendingVoiceText, setPendingVoiceText] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [aiSuggestion, setAiSuggestion] = useState("")
@@ -78,30 +100,25 @@ export function QuillEditor({
   useEffect(() => { notebookIdRef.current = notebookId }, [notebookId])
 
 
-  // Quill modules configuration - built-in toolbar (reliable)
+  // Quill modules: use external toolbar container when provided (toolbar on top of page)
   const modules = {
-    toolbar: {
-      container: [
-        [{ font: [
-          "arial", "georgia", "verdana", "tahoma", "trebuchet",
-          "impact", "courier", "times", "palatino", "garamond",
-          "roboto", "lato", "poppins", "montserrat", "inter",
-          "raleway", "nunito", "oswald", "merriweather", "ubuntu",
-          "playfair", "opensans", "sourcesans", "worksans", "dmsans",
-        ]}, { header: [1, 2, 3, 4, false] }],
-        ["bold", "italic", "underline", "strike"],
-        [{ color: [] }, { background: [] }],
-        [{ list: "ordered" }, { list: "bullet" }],
-        [{ align: [] }],
-        ["link", "image"],
-        ["clean"],
-      ],
-      handlers: {
-        image: () => {
-          fileInputRef.current?.click()
+    toolbar: toolbarContainerId
+      ? {
+          container: toolbarContainerId,
+          handlers: {
+            image: () => {
+              fileInputRef.current?.click()
+            },
+          },
+        }
+      : {
+          container: TOOLBAR_ITEMS,
+          handlers: {
+            image: () => {
+              fileInputRef.current?.click()
+            },
+          },
         },
-      },
-    },
     clipboard: {
       matchVisual: false,
     },
@@ -125,6 +142,8 @@ export function QuillEditor({
     initialTitleRef.current = initialTitle || ""
     setContent(initialContentRef.current)
     setTitle(initialTitleRef.current)
+    setTitleColor("#1a1a1a")
+    setTitleFont("Inter, system-ui, sans-serif")
     contentRef.current = initialContentRef.current
     titleRef.current = initialTitleRef.current
     isDirtyRef.current = false
@@ -234,29 +253,46 @@ export function QuillEditor({
     }
   }
 
-  // Insert transcribed voice text at end of editor
-  const handleVoiceTranscription = useCallback((text: string) => {
-    if (!text.trim()) return
-    const quill = quillRef.current?.getEditor()
-    if (quill) {
-      const len = quill.getLength()
-      quill.insertText(len - 1, "\n" + text)
-      const newContent = quill.root.innerHTML
-      setContent(newContent)
-      contentRef.current = newContent
-      isDirtyRef.current = true
-      onContentChange?.(pageId, newContent, titleRef.current)
-      scheduleDebounce(newContent)
-    } else {
-      // Fallback: append to HTML content
-      const newContent = content + `<p>${text}</p>`
-      setContent(newContent)
-      contentRef.current = newContent
-      isDirtyRef.current = true
-      onContentChange?.(pageId, newContent, titleRef.current)
-      scheduleDebounce(newContent)
-    }
-  }, [pageId, content, onContentChange, scheduleDebounce])
+  // Insert transcribed voice text at end of editor (or show "Insert" button if editor ref not ready)
+  const insertVoiceText = useCallback(
+    (text: string) => {
+      if (!text.trim()) return
+      const quill = quillRef.current?.getEditor()
+      if (quill) {
+        const len = quill.getLength()
+        quill.insertText(len - 1, "\n" + text)
+        const newContent = quill.root.innerHTML
+        setContent(newContent)
+        contentRef.current = newContent
+        isDirtyRef.current = true
+        onContentChange?.(pageId, newContent, titleRef.current)
+        scheduleDebounce(newContent)
+        setPendingVoiceText(null)
+      } else {
+        const newContent = content + `<p>${text}</p>`
+        setContent(newContent)
+        contentRef.current = newContent
+        isDirtyRef.current = true
+        onContentChange?.(pageId, newContent, titleRef.current)
+        scheduleDebounce(newContent)
+        setPendingVoiceText(null)
+      }
+    },
+    [pageId, content, onContentChange, scheduleDebounce]
+  )
+
+  const handleVoiceTranscription = useCallback(
+    (text: string) => {
+      if (!text.trim()) return
+      const quill = quillRef.current?.getEditor()
+      if (quill) {
+        insertVoiceText(text)
+      } else {
+        setPendingVoiceText(text)
+      }
+    },
+    [insertVoiceText]
+  )
 
   // Handle image upload to Cloudinary
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -513,15 +549,56 @@ export function QuillEditor({
         Page {pageNumber}
       </div>
 
-      {/* Title */}
-      <input
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        onBlur={saveTitle}
-        placeholder="Page Title"
-        className="text-xl font-semibold text-amber-900 dark:text-amber-200 bg-transparent border-none outline-none mb-4 placeholder:text-amber-300 dark:placeholder:text-amber-700 flex-shrink-0"
-        disabled={!isEditing}
-      />
+      {/* Page title with font and color controls - always visible (not colorless) */}
+      <div className="flex flex-col gap-2 mb-4 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onBlur={saveTitle}
+            placeholder="Page Title"
+            style={{
+              color: titleColor,
+              fontFamily: titleFont,
+              fontSize: "1.25rem",
+              fontWeight: 600,
+            }}
+            className="flex-1 min-w-[120px] bg-transparent border-none outline-none placeholder:text-gray-500"
+            disabled={!isEditing}
+          />
+          {isEditing && (
+            <div className="flex items-center gap-1.5" title="Title font and color">
+              <select
+                value={titleFont}
+                onChange={(e) => setTitleFont(e.target.value)}
+                className="text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-2 py-1 outline-none focus:ring-2 focus:ring-amber-500"
+                aria-label="Title font"
+              >
+                <option value="Inter, system-ui, sans-serif">Inter</option>
+                <option value="Arial, sans-serif">Arial</option>
+                <option value="Georgia, serif">Georgia</option>
+                <option value="Verdana, sans-serif">Verdana</option>
+                <option value="'Times New Roman', serif">Times New Roman</option>
+                <option value="'Roboto', sans-serif">Roboto</option>
+                <option value="'Lato', sans-serif">Lato</option>
+                <option value="'Poppins', sans-serif">Poppins</option>
+                <option value="'Merriweather', serif">Merriweather</option>
+                <option value="'Playfair Display', serif">Playfair Display</option>
+              </select>
+              <div className="flex items-center gap-1">
+                <input
+                  type="color"
+                  value={titleColor}
+                  onChange={(e) => setTitleColor(e.target.value)}
+                  className="w-8 h-8 rounded border border-gray-300 dark:border-gray-600 cursor-pointer bg-transparent"
+                  aria-label="Title color"
+                />
+                <span className="text-xs text-gray-500 dark:text-gray-400">Color</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Hidden file input for image upload */}
       <input
@@ -563,11 +640,20 @@ export function QuillEditor({
           }
           .quill-container .ql-editor {
             min-height: 100%;
-            padding: 20px;
+            padding: 28px 32px;
+            line-height: 1.75;
+            color: #1a1a1a;
+            font-size: 16px;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
           }
           .quill-container .ql-toolbar {
             background: #f8f8f8;
             border-bottom: 1px solid #ccc;
+          }
+          .quill-container .ql-snow .ql-picker.ql-color .ql-picker-options,
+          .quill-container .ql-snow .ql-picker.ql-background .ql-picker-options {
+            z-index: 10001;
+            pointer-events: auto;
           }
           .ql-font-arial { font-family: Arial, sans-serif !important; }
           .ql-font-georgia { font-family: Georgia, serif !important; }
@@ -610,11 +696,38 @@ export function QuillEditor({
 
       {/* Voice recorder + AI suggestion — shown below editor toolbar */}
       {isEditing && (
-        <div className="flex-shrink-0 border-t border-amber-100 dark:border-neutral-700 bg-white/80 dark:bg-neutral-900/80 px-4 py-1.5 flex items-center gap-3">
-          <VoiceRecorder
-            onTranscription={handleVoiceTranscription}
-            disabled={!isEditing}
-          />
+        <div className="flex-shrink-0 border-t border-amber-100 dark:border-neutral-700 bg-white/80 dark:bg-neutral-900/80 px-4 py-1.5 flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <VoiceRecorder
+              onTranscription={handleVoiceTranscription}
+              disabled={!isEditing}
+            />
+            <span className="text-xs text-gray-500 dark:text-gray-400" title="Click mic to start recording, click again to stop and add text to page">
+              Voice: click to record, click again to add text
+            </span>
+          </div>
+          {pendingVoiceText && (
+            <div className="flex items-center gap-2 flex-1 min-w-0 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg px-3 py-1.5">
+              <span className="text-xs text-amber-800 dark:text-amber-200 truncate flex-1" title={pendingVoiceText}>
+                {pendingVoiceText.length > 60 ? pendingVoiceText.slice(0, 60) + "…" : pendingVoiceText}
+              </span>
+              <button
+                type="button"
+                onClick={() => insertVoiceText(pendingVoiceText)}
+                className="text-xs font-medium px-2 py-1 rounded bg-amber-600 hover:bg-amber-700 text-white whitespace-nowrap"
+              >
+                Insert into page
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingVoiceText(null)}
+                className="text-amber-600 hover:text-amber-800 dark:text-amber-400 dark:hover:text-amber-200 p-0.5"
+                aria-label="Dismiss"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
           {isLoadingSuggestion && (
             <span className="flex items-center gap-1 text-xs text-purple-400">
               <Loader2 className="w-3 h-3 animate-spin" />

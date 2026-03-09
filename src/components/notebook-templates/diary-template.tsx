@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 import {
   Calendar, ChevronLeft, ChevronRight, Plus, Loader2,
@@ -439,9 +438,8 @@ export function DiaryTemplate({ title = "My Diary", notebookId }: DiaryTemplateP
   };
 
   if (loading) return (
-    <div className="min-h-screen flex flex-col">
-      <TemplateHeader title={title} />
-      <div className="flex-1 flex items-center justify-center">
+    <div className="h-full min-h-0 flex flex-col">
+      <div className="flex-1 min-h-0 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-amber-500"/>
       </div>
       <TemplateFooter />
@@ -449,9 +447,8 @@ export function DiaryTemplate({ title = "My Diary", notebookId }: DiaryTemplateP
   );
 
   return (
-    <div className={`min-h-screen flex flex-col ${t.bg}`}>
-      <TemplateHeader title={title} />
-      <div className="flex-1 flex overflow-hidden">
+    <div className={`h-full min-h-0 flex flex-col ${t.bg}`}>
+      <div className="flex-1 min-h-0 flex overflow-hidden">
       {/* Hidden file input */}
       <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
         onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); e.target.value = ""; }}/>

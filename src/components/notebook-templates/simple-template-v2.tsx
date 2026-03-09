@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { TemplateHeader } from './template-header'
 import { ChevronLeft, ChevronRight, Plus, List, Hash, BookOpen, Save, Palette, Download } from "lucide-react"
 import { QuillEditor } from "@/components/notebook/quill-editor"
 
@@ -134,8 +133,6 @@ export function SimpleTemplate({
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
-      <TemplateHeader title={title} />
-      
       {/* Modern Header */}
       <div className="flex-shrink-0 bg-slate-800/95 backdrop-blur-md border-b border-slate-700/50">
         {/* Title Bar */}

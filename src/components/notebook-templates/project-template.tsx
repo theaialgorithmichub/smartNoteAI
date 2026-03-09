@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 import {
   FolderKanban, Plus, Loader2, FileText, Users, Trash2, X,
@@ -756,9 +755,8 @@ Recent Tickets: ${project.tickets.slice(0, 5).map(t => `${t.title} (${t.status})
 
   //  Loading 
   if (loading) return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-neutral-950">
-      <TemplateHeader title={title} />
-      <div className="flex-1 flex items-center justify-center">
+    <div className="h-full min-h-0 flex flex-col bg-slate-50 dark:bg-neutral-950">
+      <div className="flex-1 min-h-0 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-500"/>
       </div>
       <TemplateFooter />
@@ -768,9 +766,8 @@ Recent Tickets: ${project.tickets.slice(0, 5).map(t => `${t.title} (${t.status})
   const closeProjectForm = () => { setShowCreateForm(false); setEditingProjectId(null); setFormData(blankProject()); };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-neutral-950 flex flex-col">
-      <TemplateHeader title={title} />
-      <div className="flex-1 flex overflow-hidden">
+    <div className="h-full min-h-0 bg-slate-50 dark:bg-neutral-950 flex flex-col">
+      <div className="flex-1 min-h-0 flex overflow-hidden">
       {/* Ticket Modal */}
       <AnimatePresence>
         {openTicket && project && (

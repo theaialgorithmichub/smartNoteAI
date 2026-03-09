@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 import {
   FileText, Clock, Target, Plus, X, Loader2, Trash2,
@@ -298,9 +297,8 @@ export function PlannerTemplate({ title = "Untitled Plan", notebookId }: Planner
   };
 
   if (loading) return (
-    <div className="min-h-screen flex flex-col bg-amber-50/50 dark:bg-neutral-950">
-      <TemplateHeader title={title} />
-      <div className="flex-1 flex items-center justify-center">
+    <div className="h-full min-h-0 flex flex-col bg-amber-50/50 dark:bg-neutral-950">
+      <div className="flex-1 min-h-0 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-amber-500"/>
       </div>
       <TemplateFooter />
@@ -308,9 +306,8 @@ export function PlannerTemplate({ title = "Untitled Plan", notebookId }: Planner
   );
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex flex-col">
-      <TemplateHeader title={title} />
-      <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="h-full min-h-0 bg-neutral-50 dark:bg-neutral-950 flex flex-col">
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
       {/* Header */}
       <header className="bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 px-6 py-3.5 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-3">
@@ -341,7 +338,7 @@ export function PlannerTemplate({ title = "Untitled Plan", notebookId }: Planner
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/*  Left: Calendar + Context  */}
         <div className="w-72 flex-shrink-0 flex flex-col gap-4 p-4 overflow-y-auto border-r border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900">
           {/* Calendar */}

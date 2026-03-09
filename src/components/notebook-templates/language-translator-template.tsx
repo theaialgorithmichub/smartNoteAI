@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { Languages, Mic, Volume2, Copy, ArrowLeftRight, Info, X, Check, Trash2, XCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 
 interface LanguageTranslatorTemplateProps {
@@ -213,9 +212,8 @@ export function LanguageTranslatorTemplate({ title }: LanguageTranslatorTemplate
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-neutral-900 dark:to-neutral-800">
-      <TemplateHeader title={title} />
-      <div className="flex-1 overflow-y-auto p-8">
+    <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-neutral-900 dark:to-neutral-800">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-8">
         <div className="max-w-5xl mx-auto space-y-6">
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-3 mb-2">

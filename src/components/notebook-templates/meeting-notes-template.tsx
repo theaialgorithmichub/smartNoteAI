@@ -8,7 +8,6 @@ import {
   Copy, Trash2, Clock, ChevronDown, Info,
 } from "lucide-react";
 import { FuturisticCalendar } from "@/components/ui/futuristic-calendar";
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -328,9 +327,8 @@ export function MeetingNotesTemplate({ title, notebookId, participants = [] }: M
     Object.keys(dayData).filter((d) => (dayData[d]?.meetings?.length ?? 0) > 0);
 
   return (
-    <div className="min-h-screen flex flex-col bg-neutral-950 text-neutral-100">
-      <TemplateHeader title={title} />
-      <div className="flex-1 overflow-y-auto relative">
+    <div className="h-full min-h-0 flex flex-col bg-neutral-950 text-neutral-100">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden relative">
       <div className="pointer-events-none fixed top-0 left-0 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl -z-0" />
       <div className="pointer-events-none fixed top-40 right-0 h-64 w-64 rounded-full bg-cyan-500/8 blur-3xl -z-0" />
 

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 import {
   Plus, X, Loader2, CheckCircle2, Circle, Trash2, Pencil,
@@ -409,9 +408,8 @@ export function DashboardTemplate({ title, notebookId }: DashboardTemplateProps)
   };
 
   if (loading) return (
-    <div className="min-h-screen flex flex-col bg-neutral-100 dark:bg-neutral-950">
-      <TemplateHeader title={title} />
-      <div className="flex-1 flex items-center justify-center">
+    <div className="h-full min-h-0 flex flex-col bg-neutral-100 dark:bg-neutral-950">
+      <div className="flex-1 min-h-0 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-amber-500"/>
       </div>
       <TemplateFooter />
@@ -419,9 +417,8 @@ export function DashboardTemplate({ title, notebookId }: DashboardTemplateProps)
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-neutral-100 dark:bg-neutral-950">
-      <TemplateHeader title={title} />
-      <div className="flex-1 flex overflow-hidden">
+    <div className="h-full min-h-0 flex flex-col bg-neutral-100 dark:bg-neutral-950">
+      <div className="flex-1 min-h-0 flex overflow-hidden">
 
       {/*  Sidebar  */}
       <AnimatePresence initial={false}>
@@ -485,7 +482,7 @@ export function DashboardTemplate({ title, notebookId }: DashboardTemplateProps)
       </AnimatePresence>
 
       {/*  Main  */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center gap-3 px-6 py-4 bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 flex-shrink-0">
           {!sidebarOpen && (

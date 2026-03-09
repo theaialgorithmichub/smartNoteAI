@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -12,7 +12,6 @@ import { Extension } from "@tiptap/core";
 import Color from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
 import { motion, AnimatePresence } from "framer-motion";
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 import {
   Plus, X, Loader2, Bold, Italic, Underline, Strikethrough,
@@ -570,9 +569,8 @@ export function DocumentTemplate({ title, notebookId }: DocumentTemplateProps) {
   };
 
   if (loading) return (
-    <div className="min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950">
-      <TemplateHeader title={title} />
-      <div className="flex-1 flex items-center justify-center">
+    <div className="h-full min-h-0 flex flex-col bg-neutral-50 dark:bg-neutral-950">
+      <div className="flex-1 min-h-0 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
       </div>
       <TemplateFooter />
@@ -580,9 +578,8 @@ export function DocumentTemplate({ title, notebookId }: DocumentTemplateProps) {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-neutral-50 dark:bg-neutral-950">
-      <TemplateHeader title={title} />
-      <div className="flex-1 flex overflow-hidden">
+    <div className="h-full min-h-0 flex flex-col bg-neutral-50 dark:bg-neutral-950">
+      <div className="flex-1 min-h-0 flex overflow-hidden">
       <AnimatePresence initial={false}>
         {sidebarOpen && (
           <motion.aside
@@ -640,7 +637,7 @@ export function DocumentTemplate({ title, notebookId }: DocumentTemplateProps) {
         )}
       </AnimatePresence>
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
         <div className="flex items-center gap-2 px-4 py-2 border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex-shrink-0">
           <button onClick={() => setSidebarOpen((v) => !v)} className="p-1.5 rounded hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500" title="Toggle sidebar">
             <PanelLeft className="w-4 h-4" />
@@ -664,7 +661,7 @@ export function DocumentTemplate({ title, notebookId }: DocumentTemplateProps) {
           )}
         </div>
 
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           {activeDoc ? (
             <DocumentEditor
               key={activeDoc.id}

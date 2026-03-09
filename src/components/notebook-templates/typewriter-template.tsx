@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 import {
   Type, Globe, Download, Copy, Trash2, Save, Languages,
@@ -349,9 +348,8 @@ export function TypewriterTemplate({ title = "TypeWriter", notebookId }: Typewri
   // ─── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-950 dark:to-neutral-900">
-      <TemplateHeader title={title} />
-      <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-950 dark:to-neutral-900">
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
       {/* Header */}
       <div className="bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-800 px-6 py-4">
         <div className="max-w-7xl mx-auto">
@@ -391,7 +389,7 @@ export function TypewriterTemplate({ title = "TypeWriter", notebookId }: Typewri
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 min-h-0 flex overflow-hidden">
         {/* Sidebar - Document List */}
         <div className="w-64 bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-800 overflow-y-auto">
           <div className="p-4">
@@ -439,7 +437,7 @@ export function TypewriterTemplate({ title = "TypeWriter", notebookId }: Typewri
         </div>
 
         {/* Main Editor */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
           {activeDocId ? (
             <>
               {/* Toolbar */}
@@ -579,7 +577,7 @@ export function TypewriterTemplate({ title = "TypeWriter", notebookId }: Typewri
               </div>
 
               {/* Text Editor */}
-              <div className="flex-1 overflow-hidden p-6">
+              <div className="flex-1 min-h-0 overflow-y-auto p-6">
                 <textarea
                   ref={textareaRef}
                   value={content}

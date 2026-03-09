@@ -128,7 +128,7 @@ export function AIToolbar({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 300 }}
       transition={{ duration: 0.2 }}
-      className="fixed right-0 top-0 h-full w-96 bg-white dark:bg-neutral-900 shadow-2xl border-l border-neutral-200 dark:border-neutral-800 z-50 flex flex-col overflow-hidden"
+      className="fixed right-0 top-0 h-full w-96 bg-white dark:bg-neutral-900 shadow-2xl border-l border-neutral-200 dark:border-neutral-800 z-[100] flex flex-col overflow-hidden"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 flex-shrink-0">

@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TemplateHeader } from './template-header';
 import { TemplateFooter } from './template-footer';
 import {
   Image as ImageIcon, Plus, Loader2, Trash2, Edit3, X, Search, FolderOpen,
@@ -69,6 +68,7 @@ export function ImagePromptTemplate({ title = "Image Prompts", notebookId }: Ima
   // AI & Upload state
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatingPromptId, setGeneratingPromptId] = useState<string | null>(null);
+  const [generateError, setGenerateError] = useState<string | null>(null);
   const [uploadingPromptId, setUploadingPromptId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -250,32 +250,55 @@ export function ImagePromptTemplate({ title = "Image Prompts", notebookId }: Ima
   // ─── Image Operations ────────────────────────────────────────────────────────
 
   const generateImage = async (promptId: string) => {
-    const prompt = activeProject?.prompts.find(p => p.id === promptId);
-    if (!prompt) return;
-    
+    const promptObj = activeProject?.prompts.find(p => p.id === promptId);
+    if (!promptObj || !activeProject) return;
+
+    if (!promptObj.prompt?.trim()) {
+      setGenerateError("Add prompt text first, then click Generate with AI.");
+      return;
+    }
+
+    setGenerateError(null);
     setIsGenerating(true);
     setGeneratingPromptId(promptId);
-    
+
     try {
-      // Simulate AI image generation (replace with actual API call)
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      const res = await fetch("/api/ai/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: promptObj.prompt.trim() }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setGenerateError(data.error || `Generation failed (${res.status})`);
+        return;
+      }
+
+      const imageUrl = data.url;
+      if (!imageUrl) {
+        setGenerateError("No image URL in response.");
+        return;
+      }
+
       const newImage: GeneratedImage = {
         id: Date.now().toString(),
-        url: `https://via.placeholder.com/512x512?text=${encodeURIComponent(prompt.prompt.substring(0, 30))}`,
+        url: imageUrl,
         generatedByAI: true,
-        uploadedAt: new Date().toISOString()
+        uploadedAt: new Date().toISOString(),
       };
-      
+
       updateProject({
-        prompts: activeProject!.prompts.map(p =>
+        prompts: activeProject.prompts.map(p =>
           p.id === promptId
             ? { ...p, images: [...p.images, newImage], updatedAt: new Date().toISOString() }
             : p
-        )
+        ),
       });
     } catch (error) {
       console.error("Generation error:", error);
+      setGenerateError(error instanceof Error ? error.message : "Failed to generate image.");
     } finally {
       setIsGenerating(false);
       setGeneratingPromptId(null);
@@ -341,9 +364,7 @@ export function ImagePromptTemplate({ title = "Image Prompts", notebookId }: Ima
   }) || [];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 dark:from-neutral-950 dark:to-neutral-900">
-      <TemplateHeader title={title} />
-      <div className="flex-1 overflow-y-auto">
+    <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50 dark:from-neutral-950 dark:to-neutral-900">
       {saving && (
         <div className="fixed top-20 right-6 flex items-center gap-2 text-sm text-neutral-500 bg-white dark:bg-neutral-800 px-3 py-2 rounded-lg shadow-lg z-50">
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -374,22 +395,20 @@ export function ImagePromptTemplate({ title = "Image Prompts", notebookId }: Ima
         </div>
       )}
 
-      {/* Header */}
-      <div className="bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border-b border-neutral-200 dark:border-neutral-800 sticky top-0 z-40">
+      <header className="flex-shrink-0 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border-b border-neutral-200 dark:border-neutral-800 z-40">
         <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
                 <ImageIcon className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="font-bold text-neutral-900 dark:text-white">{title}</h1>
+                <h1 className="font-bold text-neutral-900 dark:text-white">Image Prompts</h1>
                 <p className="text-xs text-neutral-500">
-                  {activeProject ? `${activeProject.prompts.length} prompts` : 'No project selected'}
+                  {activeProject ? `${activeProject.prompts.length} prompts` : "No project selected"}
                 </p>
               </div>
             </div>
-            
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowDocumentation(true)}
@@ -399,20 +418,19 @@ export function ImagePromptTemplate({ title = "Image Prompts", notebookId }: Ima
                 <Info className="h-4 w-4" />
               </button>
             </div>
-            
             <div className="flex gap-1 bg-neutral-100 dark:bg-neutral-800 p-1 rounded-xl">
               {[
-                { id: 'projects', label: 'Projects', icon: FolderOpen },
-                { id: 'prompts', label: 'Prompts', icon: Wand2 },
-                { id: 'gallery', label: 'Gallery', icon: Grid3x3 },
+                { id: "projects", label: "Projects", icon: FolderOpen },
+                { id: "prompts", label: "Prompts", icon: Wand2 },
+                { id: "gallery", label: "Gallery", icon: Grid3x3 },
               ].map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as typeof activeTab)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-all ${
                     activeTab === tab.id
-                      ? 'bg-white dark:bg-neutral-700 text-purple-600 shadow-sm'
-                      : 'text-neutral-600 dark:text-neutral-400'
+                      ? "bg-white dark:bg-neutral-700 text-purple-600 shadow-sm"
+                      : "text-neutral-600 dark:text-neutral-400"
                   }`}
                 >
                   <tab.icon className="w-4 h-4" />
@@ -422,8 +440,9 @@ export function ImagePromptTemplate({ title = "Image Prompts", notebookId }: Ima
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Projects Tab */}
         {activeTab === 'projects' && (
@@ -736,6 +755,13 @@ export function ImagePromptTemplate({ title = "Image Prompts", notebookId }: Ima
                   </div>
 
                   {/* Actions */}
+                  {generateError && (
+                    <p className="mb-2 text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+                      <X className="w-4 h-4 flex-shrink-0" />
+                      {generateError}
+                      <button type="button" onClick={() => setGenerateError(null)} className="ml-1 underline">Dismiss</button>
+                    </p>
+                  )}
                   <div className="flex gap-2">
                     <button
                       onClick={() => generateImage(prompt.id)}
