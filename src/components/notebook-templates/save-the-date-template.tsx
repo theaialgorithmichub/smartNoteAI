@@ -15,9 +15,12 @@ interface SaveTheDateTemplateProps {
 interface Event {
   id: number;
   title: string;
-  date: string;
+  date: string; // human-readable (e.g. Jan 5, 2026)
+  rawDate: string; // ISO yyyy-mm-dd for calculations/editing
   time: string;
   location?: string;
+  description?: string;
+  url?: string;
   reminder: boolean;
   daysUntil: number;
   category: string;
@@ -25,14 +28,32 @@ interface Event {
 
 export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplateProps) {
   const [events, setEvents] = useState<Event[]>([]);
-  const [newEvent, setNewEvent] = useState({ title: '', date: '', time: '', location: '', category: 'Personal' });
+  const [newEvent, setNewEvent] = useState({
+    title: '',
+    date: '',
+    time: '',
+    location: '',
+    category: 'Personal',
+    description: '',
+    url: '',
+  });
   const [upcomingAlerts, setUpcomingAlerts] = useState<Event[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; eventId: number | null; eventTitle: string }>({ show: false, eventId: null, eventTitle: '' });
   const [showDocumentation, setShowDocumentation] = useState(false);
   const [saving, setSaving] = useState(false);
   const [searchDate, setSearchDate] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
+  const [editingEventId, setEditingEventId] = useState<number | null>(null);
   const saveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const normalizeUrl = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+    if (!/^https?:\/\//i.test(trimmed)) return `https://${trimmed}`;
+    return trimmed;
+  };
+
+  const isSafeUrl = (value?: string) => !!value && /^https?:\/\//i.test(value);
 
   const saveData = () => {
     if (!notebookId) return;
@@ -56,7 +77,12 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
       const saved = localStorage.getItem(`save-the-date-${notebookId}`);
       if (saved) {
         const data = JSON.parse(saved);
-        setEvents(data.events || []);
+        const loaded: Event[] = (data.events || []).map((e: any) => ({
+          ...e,
+          // Backwards compatibility for older data
+          rawDate: e.rawDate || e.date,
+        }));
+        setEvents(loaded);
       }
     } catch (error) {
       console.error("Failed to load:", error);
@@ -69,6 +95,7 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
 
   // Calculate days until event
   const calculateDaysUntil = (eventDate: string) => {
+    if (!eventDate) return 0;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const event = new Date(eventDate);
@@ -84,7 +111,7 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
       setEvents(prevEvents => 
         prevEvents.map(event => ({
           ...event,
-          daysUntil: calculateDaysUntil(event.date)
+          daysUntil: calculateDaysUntil(event.rawDate || event.date)
         }))
       );
     };
@@ -100,22 +127,46 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
     setUpcomingAlerts(alerts);
   }, [events]);
 
-  const handleAddEvent = () => {
+  const handleSaveEvent = () => {
     if (!newEvent.title || !newEvent.date || !newEvent.time) return;
-    
+
+    const prettyDate = new Date(newEvent.date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+    const safeUrl = normalizeUrl(newEvent.url || '');
+
     const event: Event = {
-      id: Date.now(),
+      id: editingEventId ?? Date.now(),
       title: newEvent.title,
-      date: new Date(newEvent.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      date: prettyDate,
+      rawDate: newEvent.date,
       time: newEvent.time,
       location: newEvent.location,
+      description: newEvent.description,
+      url: safeUrl,
       reminder: true,
       daysUntil: calculateDaysUntil(newEvent.date),
-      category: newEvent.category
+      category: newEvent.category,
     };
-    
-    setEvents([...events, event]);
-    setNewEvent({ title: '', date: '', time: '', location: '', category: 'Personal' });
+
+    if (editingEventId) {
+      setEvents(events.map(e => (e.id === editingEventId ? event : e)));
+    } else {
+      setEvents([...events, event]);
+    }
+
+    setEditingEventId(null);
+    setNewEvent({
+      title: '',
+      date: '',
+      time: '',
+      location: '',
+      category: 'Personal',
+      description: '',
+      url: '',
+    });
   };
 
   const toggleReminder = (id: number) => {
@@ -248,6 +299,22 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
                 <option value="Social">Social</option>
               </select>
             </div>
+            <div className="space-y-3">
+              <textarea
+                placeholder="Description (optional)"
+                value={newEvent.description}
+                onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
+                rows={2}
+              />
+              <input
+                type="url"
+                placeholder="Event website URL (optional)"
+                value={newEvent.url}
+                onChange={(e) => setNewEvent({ ...newEvent, url: e.target.value })}
+                className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+              />
+            </div>
             <div className="grid md:grid-cols-4 gap-3">
               <input 
                 type="date" 
@@ -269,11 +336,11 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
                 className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500" 
               />
               <Button 
-                onClick={handleAddEvent}
+                onClick={handleSaveEvent}
                 className="bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:opacity-90"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Event
+                {editingEventId ? 'Save Changes' : 'Add Event'}
               </Button>
             </div>
           </div>
@@ -351,6 +418,24 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-bold text-neutral-900 dark:text-white">{event.title}</h3>
                         <button
+                          onClick={() => {
+                            const isoDate = event.rawDate || new Date(event.date).toISOString().split('T')[0];
+                            setNewEvent({
+                              title: event.title,
+                              date: isoDate,
+                              time: event.time,
+                              location: event.location || '',
+                              category: event.category,
+                              description: event.description || '',
+                              url: event.url || '',
+                            });
+                            setEditingEventId(event.id);
+                          }}
+                          className="px-2 py-1 text-xs bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button
                           onClick={() => toggleReminder(event.id)}
                           className={`p-1 rounded transition-colors ${
                             event.reminder 
@@ -381,6 +466,32 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
                           </div>
                         )}
                       </div>
+                      {event.description && (
+                        <p className="mt-3 text-sm text-neutral-700 dark:text-neutral-300">
+                          {event.description}
+                        </p>
+                      )}
+                      {isSafeUrl(event.url) && (
+                        <div className="mt-3 space-y-2">
+                          <a
+                            href={event.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-rose-600 dark:text-rose-400 hover:underline break-all"
+                          >
+                            {event.url}
+                          </a>
+                          <div className="rounded-lg overflow-hidden border border-neutral-200 dark:border-neutral-700 bg-neutral-900/5 h-48">
+                            <iframe
+                              src={event.url}
+                              title={event.title}
+                              className="w-full h-full border-0"
+                              loading="lazy"
+                              sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-right">

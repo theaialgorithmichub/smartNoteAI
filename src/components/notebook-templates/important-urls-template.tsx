@@ -71,27 +71,20 @@ export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTempla
   const platforms = ['YouTube', 'Instagram', 'Udemy', 'Vimeo', 'TikTok', 'Other'];
   const types = ['Entertainment', 'Study', 'Workout', 'Sports', 'Funny', 'Trailers', 'Gaming', 'Tutorial', 'Music', 'News'];
 
-  // Extract video ID and generate thumbnail
-  const getVideoThumbnail = (url: string, platform: string): string => {
+  // Extract video ID and generate thumbnail. Only YouTube has a reliable external thumbnail; others use in-card fallback.
+  const getVideoThumbnail = (url: string, platform: string): string | undefined => {
     try {
       if (platform === 'YouTube') {
         const videoIdMatch = url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})/);
         if (videoIdMatch && videoIdMatch[1]) {
           return `https://img.youtube.com/vi/${videoIdMatch[1]}/mqdefault.jpg`;
         }
-      } else if (platform === 'Instagram') {
-        return 'https://via.placeholder.com/320x180/E4405F/ffffff?text=Instagram';
-      } else if (platform === 'Udemy') {
-        return 'https://via.placeholder.com/320x180/A435F0/ffffff?text=Udemy';
-      } else if (platform === 'Vimeo') {
-        return 'https://via.placeholder.com/320x180/1AB7EA/ffffff?text=Vimeo';
-      } else if (platform === 'TikTok') {
-        return 'https://via.placeholder.com/320x180/000000/ffffff?text=TikTok';
       }
+      // Instagram, Udemy, Vimeo, TikTok, Other: no reliable thumbnail URL; card will show icon fallback
     } catch (e) {
       console.error('Error generating thumbnail:', e);
     }
-    return 'https://via.placeholder.com/320x180/6B7280/ffffff?text=Video';
+    return undefined;
   };
 
   const detectPlatform = (url: string): string => {
@@ -326,20 +319,30 @@ export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTempla
             const color = getPlatformColor(url.platform);
             return (
               <Card key={url.id} className="bg-white dark:bg-neutral-800 hover:shadow-lg transition-shadow overflow-hidden">
-                {/* Thumbnail */}
-                <div className="relative h-40 bg-neutral-200 dark:bg-neutral-700">
+                {/* Thumbnail or in-card fallback (no external placeholder so image always shows something) */}
+                <div className="relative h-40 bg-neutral-200 dark:bg-neutral-700 overflow-hidden">
                   {url.thumbnail ? (
-                    <img 
-                      src={url.thumbnail} 
-                      alt={url.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://via.placeholder.com/320x180/6B7280/ffffff?text=Video';
-                      }}
-                    />
+                    <>
+                      <img
+                        src={url.thumbnail}
+                        alt={url.title}
+                        className="w-full h-full object-cover absolute inset-0"
+                        onError={(e) => {
+                          const el = e.target as HTMLImageElement;
+                          el.style.display = 'none';
+                          const fallback = el.nextElementSibling as HTMLElement;
+                          if (fallback) fallback.classList.remove('hidden');
+                        }}
+                      />
+                      <div className="hidden absolute inset-0 w-full h-full bg-gradient-to-br from-neutral-500 to-neutral-700 flex flex-col items-center justify-center gap-1 text-white">
+                        {getPlatformIcon(url.platform)}
+                        <span className="text-xs opacity-90">Preview unavailable</span>
+                      </div>
+                    </>
                   ) : (
-                    <div className={`w-full h-full bg-gradient-to-br from-${color}-400 to-${color}-600 flex items-center justify-center`}>
+                    <div className="w-full h-full bg-gradient-to-br from-neutral-500 to-neutral-700 flex flex-col items-center justify-center gap-1 text-white">
                       {getPlatformIcon(url.platform)}
+                      <span className="text-xs opacity-90">{url.platform}</span>
                     </div>
                   )}
                   <div className="absolute top-2 right-2">
