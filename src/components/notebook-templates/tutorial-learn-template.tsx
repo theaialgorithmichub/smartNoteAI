@@ -173,7 +173,7 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
       let pageId = pageIdRef.current;
-      if (!pageId) pageId = await ensureTemplatePage() ?? undefined;
+      if (!pageId) pageId = await ensureTemplatePage();
       if (pageId) pageIdRef.current = pageId;
       if (!pageId) return;
       setSaving(true);
