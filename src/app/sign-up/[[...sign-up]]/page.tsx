@@ -14,7 +14,7 @@ export default function SignUpPage() {
           <div className="flex justify-between items-center h-16">
             <Link href="/" className="flex items-center gap-2">
               <BookOpen className="h-8 w-8 text-amber-500" />
-              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-500">SmartNote AI</span>
+              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-orange-500">smartDigitalNotes</span>
             </Link>
             <Link 
               href="/sign-in" 

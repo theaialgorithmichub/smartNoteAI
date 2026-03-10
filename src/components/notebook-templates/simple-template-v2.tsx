@@ -106,7 +106,7 @@ export function SimpleTemplate({
       const { PDFExporter } = await import('@/lib/pdf-export')
       const exporter = new PDFExporter({
         title: title,
-        author: 'SmartNote AI',
+        author: 'smartDigitalNotes',
         includeHeader: true,
         includeFooter: true,
         includePageNumbers: true,

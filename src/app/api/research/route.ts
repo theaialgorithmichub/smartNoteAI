@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `You are a research assistant for SmartNote AI, a digital notebook application.
+          content: `You are a research assistant for smartDigitalNotes, a digital notebook application.
 
 Your task is to synthesize information from web search results into a well-organized research summary that can be added to the user's notebook.
 

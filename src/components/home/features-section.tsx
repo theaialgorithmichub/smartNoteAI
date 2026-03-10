@@ -60,7 +60,7 @@ export function FeaturesSection() {
 
           <h2 className="text-4xl md:text-5xl font-bold mt-5 text-center">
             <span className="bg-clip-text text-transparent bg-gradient-to-b from-neutral-900 to-neutral-600 dark:from-neutral-50 dark:to-neutral-400">Why </span>
-            <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, var(--theme-primary), var(--theme-accent))' }}>SmartNote AI</span>
+            <span className="bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(to right, var(--theme-primary), var(--theme-accent))' }}>smartDigitalNotes</span>
             <span className="bg-clip-text text-transparent bg-gradient-to-b from-neutral-900 to-neutral-600 dark:from-neutral-50 dark:to-neutral-400">?</span>
           </h2>
           <p className="text-center mt-5 text-neutral-600 dark:text-neutral-400 text-lg">

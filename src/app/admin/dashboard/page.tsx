@@ -161,7 +161,7 @@ export default function AdminDashboard() {
             Admin Dashboard
           </h1>
           <p className="text-slate-600 dark:text-slate-300">
-            Manage your SmartNote AI platform
+            Manage your smartDigitalNotes platform
           </p>
         </motion.div>
 

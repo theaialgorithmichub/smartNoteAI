@@ -12,7 +12,7 @@ export function TemplateFooter() {
           <div className="flex items-center gap-2 text-sm text-neutral-600 dark:text-neutral-400">
             <span>Made with</span>
             <Heart className="h-4 w-4 text-red-500 fill-red-500 animate-pulse" />
-            <span>by SmartNote AI</span>
+            <span>by smartDigitalNotes</span>
           </div>
 
           {/* Center - Links */}
@@ -65,7 +65,7 @@ export function TemplateFooter() {
 
         {/* Copyright */}
         <div className="mt-4 pt-4 border-t border-neutral-200 dark:border-neutral-800 text-center text-xs text-neutral-500 dark:text-neutral-500">
-          © {new Date().getFullYear()} SmartNote AI. All rights reserved.
+          © {new Date().getFullYear()} smartDigitalNotes. All rights reserved.
         </div>
       </div>
     </footer>
