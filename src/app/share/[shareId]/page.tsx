@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { SharedTemplateRenderer } from '@/components/sharing/SharedTemplateRenderer';
+import { isJsonTemplate } from '@/lib/shared-template-config';
 
 export default function SharedNotebookPage() {
   const params = useParams();
@@ -261,13 +263,20 @@ export default function SharedNotebookPage() {
         </Card>
 
         {/* Notebook Content */}
-        <Card className="p-8 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm">
+        <Card className="p-8 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm overflow-hidden">
           {shareData?.watermark && (
             <div className="text-center text-slate-400 dark:text-slate-600 text-sm mb-6 pb-4 border-b border-neutral-200 dark:border-neutral-800">
               {shareData.watermark}
             </div>
           )}
 
+          {notebookData?.template && isJsonTemplate(notebookData.template) ? (
+            <SharedTemplateRenderer
+              templateId={notebookData.template}
+              notebookTitle={notebookData.title || 'Shared Notebook'}
+              pagesData={pagesData}
+            />
+          ) : (
           <div className="prose dark:prose-invert max-w-none">
             {notebookData && typeof notebookData === 'object' && 'title' in notebookData ? (
               <div>
@@ -296,6 +305,7 @@ export default function SharedNotebookPage() {
               <p className="text-center text-slate-500">Loading notebook content...</p>
             )}
           </div>
+          )}
         </Card>
 
         {/* Footer */}

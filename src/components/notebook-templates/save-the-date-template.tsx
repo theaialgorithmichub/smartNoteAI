@@ -8,16 +8,11 @@ import { TemplateFooter } from './template-footer';
 import { Button } from '@/components/ui/button';
 import AnimatedCardStack, { AnimatedCardItem } from '@/components/ui/animate-card-animation';
 
-interface SaveTheDateTemplateProps {
-  title: string;
-  notebookId?: string;
-}
-
-interface Event {
+export interface SaveTheDateEvent {
   id: number;
   title: string;
-  date: string; // human-readable (e.g. Jan 5, 2026)
-  rawDate: string; // ISO yyyy-mm-dd for calculations/editing
+  date: string;
+  rawDate: string;
   time: string;
   location?: string;
   description?: string;
@@ -27,8 +22,19 @@ interface Event {
   category: string;
 }
 
-export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplateProps) {
-  const [events, setEvents] = useState<Event[]>([]);
+interface SaveTheDateTemplateProps {
+  title: string;
+  notebookId?: string;
+  /** Read-only mode for shared links: no API calls, no add/edit/delete */
+  readOnly?: boolean;
+  /** Pre-loaded events when in read-only mode (e.g. from shared page) */
+  initialEvents?: SaveTheDateEvent[];
+}
+
+type Event = SaveTheDateEvent;
+
+export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents }: SaveTheDateTemplateProps) {
+  const [events, setEvents] = useState<Event[]>(readOnly && initialEvents ? initialEvents : []);
   const [newEvent, setNewEvent] = useState({
     title: '',
     date: '',
@@ -88,8 +94,12 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
     return id;
   }, [notebookId]);
 
-  // Load from DB on mount
+  // Load from DB on mount (skip when readOnly with initialEvents)
   useEffect(() => {
+    if (readOnly && initialEvents) {
+      setLoadDone(true);
+      return;
+    }
     if (!notebookId) {
       setLoadDone(true);
       return;
@@ -186,8 +196,9 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
   }, [notebookId, events, ensureTemplatePage]);
 
   useEffect(() => {
+    if (readOnly) return;
     if (loadDone) persistToDb();
-  }, [events, loadDone, persistToDb]);
+  }, [events, loadDone, persistToDb, readOnly]);
 
   // Calculate days until event
   const calculateDaysUntil = (eventDate: string) => {
@@ -318,8 +329,7 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
   // Upcoming events for animated cards (only events with valid URLs and in the future)
   const upcomingEventsForCards = events
     .filter(e => e.daysUntil >= 0 && isSafeUrl(e.url))
-    .sort((a, b) => a.daysUntil - b.daysUntil)
-    .slice(0, 3);
+    .sort((a, b) => a.daysUntil - b.daysUntil);
 
   const upcomingCardItems: AnimatedCardItem[] = upcomingEventsForCards.map(e => ({
     id: e.id,
@@ -345,13 +355,15 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
             <h1 className="text-4xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">
               {title}
             </h1>
-            <button
-              onClick={() => setShowDocumentation(true)}
-              className="p-2 bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-lg hover:bg-rose-200 dark:hover:bg-rose-900/50 transition-colors"
-              title="Know More"
-            >
-              <Info className="h-5 w-5" />
-            </button>
+            {!readOnly && (
+              <button
+                onClick={() => setShowDocumentation(true)}
+                className="p-2 bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 rounded-lg hover:bg-rose-200 dark:hover:bg-rose-900/50 transition-colors"
+                title="Know More"
+              >
+                <Info className="h-5 w-5" />
+              </button>
+            )}
           </div>
           <p className="text-neutral-600 dark:text-neutral-400">Never miss an important date</p>
         </div>
@@ -394,16 +406,18 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
           </Card>
         </div>
 
-        {/* Upcoming events animated cards */}
-        {upcomingCardItems.length > 0 && (
-          <Card className="mt-4 p-4 bg-white dark:bg-neutral-800">
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <div>
-                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Upcoming events</h3>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                  Shows your next events with live website previews.
-                </p>
-              </div>
+        {/* Upcoming events section - always visible */}
+        <Card className="mt-4 p-4 bg-white dark:bg-neutral-800">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div>
+              <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Upcoming events</h3>
+              <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                {upcomingCardItems.length > 0
+                  ? 'Shows your next events with live website previews.'
+                  : 'Events with a future date and a link appear here.'}
+              </p>
+            </div>
+            {upcomingCardItems.length > 0 && (
               <Button
                 size="sm"
                 variant="outline"
@@ -412,15 +426,24 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
               >
                 {showUpcomingCards ? 'Hide' : 'Show'} upcoming events
               </Button>
-            </div>
-            {showUpcomingCards && (
+            )}
+          </div>
+          {upcomingCardItems.length > 0 ? (
+            showUpcomingCards && (
               <div className="mt-2">
                 <AnimatedCardStack items={upcomingCardItems} />
               </div>
-            )}
-          </Card>
-        )}
+            )
+          ) : (
+            <div className="mt-4 py-6 text-center rounded-lg bg-neutral-50 dark:bg-neutral-700/30 border border-dashed border-neutral-200 dark:border-neutral-600">
+              <CalendarDays className="h-10 w-10 text-neutral-400 mx-auto mb-2" />
+              <p className="text-sm text-neutral-600 dark:text-neutral-400">No upcoming events</p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-500 mt-1">Create an event with a future date and a URL to see it here with a live preview.</p>
+            </div>
+          )}
+        </Card>
 
+        {!readOnly && (
         <div className="flex flex-wrap gap-3">
           <Button
             onClick={() => { setEditingEventId(null); setNewEvent({ title: '', date: '', time: '', location: '', category: 'Personal', description: '', url: '' }); setShowAddEventPopup(true); }}
@@ -438,6 +461,7 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
             Search and Filter Events
           </Button>
         </div>
+        )}
 
         {events.length === 0 ? (
           <Card className="p-12 bg-white dark:bg-neutral-800 text-center">
@@ -462,36 +486,40 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-bold text-neutral-900 dark:text-white">{event.title}</h3>
-                        <button
-                          onClick={() => {
-                            const isoDate = event.rawDate || new Date(event.date).toISOString().split('T')[0];
-                            setNewEvent({
-                              title: event.title,
-                              date: isoDate,
-                              time: event.time,
-                              location: event.location || '',
-                              category: event.category,
-                              description: event.description || '',
-                              url: event.url || '',
-                            });
-                            setEditingEventId(event.id);
-                            setShowAddEventPopup(true);
-                          }}
-                          className="px-2 py-1 text-xs bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => toggleReminder(event.id)}
-                          className={`p-1 rounded transition-colors ${
-                            event.reminder 
-                              ? 'text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30' 
-                              : 'text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700'
-                          }`}
-                          title={event.reminder ? 'Reminder ON' : 'Reminder OFF'}
-                        >
-                          <Bell className={`h-4 w-4 ${event.reminder ? 'fill-amber-600' : ''}`} />
-                        </button>
+                        {!readOnly && (
+                          <>
+                            <button
+                              onClick={() => {
+                                const isoDate = event.rawDate || new Date(event.date).toISOString().split('T')[0];
+                                setNewEvent({
+                                  title: event.title,
+                                  date: isoDate,
+                                  time: event.time,
+                                  location: event.location || '',
+                                  category: event.category,
+                                  description: event.description || '',
+                                  url: event.url || '',
+                                });
+                                setEditingEventId(event.id);
+                                setShowAddEventPopup(true);
+                              }}
+                              className="px-2 py-1 text-xs bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => toggleReminder(event.id)}
+                              className={`p-1 rounded transition-colors ${
+                                event.reminder 
+                                  ? 'text-amber-600 hover:bg-amber-100 dark:hover:bg-amber-900/30' 
+                                  : 'text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-700'
+                              }`}
+                              title={event.reminder ? 'Reminder ON' : 'Reminder OFF'}
+                            >
+                              <Bell className={`h-4 w-4 ${event.reminder ? 'fill-amber-600' : ''}`} />
+                            </button>
+                          </>
+                        )}
                         <span className={`px-2 py-1 bg-${color}-200 dark:bg-${color}-900/40 text-${color}-700 dark:text-${color}-400 rounded text-xs font-medium`}>
                           {event.category}
                         </span>
@@ -554,13 +582,15 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
                           {!isPast && event.daysUntil > 0 && <p className="text-xs">days left</p>}
                         </div>
                       </div>
-                      <button
-                        onClick={() => deleteEvent(event.id, event.title)}
-                        className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                        title="Delete event"
-                      >
-                        <Trash2 className="h-4 w-4 text-red-600" />
-                      </button>
+                      {!readOnly && (
+                        <button
+                          onClick={() => deleteEvent(event.id, event.title)}
+                          className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                          title="Delete event"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </Card>

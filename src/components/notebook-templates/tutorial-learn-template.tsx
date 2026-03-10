@@ -56,13 +56,32 @@ interface Project {
   createdAt: string;
 }
 
+export interface TutorialLearnProject {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  steps: TutorialLearnStep[];
+  createdAt: string;
+}
+
+export interface TutorialLearnStep {
+  id: string;
+  name: string;
+  sections: { id: string; name: string; text: string; imageUrls?: string[]; url?: string }[];
+  isCompleted: boolean;
+  order: number;
+}
+
 interface TutorialLearnTemplateProps {
   title: string;
   notebookId?: string;
+  readOnly?: boolean;
+  initialProjects?: TutorialLearnProject[];
 }
 
-export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTemplateProps) {
-  const [projects, setProjects] = useState<Project[]>([]);
+export function TutorialLearnTemplate({ title, notebookId, readOnly, initialProjects }: TutorialLearnTemplateProps) {
+  const [projects, setProjects] = useState<Project[]>(readOnly && initialProjects ? initialProjects : []);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   const [isAddingProject, setIsAddingProject] = useState(false);
@@ -107,6 +126,10 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
   }, [notebookId]);
 
   useEffect(() => {
+    if (readOnly && initialProjects) {
+      setLoadDone(true);
+      return;
+    }
     if (!notebookId) {
       setLoadDone(true);
       return;
@@ -169,7 +192,7 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
   }, [notebookId]);
 
   const persistToDb = useCallback(() => {
-    if (!notebookId || !loadDone) return;
+    if (readOnly || !notebookId || !loadDone) return;
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
       let pageId = pageIdRef.current;
@@ -215,11 +238,12 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
         setSaving(false);
       }
     }, 500);
-  }, [notebookId, projects, loadDone, ensureTemplatePage]);
+  }, [notebookId, projects, loadDone, ensureTemplatePage, readOnly]);
 
   useEffect(() => {
+    if (readOnly) return;
     if (loadDone) persistToDb();
-  }, [projects, loadDone, persistToDb]);
+  }, [projects, loadDone, persistToDb, readOnly]);
 
   useEffect(() => {
     if (editingProjectId) {
@@ -522,15 +546,17 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
     <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-neutral-950 dark:to-neutral-900">
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-8">
         <div className="max-w-7xl mx-auto space-y-6">
-          <div className="flex justify-end mb-4">
-            <button
-              onClick={() => setShowDocumentation(true)}
-              className="p-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors"
-              title="Documentation"
-            >
-              <Info className="h-5 w-5" />
-            </button>
-          </div>
+          {!readOnly && (
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={() => setShowDocumentation(true)}
+                className="p-2 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors"
+                title="Documentation"
+              >
+                <Info className="h-5 w-5" />
+              </button>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
@@ -549,14 +575,16 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
                     <Layers className="w-5 h-5 text-indigo-500" />
                     Projects
                   </h3>
-                  <Button
-                    onClick={() => setIsAddingProject(true)}
-                    size="sm"
-                    className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:opacity-90"
-                  >
-                    <Plus className="w-4 h-4 mr-1" />
-                    New
-                  </Button>
+                  {!readOnly && (
+                    <Button
+                      onClick={() => setIsAddingProject(true)}
+                      size="sm"
+                      className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:opacity-90"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      New
+                    </Button>
+                  )}
                 </div>
 
                 <div className="space-y-2 mb-3">
@@ -615,15 +643,17 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
                             </span>
                           </div>
                         </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteProject(project.id);
-                          }}
-                          className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {!readOnly && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteProject(project.id);
+                            }}
+                            className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </motion.div>
                   ))}
@@ -651,16 +681,18 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
                         <span className="text-xs px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
                           {currentProject.category || 'AI'}
                         </span>
-                        <button
-                          onClick={() => {
-                            setNewProject({ name: currentProject.name, description: currentProject.description, category: currentProject.category || 'AI' });
-                            setEditingProjectId(currentProject.id);
-                          }}
-                          className="p-1.5 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded transition-colors"
-                          title="Edit project"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
+                        {!readOnly && (
+                          <button
+                            onClick={() => {
+                              setNewProject({ name: currentProject.name, description: currentProject.description, category: currentProject.category || 'AI' });
+                              setEditingProjectId(currentProject.id);
+                            }}
+                            className="p-1.5 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded transition-colors"
+                            title="Edit project"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                       {currentProject.description && (
                         <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
@@ -677,14 +709,16 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
                         <Download className="w-4 h-4 mr-1" />
                         Export PDF
                       </Button>
-                      <Button
-                        onClick={() => setIsAddingStep(true)}
-                        size="sm"
-                        className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:opacity-90"
-                      >
-                        <Plus className="w-4 h-4 mr-1" />
-                        Add Step
-                      </Button>
+                      {!readOnly && (
+                        <Button
+                          onClick={() => setIsAddingStep(true)}
+                          size="sm"
+                          className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:opacity-90"
+                        >
+                          <Plus className="w-4 h-4 mr-1" />
+                          Add Step
+                        </Button>
+                      )}
                     </div>
                   </div>
 
@@ -706,21 +740,25 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3 flex-1">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleStepCompletion(step.id);
-                                }}
-                                className="p-1 hover:bg-white/50 dark:hover:bg-neutral-700/50 rounded transition-colors"
-                              >
-                                {step.isCompleted ? (
-                                  <CheckCircle className="w-5 h-5 text-green-600" />
-                                ) : (
-                                  <Circle className="w-5 h-5 text-neutral-400" />
-                                )}
-                              </button>
+                              {!readOnly ? (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleStepCompletion(step.id);
+                                  }}
+                                  className="p-1 hover:bg-white/50 dark:hover:bg-neutral-700/50 rounded transition-colors"
+                                >
+                                  {step.isCompleted ? (
+                                    <CheckCircle className="w-5 h-5 text-green-600" />
+                                  ) : (
+                                    <Circle className="w-5 h-5 text-neutral-400" />
+                                  )}
+                                </button>
+                              ) : (
+                                step.isCompleted ? <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" /> : <Circle className="w-5 h-5 text-neutral-400 flex-shrink-0" />
+                              )}
                               <div className="flex-1 min-w-0">
-                                {editingStepId === step.id ? (
+                                {!readOnly && editingStepId === step.id ? (
                                   <div className="flex items-center gap-2">
                                     <span className="text-neutral-500 text-sm">Step {index + 1}:</span>
                                     <input
@@ -743,13 +781,15 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
                                   <>
                                     <h3 className="font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
                                       Step {index + 1}: {step.name}
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); setEditingStepId(step.id); }}
-                                        className="p-0.5 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded"
-                                        title="Edit step name"
-                                      >
-                                        <Edit2 className="w-3.5 h-3.5" />
-                                      </button>
+                                      {!readOnly && (
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); setEditingStepId(step.id); }}
+                                          className="p-0.5 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded"
+                                          title="Edit step name"
+                                        >
+                                          <Edit2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      )}
                                     </h3>
                                     <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                                       {step.sections.length} section{step.sections.length !== 1 ? 's' : ''}
@@ -759,15 +799,17 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  deleteStep(step.id);
-                                }}
-                                className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
+                              {!readOnly && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteStep(step.id);
+                                  }}
+                                  className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )}
                               {expandedSteps.has(step.id) ? (
                                 <ChevronDown className="w-5 h-5 text-neutral-500" />
                               ) : (
@@ -795,21 +837,23 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
                                       <h4 className="font-medium text-neutral-900 dark:text-white">
                                         {section.name}
                                       </h4>
-                                      <div className="flex gap-1">
-                                        <button
-                                          onClick={() => openEditSection(step.id, section)}
-                                          className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
-                                          title="Edit section"
-                                        >
-                                          <Edit2 className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                          onClick={() => deleteSection(step.id, section.id)}
-                                          className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-                                        >
-                                          <Trash2 className="w-4 h-4" />
-                                        </button>
-                                      </div>
+                                      {!readOnly && (
+                                        <div className="flex gap-1">
+                                          <button
+                                            onClick={() => openEditSection(step.id, section)}
+                                            className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
+                                            title="Edit section"
+                                          >
+                                            <Edit2 className="w-4 h-4" />
+                                          </button>
+                                          <button
+                                            onClick={() => deleteSection(step.id, section.id)}
+                                            className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </button>
+                                        </div>
+                                      )}
                                     </div>
 
                                     <p className="text-sm text-neutral-600 dark:text-neutral-300 whitespace-pre-wrap">
@@ -845,18 +889,20 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
                                   </div>
                                 ))}
 
-                                <Button
-                                  onClick={() => {
-                                    setNewSection({ name: '', text: '', imageUrls: [], url: '' });
-                                    setIsAddingSection(step.id);
-                                  }}
-                                  size="sm"
-                                  variant="outline"
-                                  className="w-full border-dashed border-2"
-                                >
-                                  <Plus className="w-4 h-4 mr-1" />
-                                  Add Section
-                                </Button>
+                                {!readOnly && (
+                                  <Button
+                                    onClick={() => {
+                                      setNewSection({ name: '', text: '', imageUrls: [], url: '' });
+                                      setIsAddingSection(step.id);
+                                    }}
+                                    size="sm"
+                                    variant="outline"
+                                    className="w-full border-dashed border-2"
+                                  >
+                                    <Plus className="w-4 h-4 mr-1" />
+                                    Add Section
+                                  </Button>
+                                )}
                               </div>
                             </motion.div>
                           )}
