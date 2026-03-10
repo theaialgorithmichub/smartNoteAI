@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   BookOpen, 
@@ -19,18 +19,24 @@ import {
   Type,
   Layers,
   CheckCircle,
-  Circle
+  Circle,
+  Search,
+  Link as LinkIcon,
+  Loader2
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { TemplateFooter } from './template-footer';
 
+const PROJECT_CATEGORIES = ['AI', 'Prompting', 'Software', 'Ecommerce'] as const;
+
 interface Section {
   id: string;
   name: string;
   text: string;
-  imageUrl?: string;
-  imageFile?: File;
+  imageUrl?: string; // deprecated, use imageUrls
+  imageUrls?: string[]; // Cloudinary URLs
+  url?: string;
 }
 
 interface Step {
@@ -45,6 +51,7 @@ interface Project {
   id: string;
   name: string;
   description: string;
+  category: string;
   steps: Step[];
   createdAt: string;
 }
@@ -61,61 +68,165 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
   const [isAddingProject, setIsAddingProject] = useState(false);
   const [isAddingStep, setIsAddingStep] = useState(false);
   const [isAddingSection, setIsAddingSection] = useState<string | null>(null);
-  const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [editingSectionId, setEditingSectionId] = useState<{ stepId: string; sectionId: string } | null>(null);
   const [showDocumentation, setShowDocumentation] = useState(false);
   const [saving, setSaving] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [currentImageSection, setCurrentImageSection] = useState<string | null>(null);
+  const sectionFormImageRef = useRef<HTMLInputElement>(null);
+  const [projectSearch, setProjectSearch] = useState('');
+  const [projectCategoryFilter, setProjectCategoryFilter] = useState<string>('All');
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [editingStepId, setEditingStepId] = useState<string | null>(null);
 
-  const [newProject, setNewProject] = useState({ name: '', description: '' });
+  const [newProject, setNewProject] = useState({ name: '', description: '', category: 'AI' as string });
   const [newStep, setNewStep] = useState({ name: '' });
-  const [newSection, setNewSection] = useState({ name: '', text: '' });
+  const [newSection, setNewSection] = useState({ name: '', text: '', imageUrls: [] as string[], url: '' });
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [loadDone, setLoadDone] = useState(false);
+  const pageIdRef = useRef<string | null>(null);
 
-  const saveData = () => {
-    if (!notebookId) return;
+  const TEMPLATE_PAGE_TITLE = '__tutorial_learn_template__';
+
+  const ensureTemplatePage = useCallback(async (): Promise<string | null> => {
+    if (!notebookId) return null;
+    const res = await fetch(`/api/notebooks/${notebookId}/pages`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    const pages: any[] = json.pages ?? [];
+    const existing = pages.find((p: any) => p.title === TEMPLATE_PAGE_TITLE);
+    if (existing) return typeof existing._id === 'string' ? existing._id : String(existing._id);
+    const cr = await fetch(`/api/notebooks/${notebookId}/pages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: TEMPLATE_PAGE_TITLE, content: JSON.stringify({ projects: [] }) }),
+    });
+    if (!cr.ok) return null;
+    const created = await cr.json();
+    const page = created.page ?? created;
+    return page?._id != null ? String(page._id) : null;
+  }, [notebookId]);
+
+  useEffect(() => {
+    if (!notebookId) {
+      setLoadDone(true);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/notebooks/${notebookId}/pages`);
+        if (!res.ok) {
+          setLoadDone(true);
+          return;
+        }
+        const json = await res.json();
+        const pages: any[] = json.pages ?? [];
+        const existing = pages.find((p: any) => p.title === TEMPLATE_PAGE_TITLE);
+        if (cancelled) return;
+        if (existing) {
+          pageIdRef.current = typeof existing._id === 'string' ? existing._id : String(existing._id);
+          try {
+            const data = typeof existing.content === 'string' ? JSON.parse(existing.content || '{}') : existing.content || {};
+            const list = Array.isArray(data.projects) ? data.projects : [];
+            const loaded = list.map((p: any) => ({
+              ...p,
+              category: p.category || 'AI',
+              steps: (p.steps || []).map((s: any) => ({
+                ...s,
+                sections: (s.sections || []).map((sec: any) => ({
+                  ...sec,
+                  url: sec.url || '',
+                  imageUrls: Array.isArray(sec.imageUrls) ? sec.imageUrls : (sec.imageUrl ? [sec.imageUrl] : [])
+                }))
+              }))
+            }));
+            setProjects(loaded);
+          } catch {
+            await fetch(`/api/notebooks/${notebookId}/pages/${existing._id}`, { method: 'DELETE' });
+          }
+        } else {
+          const cr = await fetch(`/api/notebooks/${notebookId}/pages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: TEMPLATE_PAGE_TITLE, content: JSON.stringify({ projects: [] }) }),
+          });
+          if (!cr.ok) {
+            setLoadDone(true);
+            return;
+          }
+          const created = await cr.json();
+          const page = created.page ?? created;
+          const id = page?._id != null ? String(page._id) : null;
+          if (!cancelled && id) pageIdRef.current = id;
+        }
+      } catch (err) {
+        console.error('Tutorial Learn load failed:', err);
+      } finally {
+        if (!cancelled) setLoadDone(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [notebookId]);
+
+  const persistToDb = useCallback(() => {
+    if (!notebookId || !loadDone) return;
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    
-    saveTimeoutRef.current = setTimeout(() => {
+    saveTimeoutRef.current = setTimeout(async () => {
+      let pageId = pageIdRef.current;
+      if (!pageId) pageId = await ensureTemplatePage() ?? undefined;
+      if (pageId) pageIdRef.current = pageId;
+      if (!pageId) return;
       setSaving(true);
       try {
         const dataToSave = projects.map(project => ({
           ...project,
+          category: project.category || 'AI',
           steps: project.steps.map(step => ({
             ...step,
             sections: step.sections.map(section => ({
               id: section.id,
               name: section.name,
               text: section.text,
-              imageUrl: section.imageUrl
+              imageUrls: section.imageUrls ?? (section.imageUrl ? [section.imageUrl] : []),
+              url: section.url
             }))
           }))
         }));
-        localStorage.setItem(`tutorial-learn-${notebookId}`, JSON.stringify({ projects: dataToSave }));
-      } catch (error) {
-        console.error("Failed to save:", error);
+        const patchRes = await fetch(`/api/notebooks/${notebookId}/pages/${pageId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: TEMPLATE_PAGE_TITLE, content: JSON.stringify({ projects: dataToSave }) }),
+        });
+        if (patchRes.status === 404) {
+          pageIdRef.current = null;
+          const newId = await ensureTemplatePage();
+          if (newId) {
+            pageIdRef.current = newId;
+            await fetch(`/api/notebooks/${notebookId}/pages/${newId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ title: TEMPLATE_PAGE_TITLE, content: JSON.stringify({ projects: dataToSave }) }),
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Tutorial Learn persist failed:', err);
       } finally {
         setSaving(false);
       }
     }, 500);
-  };
+  }, [notebookId, projects, loadDone, ensureTemplatePage]);
 
   useEffect(() => {
-    if (!notebookId) return;
-    try {
-      const saved = localStorage.getItem(`tutorial-learn-${notebookId}`);
-      if (saved) {
-        const data = JSON.parse(saved);
-        setProjects(data.projects || []);
-      }
-    } catch (error) {
-      console.error("Failed to load:", error);
+    if (loadDone) persistToDb();
+  }, [projects, loadDone, persistToDb]);
+
+  useEffect(() => {
+    if (editingProjectId) {
+      const proj = projects.find(p => p.id === editingProjectId);
+      if (proj) setNewProject({ name: proj.name, description: proj.description, category: proj.category || 'AI' });
     }
-  }, [notebookId]);
-
-  useEffect(() => {
-    saveData();
-  }, [projects]);
+  }, [editingProjectId, projects]);
 
   const addProject = () => {
     if (!newProject.name.trim()) return;
@@ -123,13 +234,30 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
       id: Date.now().toString(),
       name: newProject.name,
       description: newProject.description,
+      category: newProject.category || 'AI',
       steps: [],
       createdAt: new Date().toISOString()
     };
     setProjects([project, ...projects]);
     setSelectedProject(project.id);
-    setNewProject({ name: '', description: '' });
+    setNewProject({ name: '', description: '', category: 'AI' });
     setIsAddingProject(false);
+  };
+
+  const updateProject = (updates: Partial<Pick<Project, 'name' | 'description' | 'category'>>) => {
+    if (!editingProjectId) return;
+    setProjects(projects.map(p => p.id === editingProjectId ? { ...p, ...updates } : p));
+    setEditingProjectId(null);
+  };
+
+  const updateStepName = (stepId: string, name: string) => {
+    if (!selectedProject) return;
+    setProjects(projects.map(p =>
+      p.id === selectedProject
+        ? { ...p, steps: p.steps.map(s => s.id === stepId ? { ...s, name } : s) }
+        : p
+    ));
+    setEditingStepId(null);
   };
 
   const deleteProject = (id: string) => {
@@ -192,7 +320,9 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
     const section: Section = {
       id: Date.now().toString(),
       name: newSection.name,
-      text: newSection.text
+      text: newSection.text,
+      imageUrls: newSection.imageUrls.length ? newSection.imageUrls : undefined,
+      url: newSection.url?.trim() || undefined
     };
 
     setProjects(projects.map(p => 
@@ -207,8 +337,47 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
           }
         : p
     ));
-    setNewSection({ name: '', text: '' });
+    setNewSection({ name: '', text: '', imageUrls: [], url: '' });
     setIsAddingSection(null);
+  };
+
+  const saveSectionEdit = () => {
+    if (!selectedProject || !editingSectionId) return;
+    const { stepId, sectionId } = editingSectionId;
+    updateSection(stepId, sectionId, {
+      name: newSection.name,
+      text: newSection.text,
+      imageUrls: newSection.imageUrls.length ? newSection.imageUrls : undefined,
+      url: newSection.url?.trim() || undefined
+    });
+    setNewSection({ name: '', text: '', imageUrls: [], url: '' });
+    setEditingSectionId(null);
+  };
+
+  const openEditSection = (stepId: string, section: Section) => {
+    const urls = section.imageUrls ?? (section.imageUrl ? [section.imageUrl] : []);
+    setNewSection({
+      name: section.name,
+      text: section.text,
+      imageUrls: urls,
+      url: section.url || ''
+    });
+    setEditingSectionId({ stepId, sectionId: section.id });
+  };
+
+  const uploadImagesToCloudinary = async (files: File[]): Promise<string[]> => {
+    const urls: string[] = [];
+    for (const file of files) {
+      const form = new FormData();
+      form.append('file', file);
+      form.append('type', 'attachment');
+      const res = await fetch('/api/upload', { method: 'POST', body: form });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.url) urls.push(json.url);
+      }
+    }
+    return urls;
   };
 
   const updateSection = (stepId: string, sectionId: string, updates: Partial<Section>) => {
@@ -246,17 +415,6 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
           }
         : p
     ));
-  };
-
-  const handleImageUpload = (stepId: string, sectionId: string, event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      updateSection(stepId, sectionId, { imageUrl: reader.result as string });
-    };
-    reader.readAsDataURL(file);
   };
 
   const toggleStepExpansion = (stepId: string) => {
@@ -317,16 +475,22 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
             yPosition += splitText.length * 6;
           }
 
-          if (section.imageUrl) {
+          const imgs = section.imageUrls ?? (section.imageUrl ? [section.imageUrl] : []);
+          for (const imgUrl of imgs) {
             if (yPosition > pageHeight - 80) {
               doc.addPage();
               yPosition = 20;
             }
             try {
-              doc.addImage(section.imageUrl, 'JPEG', margin + 5, yPosition, 80, 60);
+              doc.addImage(imgUrl, 'JPEG', margin + 5, yPosition, 80, 60);
               yPosition += 65;
-            } catch (error) {
-              console.error('Error adding image:', error);
+            } catch {
+              try {
+                doc.addImage(imgUrl, 'PNG', margin + 5, yPosition, 80, 60);
+                yPosition += 65;
+              } catch (error) {
+                console.error('Error adding image:', error);
+              }
             }
           }
 
@@ -344,6 +508,15 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
   };
 
   const currentProject = projects.find(p => p.id === selectedProject);
+
+  const filteredProjects = projects.filter(p => {
+    const matchSearch = !projectSearch.trim() || p.name.toLowerCase().includes(projectSearch.toLowerCase());
+    const matchCategory = projectCategoryFilter === 'All' || p.category === projectCategoryFilter;
+    return matchSearch && matchCategory;
+  });
+
+  const isSectionModalOpen = isAddingSection !== null || editingSectionId !== null;
+  const sectionModalStepId = isAddingSection ?? editingSectionId?.stepId ?? null;
 
   return (
     <div className="h-full min-h-0 flex flex-col bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-neutral-950 dark:to-neutral-900">
@@ -371,7 +544,7 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
                     Create step-by-step tutorials with images and text
                   </p>
                 </div>
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-3">
                   <h3 className="text-base font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
                     <Layers className="w-5 h-5 text-indigo-500" />
                     Projects
@@ -386,8 +559,31 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
                   </Button>
                 </div>
 
+                <div className="space-y-2 mb-3">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                    <input
+                      type="text"
+                      placeholder="Search by project name..."
+                      value={projectSearch}
+                      onChange={(e) => setProjectSearch(e.target.value)}
+                      className="w-full pl-8 pr-3 py-2 text-sm border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                    />
+                  </div>
+                  <select
+                    value={projectCategoryFilter}
+                    onChange={(e) => setProjectCategoryFilter(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                  >
+                    <option value="All">All categories</option>
+                    {PROJECT_CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="space-y-2">
-                  {projects.map((project) => (
+                  {filteredProjects.map((project) => (
                     <motion.div
                       key={project.id}
                       initial={{ opacity: 0, y: 10 }}
@@ -409,9 +605,14 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
                               {project.description}
                             </p>
                           )}
-                          <div className="flex items-center gap-2 mt-2 text-xs text-neutral-500">
-                            <FileText className="w-3 h-3" />
-                            {project.steps.length} steps
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
+                              {project.category || 'AI'}
+                            </span>
+                            <span className="text-xs text-neutral-500 flex items-center gap-1">
+                              <FileText className="w-3 h-3" />
+                              {project.steps.length} steps
+                            </span>
                           </div>
                         </div>
                         <button
@@ -427,11 +628,11 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
                     </motion.div>
                   ))}
 
-                  {projects.length === 0 && (
+                  {filteredProjects.length === 0 && (
                     <div className="text-center py-8 text-neutral-400 dark:text-neutral-600">
                       <BookOpen className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                      <p className="text-sm">No projects yet</p>
-                      <p className="text-xs mt-1">Click "New" to create one</p>
+                      <p className="text-sm">{projects.length === 0 ? 'No projects yet' : 'No projects match filters'}</p>
+                      <p className="text-xs mt-1">{projects.length === 0 ? 'Click "New" to create one' : 'Try a different search or category'}</p>
                     </div>
                   )}
                 </div>
@@ -442,10 +643,25 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
               {currentProject ? (
                 <Card className="p-6 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border-neutral-200 dark:border-neutral-800">
                   <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">
-                        {currentProject.name}
-                      </h2>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">
+                          {currentProject.name}
+                        </h2>
+                        <span className="text-xs px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
+                          {currentProject.category || 'AI'}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setNewProject({ name: currentProject.name, description: currentProject.description, category: currentProject.category || 'AI' });
+                            setEditingProjectId(currentProject.id);
+                          }}
+                          className="p-1.5 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded transition-colors"
+                          title="Edit project"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                      </div>
                       {currentProject.description && (
                         <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
                           {currentProject.description}
@@ -503,13 +719,43 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
                                   <Circle className="w-5 h-5 text-neutral-400" />
                                 )}
                               </button>
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-neutral-900 dark:text-white">
-                                  Step {index + 1}: {step.name}
-                                </h3>
-                                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
-                                  {step.sections.length} section{step.sections.length !== 1 ? 's' : ''}
-                                </p>
+                              <div className="flex-1 min-w-0">
+                                {editingStepId === step.id ? (
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-neutral-500 text-sm">Step {index + 1}:</span>
+                                    <input
+                                      type="text"
+                                      value={step.name}
+                                      onChange={(e) => {
+                                        setProjects(projects.map(p =>
+                                          p.id === selectedProject
+                                            ? { ...p, steps: p.steps.map(s => s.id === step.id ? { ...s, name: e.target.value } : s) }
+                                            : p
+                                        ));
+                                      }}
+                                      onBlur={() => setEditingStepId(null)}
+                                      onKeyDown={(e) => { if (e.key === 'Enter') setEditingStepId(null); }}
+                                      className="flex-1 min-w-0 px-2 py-1 border border-neutral-300 dark:border-neutral-600 rounded bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white font-semibold"
+                                      autoFocus
+                                    />
+                                  </div>
+                                ) : (
+                                  <>
+                                    <h3 className="font-semibold text-neutral-900 dark:text-white flex items-center gap-2">
+                                      Step {index + 1}: {step.name}
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); setEditingStepId(step.id); }}
+                                        className="p-0.5 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded"
+                                        title="Edit step name"
+                                      >
+                                        <Edit2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </h3>
+                                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                                      {step.sections.length} section{step.sections.length !== 1 ? 's' : ''}
+                                    </p>
+                                  </>
+                                )}
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -551,19 +797,9 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
                                       </h4>
                                       <div className="flex gap-1">
                                         <button
-                                          onClick={() => {
-                                            setCurrentImageSection(section.id);
-                                            fileInputRef.current?.click();
-                                          }}
-                                          className="p-1 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded transition-colors"
-                                          title="Upload image"
-                                        >
-                                          <Upload className="w-4 h-4" />
-                                        </button>
-                                        <button
-                                          onClick={() => setEditingSection(section.id)}
+                                          onClick={() => openEditSection(step.id, section)}
                                           className="p-1 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
-                                          title="Edit text"
+                                          title="Edit section"
                                         >
                                           <Edit2 className="w-4 h-4" />
                                         </button>
@@ -576,57 +812,44 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
                                       </div>
                                     </div>
 
-                                    {editingSection === section.id ? (
-                                      <div className="space-y-2">
-                                        <textarea
-                                          value={section.text}
-                                          onChange={(e) => updateSection(step.id, section.id, { text: e.target.value })}
-                                          className="w-full p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white resize-none"
-                                          rows={4}
-                                          placeholder="Enter section text..."
-                                        />
-                                        <Button
-                                          onClick={() => setEditingSection(null)}
-                                          size="sm"
-                                          className="bg-green-500 text-white hover:bg-green-600"
+                                    <p className="text-sm text-neutral-600 dark:text-neutral-300 whitespace-pre-wrap">
+                                      {section.text || 'No text added yet'}
+                                    </p>
+
+                                    {((section.imageUrls?.length ?? 0) > 0 || section.imageUrl) && (
+                                      <div className="mt-3 flex flex-wrap gap-3">
+                                        {(section.imageUrls ?? (section.imageUrl ? [section.imageUrl] : [])).map((url, i) => (
+                                          <img
+                                            key={i}
+                                            src={url}
+                                            alt={`${section.name} ${i + 1}`}
+                                            className="max-w-full h-auto max-h-48 rounded-lg border border-neutral-200 dark:border-neutral-700 object-cover"
+                                          />
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    {section.url && (
+                                      <div className="mt-2">
+                                        <a
+                                          href={section.url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
                                         >
-                                          <Save className="w-4 h-4 mr-1" />
-                                          Save
-                                        </Button>
-                                      </div>
-                                    ) : (
-                                      <p className="text-sm text-neutral-600 dark:text-neutral-300 whitespace-pre-wrap">
-                                        {section.text || 'No text added yet'}
-                                      </p>
-                                    )}
-
-                                    {section.imageUrl && (
-                                      <div className="mt-3">
-                                        <img
-                                          src={section.imageUrl}
-                                          alt={section.name}
-                                          className="max-w-full h-auto rounded-lg border border-neutral-200 dark:border-neutral-700"
-                                        />
+                                          <LinkIcon className="w-4 h-4" />
+                                          {section.url}
+                                        </a>
                                       </div>
                                     )}
-
-                                    <input
-                                      ref={fileInputRef}
-                                      type="file"
-                                      accept="image/*"
-                                      className="hidden"
-                                      onChange={(e) => {
-                                        if (currentImageSection === section.id) {
-                                          handleImageUpload(step.id, section.id, e);
-                                          setCurrentImageSection(null);
-                                        }
-                                      }}
-                                    />
                                   </div>
                                 ))}
 
                                 <Button
-                                  onClick={() => setIsAddingSection(step.id)}
+                                  onClick={() => {
+                                    setNewSection({ name: '', text: '', imageUrls: [], url: '' });
+                                    setIsAddingSection(step.id);
+                                  }}
                                   size="sm"
                                   variant="outline"
                                   className="w-full border-dashed border-2"
@@ -707,6 +930,21 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
 
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
+                    Category
+                  </label>
+                  <select
+                    value={newProject.category}
+                    onChange={(e) => setNewProject({ ...newProject, category: e.target.value })}
+                    className="w-full p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                  >
+                    {PROJECT_CATEGORIES.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
                     Description
                   </label>
                   <textarea
@@ -736,6 +974,78 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
             </motion.div>
           </motion.div>
         )}
+
+        {editingProjectId && (() => {
+          const proj = projects.find(p => p.id === editingProjectId);
+          if (!proj) return null;
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+              onClick={() => setEditingProjectId(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white dark:bg-neutral-900 rounded-2xl p-6 max-w-md w-full shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-neutral-900 dark:text-white">Edit Project</h3>
+                  <button onClick={() => setEditingProjectId(null)} className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Project Name *</label>
+                    <input
+                      type="text"
+                      value={newProject.name}
+                      onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                      className="w-full p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                      placeholder="e.g., React Basics Tutorial"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Category</label>
+                    <select
+                      value={newProject.category}
+                      onChange={(e) => setNewProject({ ...newProject, category: e.target.value })}
+                      className="w-full p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                    >
+                      {PROJECT_CATEGORIES.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Description</label>
+                    <textarea
+                      value={newProject.description}
+                      onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                      className="w-full p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white resize-none"
+                      rows={3}
+                      placeholder="Brief description..."
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => updateProject({ name: newProject.name, description: newProject.description, category: newProject.category })}
+                      className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:opacity-90"
+                    >
+                      Save
+                    </Button>
+                    <Button onClick={() => setEditingProjectId(null)} variant="outline">Cancel</Button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
 
         {isAddingStep && (
           <motion.div
@@ -796,67 +1106,130 @@ export function TutorialLearnTemplate({ title, notebookId }: TutorialLearnTempla
           </motion.div>
         )}
 
-        {isAddingSection && (
+        {isSectionModalOpen && sectionModalStepId && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-8"
-            onClick={() => setIsAddingSection(null)}
+            onClick={() => { setEditingSectionId(null); setIsAddingSection(null); }}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white dark:bg-neutral-900 rounded-2xl p-6 w-full h-full max-w-[calc(100vw-4rem)] max-h-[calc(100vh-4rem)] shadow-2xl flex flex-col"
+              className="bg-white dark:bg-neutral-900 rounded-2xl p-6 w-full max-w-[calc(100vw-4rem)] h-full max-h-[calc(100vh-4rem)] shadow-2xl flex flex-col overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4 flex-shrink-0">
-                <h3 className="text-xl font-bold text-neutral-900 dark:text-white">New Section</h3>
+                <h3 className="text-xl font-bold text-neutral-900 dark:text-white">
+                  {editingSectionId ? 'Edit Section' : 'New Section'}
+                </h3>
                 <button
-                  onClick={() => setIsAddingSection(null)}
+                  onClick={() => { setEditingSectionId(null); setIsAddingSection(null); }}
                   className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="space-y-4 flex-1 flex flex-col overflow-hidden">
+              <div className="space-y-4 flex-1 flex flex-col min-h-0 overflow-y-auto">
                 <div>
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">
-                    Section Name *
-                  </label>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Section Name *</label>
                   <input
                     type="text"
                     value={newSection.name}
                     onChange={(e) => setNewSection({ ...newSection, name: e.target.value })}
                     className="w-full p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
                     placeholder="e.g., Installation"
-                    autoFocus
+                    autoFocus={!editingSectionId}
                   />
                 </div>
 
-                <div className="flex-1 flex flex-col min-h-0">
-                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2 flex-shrink-0">
-                    Text Content
-                  </label>
+                <div className="flex-1 flex flex-col min-h-[120px]">
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Text Content</label>
                   <textarea
                     value={newSection.text}
                     onChange={(e) => setNewSection({ ...newSection, text: e.target.value })}
-                    className="w-full h-full p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white resize-none"
+                    className="w-full flex-1 min-h-[120px] p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white resize-none"
                     placeholder="Enter the content for this section..."
                   />
                 </div>
 
-                <div className="flex gap-2 flex-shrink-0">
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2">Images (upload to Cloudinary)</label>
+                  <input
+                    ref={sectionFormImageRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={async (e) => {
+                      const files = Array.from(e.target.files ?? []);
+                      if (!files.length) return;
+                      setUploadingImages(true);
+                      try {
+                        const urls = await uploadImagesToCloudinary(files);
+                        setNewSection(prev => ({ ...prev, imageUrls: [...prev.imageUrls, ...urls] }));
+                      } catch (err) {
+                        console.error('Upload failed:', err);
+                      } finally {
+                        setUploadingImages(false);
+                        e.target.value = '';
+                      }
+                    }}
+                  />
                   <Button
-                    onClick={() => addSection(isAddingSection)}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => sectionFormImageRef.current?.click()}
+                    disabled={uploadingImages}
+                    className="gap-1"
+                  >
+                    {uploadingImages ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                    {uploadingImages ? 'Uploading...' : 'Upload images'}
+                  </Button>
+                  {newSection.imageUrls.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {newSection.imageUrls.map((url, i) => (
+                        <div key={i} className="relative group">
+                          <img src={url} alt={`Upload ${i + 1}`} className="w-24 h-24 object-cover rounded-lg border border-neutral-200 dark:border-neutral-700" />
+                          <button
+                            type="button"
+                            onClick={() => setNewSection(prev => ({ ...prev, imageUrls: prev.imageUrls.filter((_, idx) => idx !== i) }))}
+                            className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-2 flex items-center gap-1">
+                    <LinkIcon className="w-4 h-4" /> URL (optional)
+                  </label>
+                  <input
+                    type="url"
+                    value={newSection.url}
+                    onChange={(e) => setNewSection({ ...newSection, url: e.target.value })}
+                    className="w-full p-3 border border-neutral-300 dark:border-neutral-600 rounded-lg bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white"
+                    placeholder="https://..."
+                  />
+                </div>
+
+                <div className="flex gap-2 flex-shrink-0 pt-2">
+                  <Button
+                    onClick={() => editingSectionId ? saveSectionEdit() : addSection(sectionModalStepId)}
                     className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:opacity-90"
                   >
-                    Add Section
+                    {editingSectionId ? <><Save className="w-4 h-4 mr-1" /> Save</> : <><Plus className="w-4 h-4 mr-1" /> Add Section</>}
                   </Button>
                   <Button
-                    onClick={() => setIsAddingSection(null)}
+                    onClick={() => { setEditingSectionId(null); setIsAddingSection(null); }}
                     variant="outline"
                   >
                     Cancel
