@@ -6,6 +6,7 @@ import { Calendar, Plus, Bell, Trash2, X, Info, BellRing, AlertCircle, CalendarD
 import { Card } from '@/components/ui/card';
 import { TemplateFooter } from './template-footer';
 import { Button } from '@/components/ui/button';
+import AnimatedCardStack, { AnimatedCardItem } from '@/components/ui/animate-card-animation';
 
 interface SaveTheDateTemplateProps {
   title: string;
@@ -47,6 +48,7 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
   const [editingEventId, setEditingEventId] = useState<number | null>(null);
   const [showAddEventPopup, setShowAddEventPopup] = useState(false);
   const [showSearchFilterPopup, setShowSearchFilterPopup] = useState(false);
+  const [showUpcomingCards, setShowUpcomingCards] = useState(false);
   const saveTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const pageIdRef = React.useRef<string | null>(null);
 
@@ -60,18 +62,53 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
   const isSafeUrl = (value?: string) => !!value && /^https?:\/\//i.test(value);
 
   const TEMPLATE_PAGE_TITLE = '__save_the_date_template__';
+  const [loadDone, setLoadDone] = useState(false);
 
-  // Load from DB
+  // Ensure we have a template page (find or create) and return its id
+  const ensureTemplatePage = useCallback(async (): Promise<string | null> => {
+    if (!notebookId) return null;
+    const res = await fetch(`/api/notebooks/${notebookId}/pages`);
+    if (!res.ok) return null;
+    const json = await res.json();
+    const pages: any[] = json.pages ?? [];
+    const existing = pages.find((p: any) => p.title === TEMPLATE_PAGE_TITLE);
+    if (existing) {
+      const id = typeof existing._id === 'string' ? existing._id : String(existing._id);
+      return id;
+    }
+    const cr = await fetch(`/api/notebooks/${notebookId}/pages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: TEMPLATE_PAGE_TITLE, content: JSON.stringify({ events: [] }) }),
+    });
+    if (!cr.ok) return null;
+    const created = await cr.json();
+    const page = created.page ?? created;
+    const id = page?._id != null ? String(page._id) : null;
+    return id;
+  }, [notebookId]);
+
+  // Load from DB on mount
   useEffect(() => {
-    if (!notebookId) return;
+    if (!notebookId) {
+      setLoadDone(true);
+      return;
+    }
+    let cancelled = false;
     (async () => {
       try {
         const res = await fetch(`/api/notebooks/${notebookId}/pages`);
+        if (!res.ok) {
+          setLoadDone(true);
+          return;
+        }
         const json = await res.json();
         const pages: any[] = json.pages ?? [];
         const existing = pages.find((p: any) => p.title === TEMPLATE_PAGE_TITLE);
+        if (cancelled) return;
         if (existing) {
-          pageIdRef.current = existing._id;
+          const id = typeof existing._id === 'string' ? existing._id : String(existing._id);
+          pageIdRef.current = id;
           try {
             const data = typeof existing.content === 'string' ? JSON.parse(existing.content || '{}') : existing.content || {};
             const list = Array.isArray(data.events) ? data.events : (data.events ? [] : []);
@@ -89,37 +126,68 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ title: TEMPLATE_PAGE_TITLE, content: JSON.stringify({ events: [] }) }),
           });
+          if (!cr.ok) {
+            setLoadDone(true);
+            return;
+          }
           const created = await cr.json();
-          pageIdRef.current = created.page?._id ?? null;
+          const page = created.page ?? created;
+          const id = page?._id != null ? String(page._id) : null;
+          if (!cancelled) pageIdRef.current = id;
         }
       } catch (err) {
         console.error('Save the Date load failed:', err);
+      } finally {
+        if (!cancelled) setLoadDone(true);
       }
     })();
+    return () => { cancelled = true; };
   }, [notebookId]);
 
   const persistToDb = useCallback(() => {
-    if (!notebookId || !pageIdRef.current) return;
+    if (!notebookId) return;
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
+      let pageId = pageIdRef.current;
+      if (!pageId) {
+        pageId = await ensureTemplatePage();
+        if (pageId) pageIdRef.current = pageId;
+      }
+      if (!pageId) {
+        console.error('Save the Date: no template page id');
+        setSaving(false);
+        return;
+      }
       setSaving(true);
       try {
-        await fetch(`/api/notebooks/${notebookId}/pages/${pageIdRef.current}`, {
+        const res = await fetch(`/api/notebooks/${notebookId}/pages/${pageId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title: TEMPLATE_PAGE_TITLE, content: JSON.stringify({ events }) }),
         });
+        if (res.status === 404) {
+          pageIdRef.current = null;
+          const newId = await ensureTemplatePage();
+          if (newId) {
+            pageIdRef.current = newId;
+            await fetch(`/api/notebooks/${notebookId}/pages/${newId}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ title: TEMPLATE_PAGE_TITLE, content: JSON.stringify({ events }) }),
+            });
+          }
+        }
       } catch (err) {
         console.error('Save the Date persist failed:', err);
       } finally {
         setSaving(false);
       }
     }, 500);
-  }, [notebookId, events]);
+  }, [notebookId, events, ensureTemplatePage]);
 
   useEffect(() => {
-    persistToDb();
-  }, [events, persistToDb]);
+    if (loadDone) persistToDb();
+  }, [events, loadDone, persistToDb]);
 
   // Calculate days until event
   const calculateDaysUntil = (eventDate: string) => {
@@ -222,6 +290,9 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
       case 'Work': return 'blue';
       case 'Personal': return 'purple';
       case 'Health': return 'green';
+      case 'Social': return 'neutral';
+      case 'AI Film': return 'cyan';
+      case 'Short Film': return 'amber';
       default: return 'neutral';
     }
   };
@@ -243,6 +314,19 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
 
   // This Week: only future/current (0 <= daysUntil <= 7), exclude past
   const thisWeekCount = events.filter(e => e.daysUntil >= 0 && e.daysUntil <= 7).length;
+
+  // Upcoming events for animated cards (only events with valid URLs and in the future)
+  const upcomingEventsForCards = events
+    .filter(e => e.daysUntil >= 0 && isSafeUrl(e.url))
+    .sort((a, b) => a.daysUntil - b.daysUntil)
+    .slice(0, 3);
+
+  const upcomingCardItems: AnimatedCardItem[] = upcomingEventsForCards.map(e => ({
+    id: e.id,
+    title: e.title,
+    description: `${e.date}${e.time ? ` • ${e.time}` : ''}${e.category ? ` • ${e.category}` : ''}`,
+    iframeUrl: e.url,
+  }));
 
   // Quick date selection helper
   const setQuickDate = (daysFromNow: number) => {
@@ -309,6 +393,33 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
             <p className="text-3xl font-bold">{events.filter(e => e.reminder).length}</p>
           </Card>
         </div>
+
+        {/* Upcoming events animated cards */}
+        {upcomingCardItems.length > 0 && (
+          <Card className="mt-4 p-4 bg-white dark:bg-neutral-800">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div>
+                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Upcoming events</h3>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                  Shows your next events with live website previews.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-rose-300 dark:border-rose-700 text-rose-600 dark:text-rose-300"
+                onClick={() => setShowUpcomingCards(prev => !prev)}
+              >
+                {showUpcomingCards ? 'Hide' : 'Show'} upcoming events
+              </Button>
+            </div>
+            {showUpcomingCards && (
+              <div className="mt-2">
+                <AnimatedCardStack items={upcomingCardItems} />
+              </div>
+            )}
+          </Card>
+        )}
 
         <div className="flex flex-wrap gap-3">
           <Button
@@ -461,7 +572,7 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
         {/* Add New Event popup */}
         {showAddEventPopup && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <Card className="max-w-lg w-full max-h-[90vh] overflow-y-auto bg-white dark:bg-neutral-800">
+            <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-neutral-800">
               <div className="sticky top-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-4 flex items-center justify-between">
                 <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Add New Event</h3>
                 <button onClick={() => { setShowAddEventPopup(false); setEditingEventId(null); setNewEvent({ title: '', date: '', time: '', location: '', category: 'Personal', description: '', url: '' }); }} className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg"><X className="h-5 w-5" /></button>
@@ -470,7 +581,7 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input type="text" placeholder="Event title..." value={newEvent.title} onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })} className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500" />
                   <select value={newEvent.category} onChange={(e) => setNewEvent({ ...newEvent, category: e.target.value })} className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500">
-                    <option value="Personal">Personal</option><option value="Work">Work</option><option value="Health">Health</option><option value="Social">Social</option>
+                    <option value="Personal">Personal</option><option value="Work">Work</option><option value="Health">Health</option><option value="Social">Social</option><option value="AI Film">AI Film</option><option value="Short Film">Short Film</option>
                   </select>
                 </div>
                 <textarea placeholder="Description (optional)" value={newEvent.description} onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })} className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none" rows={2} />
@@ -497,7 +608,7 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
         {/* Search and Filter Events popup */}
         {showSearchFilterPopup && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <Card className="max-w-md w-full bg-white dark:bg-neutral-800">
+            <Card className="w-full max-w-xl bg-white dark:bg-neutral-800">
               <div className="p-4 border-b border-neutral-200 dark:border-neutral-700 flex items-center justify-between">
                 <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Search and filter events</h3>
                 <button onClick={() => setShowSearchFilterPopup(false)} className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg"><X className="h-5 w-5" /></button>
@@ -519,6 +630,8 @@ export function SaveTheDateTemplate({ title, notebookId }: SaveTheDateTemplatePr
                     <option value="Work">Work</option>
                     <option value="Health">Health</option>
                     <option value="Social">Social</option>
+                    <option value="AI Film">AI Film</option>
+                    <option value="Short Film">Short Film</option>
                   </select>
                 </div>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">Events are ordered with upcoming first, then past. This week counts only future events (0–7 days).</p>
