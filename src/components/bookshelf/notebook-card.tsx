@@ -3,8 +3,9 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { Trash2, Clock, BookOpen, AlertCircle, Share2, Users, X } from "lucide-react"
+import { Trash2, Clock, BookOpen, AlertCircle, Share2, Users, X, ImageIcon } from "lucide-react"
 import { formatDate } from "@/lib/utils"
+import { EditCoverDialog } from "./edit-cover-dialog"
 import { GlareCard } from "@/components/ui/glare-card"
 import { ShareNotebookModal } from "@/components/sharing/ShareNotebookModal"
 import { useShareNotebook, useFriends } from "@/hooks/useSharing"
@@ -45,6 +46,7 @@ export function NotebookCard({ notebook, onUpdate }: NotebookCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
+  const [showEditCoverDialog, setShowEditCoverDialog] = useState(false)
   
   const { shareNotebook } = useShareNotebook()
   const { friends } = useFriends()
@@ -112,6 +114,18 @@ export function NotebookCard({ notebook, onUpdate }: NotebookCardProps) {
           <Share2 className="h-4 w-4 text-white" />
         </button>
 
+        {/* Edit cover button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowEditCoverDialog(true);
+          }}
+          className="p-2 bg-black/60 backdrop-blur-sm rounded-full hover:bg-amber-500 transition-all"
+          title="Edit notebook cover"
+        >
+          <ImageIcon className="h-4 w-4 text-white" />
+        </button>
+
         {/* Delete button with AlertDialog confirmation */}
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <AlertDialogTrigger asChild>
@@ -172,6 +186,17 @@ export function NotebookCard({ notebook, onUpdate }: NotebookCardProps) {
           setShowShareModal(false);
           onUpdate();
         }}
+      />
+
+      <EditCoverDialog
+        open={showEditCoverDialog}
+        onOpenChange={setShowEditCoverDialog}
+        notebook={{
+          _id: notebook._id,
+          title: notebook.title,
+          appearance: notebook.appearance,
+        }}
+        onSaved={onUpdate}
       />
 
       <div onClick={handleOpen} className="cursor-pointer">
