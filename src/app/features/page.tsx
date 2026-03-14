@@ -1,11 +1,20 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Sparkles, NotebookText, Wand2, Share2, ShieldCheck, Globe2 } from "lucide-react";
+import { Sparkles, BookText, Wand2, Share2, ShieldCheck, Globe2 } from "lucide-react";
 import { Navbar } from "@/components/ui/navbar";
 import { Footer } from "@/components/home/footer";
 import { FeaturesSection } from "@/components/home/features-section";
 import { Card } from "@/components/ui/card";
+
+function HighlightPill({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <div className="rounded-xl bg-neutral-900/60 border border-neutral-800 px-4 py-3">
+      <p className="font-medium text-neutral-100">{title}</p>
+      <p className="text-sm text-neutral-400 mt-0.5">{subtitle}</p>
+    </div>
+  );
+}
 
 export default function FeaturesPage() {
   return (
@@ -57,7 +66,7 @@ export default function FeaturesPage() {
       {/* Core feature rows */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 space-y-12">
         <FeatureRow
-          icon={<NotebookText className="w-6 h-6 text-amber-300" />}
+          icon={<BookText className="w-6 h-6 text-amber-300" />}
           eyebrow="Notebook-first experience"
           title="A shelf of notebooks, not a pile of docs"
           description="Create separate, beautifully themed notebooks for every project, course, or client. Flip through pages, add chapters, and keep long-term work organized exactly how your brain remembers it."
@@ -143,7 +152,7 @@ export default function FeaturesPage() {
 
             <Card className="flex-1 bg-white/5 border-neutral-700/60 backdrop-blur-xl p-5">
               <h3 className="font-semibold mb-1 flex items-center gap-2">
-                <NotebookText className="w-4 h-4 text-amber-300" />
+                <BookText className="w-4 h-4 text-amber-300" />
                 For serious projects
               </h3>
               <p className="text-sm text-neutral-300 mb-2">

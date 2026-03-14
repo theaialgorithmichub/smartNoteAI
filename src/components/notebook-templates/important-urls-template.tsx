@@ -1,10 +1,16 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, Plus, Youtube, Instagram, Video, ExternalLink, Trash2, Search, Info, X, Check, BookOpen, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link, Plus, Youtube, Instagram, Video, ExternalLink, Trash2, Search, Info, X, Check, BookOpen, ChevronLeft, ChevronRight, Tag, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { TemplateFooter } from './template-footer';
 import { Button } from '@/components/ui/button';
+import { BentoGrid } from '@/components/ui/bento-grid';
+import {
+  ContainerScrollContained,
+  CardsContainer,
+  CardTransformed,
+} from '@/components/ui/animated-cards-stack';
 
 interface ImportantUrlsTemplateProps {
   title: string;
@@ -19,11 +25,13 @@ interface SavedUrl {
   thumbnail?: string;
   type: string;
   date: string;
+  channel?: string;
+  tags?: string[];
 }
 
 export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTemplateProps) {
   const [urls, setUrls] = useState<SavedUrl[]>([]);
-  const [newUrl, setNewUrl] = useState({ title: '', url: '', platform: 'YouTube', type: 'Entertainment' });
+  const [newUrl, setNewUrl] = useState({ title: '', url: '', platform: 'YouTube', type: 'Entertainment', channel: '', tags: '' });
   const [selectedPlatform, setSelectedPlatform] = useState('All');
   const [selectedType, setSelectedType] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,7 +39,10 @@ export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTempla
   const [showDocumentation, setShowDocumentation] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; urlId: number | null; urlTitle: string }>({ show: false, urlId: null, urlTitle: '' });
   const [saving, setSaving] = useState(false);
+  const [showLatestUrlsStack, setShowLatestUrlsStack] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const latestUrls = urls.slice(0, 5);
   
   const urlsPerPage = 10;
 
@@ -57,7 +68,12 @@ export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTempla
       const saved = localStorage.getItem(`important-urls-${notebookId}`);
       if (saved) {
         const data = JSON.parse(saved);
-        setUrls(data.urls || []);
+        const loaded = (data.urls || []).map((u: SavedUrl) => ({
+          ...u,
+          channel: u.channel ?? undefined,
+          tags: Array.isArray(u.tags) ? u.tags : undefined,
+        }));
+        setUrls(loaded);
       }
     } catch (error) {
       console.error("Failed to load:", error);
@@ -100,18 +116,24 @@ export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTempla
     if (!newUrl.title || !newUrl.url) return;
     
     const detectedPlatform = detectPlatform(newUrl.url);
+    const tags = newUrl.tags
+      .split(',')
+      .map(t => t.trim().toLowerCase())
+      .filter(Boolean);
     const url: SavedUrl = {
       id: Date.now(),
       title: newUrl.title,
       url: newUrl.url,
-      platform: detectedPlatform as any,
+      platform: detectedPlatform as SavedUrl['platform'],
       thumbnail: getVideoThumbnail(newUrl.url, detectedPlatform),
       type: newUrl.type,
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      channel: newUrl.channel.trim() || undefined,
+      tags: tags.length ? tags : undefined,
     };
     
     setUrls([url, ...urls]);
-    setNewUrl({ title: '', url: '', platform: 'YouTube', type: 'Entertainment' });
+    setNewUrl({ title: '', url: '', platform: 'YouTube', type: 'Entertainment', channel: '', tags: '' });
   };
 
   const deleteUrl = (id: number, urlTitle: string) => {
@@ -129,11 +151,16 @@ export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTempla
     setDeleteConfirm({ show: false, urlId: null, urlTitle: '' });
   };
 
+  const q = searchQuery.toLowerCase().trim();
   const filteredUrls = urls.filter(url => {
     const matchesPlatform = selectedPlatform === 'All' || url.platform === selectedPlatform;
     const matchesType = selectedType === 'All' || url.type === selectedType;
-    const matchesSearch = url.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         url.url.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = !q || (
+      url.title.toLowerCase().includes(q) ||
+      url.url.toLowerCase().includes(q) ||
+      (url.channel?.toLowerCase().includes(q)) ||
+      (url.tags?.some(t => t.includes(q)))
+    );
     return matchesPlatform && matchesType && matchesSearch;
   });
 
@@ -166,14 +193,14 @@ export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTempla
     }
   };
 
-  const getPlatformColor = (platform: string) => {
+  const getPlatformBadgeClass = (platform: string) => {
     switch (platform) {
-      case 'YouTube': return 'red';
-      case 'Instagram': return 'pink';
-      case 'Udemy': return 'purple';
-      case 'Vimeo': return 'blue';
-      case 'TikTok': return 'neutral';
-      default: return 'gray';
+      case 'YouTube': return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400';
+      case 'Instagram': return 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400';
+      case 'Udemy': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400';
+      case 'Vimeo': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400';
+      case 'TikTok': return 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300';
+      default: return 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
     }
   };
 
@@ -197,108 +224,193 @@ export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTempla
           <p className="text-neutral-600 dark:text-neutral-400">Save your favorite video content</p>
         </div>
 
-        <div className="grid sm:grid-cols-3 gap-4">
-          <Card className="p-4 bg-gradient-to-br from-red-500 to-pink-500 text-white">
-            <p className="text-sm opacity-90 mb-1">Total URLs</p>
-            <p className="text-3xl font-bold">{urls.length}</p>
-          </Card>
-          <Card className="p-4 bg-gradient-to-br from-purple-500 to-pink-500 text-white">
-            <p className="text-sm opacity-90 mb-1">Platforms</p>
-            <p className="text-3xl font-bold">{new Set(urls.map(u => u.platform)).size}</p>
-          </Card>
-          <Card className="p-4 bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
-            <p className="text-sm opacity-90 mb-1">Categories</p>
-            <p className="text-3xl font-bold">{new Set(urls.map(u => u.type)).size}</p>
-          </Card>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-neutral-500 dark:text-neutral-400">
+          <span>{urls.length} URLs</span>
+          <span className="text-neutral-300 dark:text-neutral-600">·</span>
+          <span>{new Set(urls.map(u => u.platform)).size} platforms</span>
+          <span className="text-neutral-300 dark:text-neutral-600">·</span>
+          <span>{new Set(urls.map(u => u.type)).size} categories</span>
         </div>
 
+        {/* Latest URLs - Stack Cards (expand on click) */}
+        {urls.length > 0 && (
+          <Card className="overflow-hidden bg-white/80 dark:bg-neutral-800/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-700/80 rounded-2xl shadow-lg">
+            <button
+              type="button"
+              onClick={() => setShowLatestUrlsStack(!showLatestUrlsStack)}
+              className="w-full flex items-center justify-between p-4 text-left hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors rounded-2xl"
+            >
+              <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Latest URLs</h3>
+              {showLatestUrlsStack ? <ChevronUp className="h-5 w-5 text-neutral-500" /> : <ChevronDown className="h-5 w-5 text-neutral-500" />}
+            </button>
+            {showLatestUrlsStack && (
+              <div className="border-t border-neutral-200 dark:border-neutral-700">
+                <ContainerScrollContained containerHeight="420px">
+                  <CardsContainer className="mx-auto h-[380px] w-[320px] max-w-full">
+                      {latestUrls.map((url, index) => {
+                        const thumb = url.thumbnail ?? getVideoThumbnail(url.url, url.platform);
+                        return (
+                          <CardTransformed
+                            key={url.id}
+                            arrayLength={latestUrls.length}
+                            index={index + 2}
+                            variant="light"
+                            className="overflow-hidden !rounded-xl !p-0 cursor-pointer items-stretch justify-stretch"
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => window.open(url.url, '_blank', 'noopener,noreferrer')}
+                            onKeyDown={(e) => e.key === 'Enter' && window.open(url.url, '_blank', 'noopener,noreferrer')}
+                          >
+                            <div className="flex flex-col w-full h-full">
+                              <div className="relative h-36 bg-neutral-200 dark:bg-neutral-700 shrink-0 overflow-hidden">
+                                {thumb ? (
+                                  <img src={thumb} alt={url.title} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex flex-col items-center justify-center gap-1 text-white bg-gradient-to-br from-neutral-500 to-neutral-700">
+                                    {getPlatformIcon(url.platform)}
+                                    <span className="text-xs opacity-90">{url.platform}</span>
+                                  </div>
+                                )}
+                                <div className="absolute top-2 right-2">
+                                  <span className={`px-2 py-1 rounded-lg text-xs font-medium ${getPlatformBadgeClass(url.platform)}`}>
+                                    {url.platform}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex flex-col flex-1 p-4 text-left gap-1 min-h-0">
+                                <h4 className="font-bold text-neutral-900 dark:text-white line-clamp-2 text-sm">{url.title}</h4>
+                                {url.channel && <p className="text-xs text-neutral-600 dark:text-neutral-400 truncate">{url.channel}</p>}
+                                {url.tags && url.tags.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {url.tags.slice(0, 3).map((tag, i) => (
+                                      <span key={i} className="inline-flex items-center px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded text-[10px]">
+                                        {tag}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                                <span className="text-xs text-blue-600 dark:text-blue-400 mt-auto flex items-center gap-1">
+                                  Open <ExternalLink className="h-3 w-3" />
+                                </span>
+                              </div>
+                            </div>
+                          </CardTransformed>
+                        );
+                      })}
+                    </CardsContainer>
+                </ContainerScrollContained>
+              </div>
+            )}
+          </Card>
+        )}
+
         {/* Search and Filters */}
-        <Card className="p-4 bg-white dark:bg-neutral-800">
-          <div className="space-y-3">
+        <Card className="p-4 sm:p-6 bg-white/80 dark:bg-neutral-800/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-700/80 rounded-2xl shadow-lg">
+          <div className="space-y-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
               <input
                 type="text"
-                placeholder="Search URLs..."
+                placeholder="Search by URL, tag, channel, or title..."
                 value={searchQuery}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500 dark:focus:ring-red-500/30 transition-all"
               />
             </div>
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              <div className="flex gap-2">
-                <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400 whitespace-nowrap py-2">Platform:</span>
-                {['All', ...platforms].map(platform => (
-                  <button
-                    key={platform}
-                    onClick={() => handleFilterChange('platform', platform)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                      selectedPlatform === platform
-                        ? 'bg-red-500 text-white'
-                        : 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-red-100 dark:hover:bg-red-900/30'
-                    }`}
-                  >
-                    {platform}
-                  </button>
-                ))}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 overflow-x-auto">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Platform</span>
+                <div className="inline-flex gap-2 p-1 rounded-full bg-neutral-100 dark:bg-neutral-900/60">
+                  {['All', ...platforms].map(platform => (
+                    <button
+                      key={platform}
+                      onClick={() => handleFilterChange('platform', platform)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                        selectedPlatform === platform
+                          ? 'bg-red-500 text-white shadow-sm'
+                          : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                      }`}
+                    >
+                      {platform}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="flex gap-2">
-                <span className="text-sm font-medium text-neutral-600 dark:text-neutral-400 whitespace-nowrap py-2">Type:</span>
-                {['All', ...types].map(type => (
-                  <button
-                    key={type}
-                    onClick={() => handleFilterChange('type', type)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-                      selectedType === type
-                        ? 'bg-pink-500 text-white'
-                        : 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-pink-100 dark:hover:bg-pink-900/30'
-                    }`}
-                  >
-                    {type}
-                  </button>
-                ))}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Type</span>
+                <div className="inline-flex gap-2 p-1 rounded-full bg-neutral-100 dark:bg-neutral-900/60">
+                  {['All', ...types].map(type => (
+                    <button
+                      key={type}
+                      onClick={() => handleFilterChange('type', type)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                        selectedType === type
+                          ? 'bg-pink-500 text-white shadow-sm'
+                          : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </Card>
 
-        <Card className="p-6 bg-white dark:bg-neutral-800">
+        <Card className="p-6 bg-white/80 dark:bg-neutral-800/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-700/80 rounded-2xl shadow-lg">
           <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-4">Add New URL</h3>
-          <div className="space-y-3">
-            <div className="grid md:grid-cols-2 gap-3">
+          <div className="space-y-4">
+            <div className="grid sm:grid-cols-2 gap-3">
               <input
                 type="text"
                 placeholder="Title..."
                 value={newUrl.title}
                 onChange={(e) => setNewUrl({ ...newUrl, title: e.target.value })}
-                className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="px-4 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/50"
               />
               <select
                 value={newUrl.type}
                 onChange={(e) => setNewUrl({ ...newUrl, type: e.target.value })}
-                className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="px-4 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/50"
               >
                 {types.map(type => <option key={type} value={type}>{type}</option>)}
               </select>
             </div>
-            <div className="grid md:grid-cols-3 gap-3">
+            <div className="grid sm:grid-cols-2 gap-3">
+              <input
+                type="text"
+                placeholder="Channel (optional)..."
+                value={newUrl.channel}
+                onChange={(e) => setNewUrl({ ...newUrl, channel: e.target.value })}
+                className="px-4 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/50"
+              />
+              <input
+                type="text"
+                placeholder="Tags (comma-separated, e.g. react, tutorial)"
+                value={newUrl.tags}
+                onChange={(e) => setNewUrl({ ...newUrl, tags: e.target.value })}
+                className="px-4 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/50"
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-3">
               <input
                 type="url"
                 placeholder="Paste video URL..."
                 value={newUrl.url}
                 onChange={(e) => setNewUrl({ ...newUrl, url: e.target.value })}
-                className="md:col-span-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="flex-1 px-4 py-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500/50"
               />
               <Button 
                 onClick={handleSaveUrl}
-                className="bg-gradient-to-r from-red-500 to-pink-500 text-white hover:opacity-90"
+                className="bg-gradient-to-r from-red-500 to-pink-500 text-white hover:opacity-90 rounded-xl px-6"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 Save URL
               </Button>
             </div>
             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-              Platform will be auto-detected from URL (YouTube, Instagram, Udemy, Vimeo, TikTok)
+              Platform auto-detected from URL (YouTube, Instagram, Udemy, Vimeo, TikTok). Search by URL, tag, or channel.
             </p>
           </div>
         </Card>
@@ -314,12 +426,10 @@ export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTempla
             </p>
           </Card>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {paginatedUrls.map(url => {
-            const color = getPlatformColor(url.platform);
-            return (
-              <Card key={url.id} className="bg-white dark:bg-neutral-800 hover:shadow-lg transition-shadow overflow-hidden">
-                {/* Thumbnail or in-card fallback (no external placeholder so image always shows something) */}
+          <BentoGrid className="auto-rows-[minmax(300px,auto)]">
+            {paginatedUrls.map(url => (
+              <Card key={url.id} className="group col-span-1 flex flex-col overflow-hidden rounded-xl bg-white dark:bg-neutral-800/90 border border-neutral-200/80 dark:border-neutral-700/80 shadow-lg hover:shadow-xl transition-all duration-300">
+                {/* Thumbnail */}
                 <div className="relative h-40 bg-neutral-200 dark:bg-neutral-700 overflow-hidden">
                   {url.thumbnail ? (
                     <>
@@ -348,26 +458,41 @@ export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTempla
                   <div className="absolute top-2 right-2">
                     <button 
                       onClick={() => deleteUrl(url.id, url.title)}
-                      className="p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-lg"
+                      className="p-1.5 bg-red-500/90 text-white rounded-lg hover:bg-red-600 transition-colors shadow-lg backdrop-blur-sm"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
-                
                 {/* Content */}
-                <div className="p-4">
+                <div className="flex flex-col flex-1 p-4">
                   <h3 className="font-bold text-neutral-900 dark:text-white mb-2 line-clamp-2">{url.title}</h3>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className={`px-2 py-1 bg-${color}-100 dark:bg-${color}-900/30 text-${color}-700 dark:text-${color}-400 rounded text-xs font-medium flex items-center gap-1`}>
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <span className={`px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 ${getPlatformBadgeClass(url.platform)}`}>
                       {getPlatformIcon(url.platform)}
                       {url.platform}
                     </span>
-                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded text-xs font-medium">
+                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-lg text-xs font-medium">
                       {url.type}
                     </span>
+                    {url.channel && (
+                      <span className="px-2 py-1 bg-neutral-100 dark:bg-neutral-700 text-neutral-600 dark:text-neutral-300 rounded-lg text-xs truncate max-w-[120px]" title={url.channel}>
+                        {url.channel}
+                      </span>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between">
+                  {url.tags && url.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {url.tags.slice(0, 4).map((tag, i) => (
+                        <span key={i} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded text-[10px]">
+                          <Tag className="h-2.5 w-2.5" />
+                          {tag}
+                        </span>
+                      ))}
+                      {url.tags.length > 4 && <span className="text-[10px] text-neutral-400">+{url.tags.length - 4}</span>}
+                    </div>
+                  )}
+                  <div className="mt-auto flex items-center justify-between pt-2 border-t border-neutral-100 dark:border-neutral-700">
                     <span className="text-xs text-neutral-500 dark:text-neutral-400">{url.date}</span>
                     <a
                       href={url.url}
@@ -380,23 +505,24 @@ export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTempla
                   </div>
                 </div>
               </Card>
-            );
-          })}
-          </div>
+            ))}
+          </BentoGrid>
         )}
 
         {/* Pagination */}
         {filteredUrls.length > urlsPerPage && (
-          <Card className="p-4 bg-white dark:bg-neutral-800">
-            <div className="flex items-center justify-between">
+          <Card className="p-4 bg-white/80 dark:bg-neutral-800/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-700/80 rounded-2xl">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-sm text-neutral-600 dark:text-neutral-400">
-                Showing {startIndex + 1}-{Math.min(endIndex, filteredUrls.length)} of {filteredUrls.length} URLs
+                Showing {startIndex + 1}–{Math.min(endIndex, filteredUrls.length)} of {filteredUrls.length}
               </div>
               <div className="flex items-center gap-2">
                 <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="px-3 py-2 bg-neutral-200 dark:bg-neutral-700 text-neutral-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-300 dark:hover:bg-neutral-600"
+                  className="rounded-full"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -405,7 +531,7 @@ export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTempla
                     <button
                       key={page}
                       onClick={() => handlePageChange(page)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      className={`min-w-[36px] px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                         currentPage === page
                           ? 'bg-red-500 text-white'
                           : 'bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-red-100 dark:hover:bg-red-900/30'
@@ -416,9 +542,11 @@ export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTempla
                   ))}
                 </div>
                 <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-2 bg-neutral-200 dark:bg-neutral-700 text-neutral-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-neutral-300 dark:hover:bg-neutral-600"
+                  className="rounded-full"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
