@@ -105,16 +105,16 @@ export function SmartAISection() {
       {/* Content Overlay */}
       <div className="relative z-10 pt-12 md:pt-20 lg:pt-24 px-4 md:px-8 h-full">
         <div className="max-w-7xl mx-auto h-full flex flex-col">
-          {/* Badge at top center */}
-          <div className="text-center flex flex-col items-center mb-8">
+          {/* Badge + Heading — center on mobile, shift right on desktop so robot stays visible */}
+          <div className="flex flex-col items-center md:items-end text-center md:text-right mb-8 md:mb-12 md:mr-8 lg:mr-16">
             <NoteEBadge />
-            
+
             {/* Heading and Description */}
-            <div className="mt-6 max-w-2xl">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white drop-shadow-2xl mb-4">
+            <div className="mt-6 max-w-2xl md:max-w-md bg-white/80 dark:bg-black/60 backdrop-blur-lg rounded-2xl px-6 py-4 shadow-2xl border border-white/40 dark:border-white/10">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-neutral-900 dark:text-white drop-shadow-2xl mb-3 leading-tight">
                 Ask Note E Anything
               </h2>
-              <p className="text-lg md:text-xl text-white/90 drop-shadow-lg">
+              <p className="text-base sm:text-lg md:text-xl text-neutral-700 dark:text-white/90 drop-shadow-lg">
                 Your intelligent companion for all things SmartNote AI
               </p>
             </div>

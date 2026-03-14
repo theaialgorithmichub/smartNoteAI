@@ -32,11 +32,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6 sm:space-y-8 pb-24 sm:pb-32">
       {/* Search and Actions Bar */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-neutral-900 to-neutral-600 dark:from-neutral-50 dark:to-neutral-400">My Bookshelf</h1>
-          <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 mt-1">Your digital notebooks, organized beautifully</p>
-        </div>
+      <div className="flex flex-col gap-4 items-stretch sm:items-end">
         <DashboardSearch />
       </div>
 

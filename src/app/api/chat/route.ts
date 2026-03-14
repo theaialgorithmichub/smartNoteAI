@@ -250,6 +250,12 @@ Be thorough. Longer, richer content is preferred over brief summaries.`,
           messages: [{
             role: "system",
             content: `You are a travel expert. Suggest realistic flight options between two cities.
+You MUST respect real-world geography and common routes:
+- Only suggest flights that are plausible given the two cities (for example, Trivandrum/Thiruvananthapuram ↔ Singapore is a real air route, but there are no trains across the ocean).
+- Never invent airlines or flight numbers that obviously don't exist; use well-known carriers on that corridor where possible.
+- All prices must be realistic ballpark values in the requested currency (convert mentally from typical market prices, do NOT output random tiny or huge numbers).
+- When the user's total budget is very low for the route, still give realistic prices and ignore the budget rather than fabricating impossibly cheap fares.
+
 Return ONLY valid JSON:
 {
   "flights": [
@@ -267,7 +273,12 @@ Return ONLY valid JSON:
     }
   ]
 }
-Provide 4-5 varied options (different airlines, times, price points). Use real airline names. Generate realistic Google Flights search URLs.`
+Provide 4-5 varied options (different airlines, times, price points).
+CRITICAL:
+- The "price" field MUST be the approximate total price per adult in the user's requested currency code: ${currency}.
+- Use your world knowledge of typical fares for the distance and route to keep prices believable.
+- If you are unsure of an exact fare, choose a mid-range realistic value rather than something extreme.
+- Do not hard-code the currency symbol; only return the numeric price in the JSON.`
           }, {
             role: "user",
             content: `Flights from ${source} to ${destination} for ${travelers} traveler(s). Budget: ${budget} ${currency} total.${exclusion}`
@@ -432,6 +443,14 @@ Provide 4-5 items in each category. Use real names and generate realistic search
           messages: [{
             role: "system",
             content: `You are a travel expert. Suggest realistic train options between two cities.
+
+CRITICAL REALISM RULES:
+- First, consider basic geography. If the source and destination are separated by an ocean/sea or do not have any practical cross-border rail connection (for example, Trivandrum/Thiruvananthapuram ↔ Singapore), then there are effectively NO train routes.
+- In such cases, you MUST return an empty "trains": [] array and NOT invent any train services.
+- Only suggest trains when there is a plausible rail network between the two cities (same country or connected neighboring countries with known rail links).
+- IMPORTANT: If both cities are in the SAME country with a well-developed rail network (for example, within India such as "Trivandrum/Thiruvananthapuram → Delhi", or within European countries, etc.), you SHOULD assume that long-distance trains exist even if you are not sure about the exact train number. In these cases you MUST return 4–5 plausible train options instead of an empty list.
+- Use real operator names (e.g., national railways, Eurostar, etc.) and believable durations based on distance.
+
 Return ONLY valid JSON:
 {
   "trains": [
@@ -449,7 +468,13 @@ Return ONLY valid JSON:
     }
   ]
 }
-Provide 4-5 varied options (different classes, times, price points). Use real train operator names. Generate realistic booking/search URLs (Rome2Rio, Trainline, national rail sites).`
+When trains DO exist:
+- Provide 4-5 varied options (different classes, times, and price points).
+- The "price" field MUST be a realistic ballpark value per adult in the requested currency code: ${currency}.
+- Use plausible prices for the distance and class; avoid unrealistically low or high values.
+- Generate realistic booking/search URLs (Rome2Rio, Trainline, national rail sites) that match the route.
+When trains clearly do NOT exist or would require crossing an ocean:
+- Return "trains": [] and nothing else. Do NOT fabricate rail routes.`
           }, {
             role: "user",
             content: `Trains from ${source} to ${destination} for ${travelers} traveler(s). Budget: ${budget} ${currency} total.${exclusion}`
