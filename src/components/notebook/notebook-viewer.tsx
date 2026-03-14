@@ -76,6 +76,7 @@ import { AIPromptStudioTemplate } from "@/components/notebook-templates/ai-promp
 import { PianoNotesTemplate } from "@/components/notebook-templates/piano-notes-template"
 import { VocabularyTemplate } from "@/components/notebook-templates/vocabulary-template"
 import { LoadingCubes } from "@/components/ui/loading-cubes"
+import LoadingBottle from "@/components/ui/loading-bottle"
 import { SimpleTemplate } from "@/components/notebook-templates/simple-template"
 import { AppHeader } from "@/components/layout/app-header"
 import { NotebookHeader } from "@/components/layout/notebook-header"
@@ -504,11 +505,11 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
               <span className="text-sm font-bold text-amber-700 dark:text-amber-300 hidden sm:block">SmartNote AI</span>
             </button>
             <span className="text-amber-300 dark:text-neutral-600">|</span>
-            <h1 className="text-xl font-semibold text-amber-900 dark:text-amber-200">Loading...</h1>
+            <h1 className="text-xl font-semibold text-amber-900 dark:text-amber-200">Opening notebook...</h1>
           </div>
         </header>
         <div className="flex-1 flex items-center justify-center">
-          <LoadingCubes />
+          <LoadingBottle />
         </div>
       </div>
     )

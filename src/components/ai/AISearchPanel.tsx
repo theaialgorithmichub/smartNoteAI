@@ -75,23 +75,23 @@ export function AISearchPanel() {
     <div className="w-full">
       {/* Mode toggle + input */}
       <div className="flex flex-col gap-3">
-        <div className="flex gap-2 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-xl w-fit">
+        <div className="inline-flex items-center gap-1 p-1 bg-neutral-900/70 border border-neutral-800 rounded-full w-fit backdrop-blur-xl shadow-[0_0_0_1px_rgba(255,255,255,0.05)]">
           <button
             onClick={() => { setMode("search"); clear(); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
               mode === "search"
-                ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm"
-                : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700"
+                ? "bg-neutral-800 text-white shadow-md shadow-black/40"
+                : "text-neutral-400 hover:text-neutral-200"
             }`}
           >
             <Search className="w-3.5 h-3.5" /> Search
           </button>
           <button
             onClick={() => { setMode("ask"); clear(); }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all ${
               mode === "ask"
-                ? "bg-white dark:bg-neutral-700 text-neutral-900 dark:text-white shadow-sm"
-                : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700"
+                ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md shadow-amber-500/40"
+                : "text-neutral-400 hover:text-neutral-200"
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" /> Ask AI
@@ -100,8 +100,8 @@ export function AISearchPanel() {
 
         <div className="relative flex items-center">
           {mode === "search"
-            ? <Search className="absolute left-3 w-4 h-4 text-neutral-400 pointer-events-none" />
-            : <MessageSquare className="absolute left-3 w-4 h-4 text-purple-500 pointer-events-none" />
+            ? <Search className="absolute left-3 w-4 h-4 text-neutral-500 pointer-events-none" />
+            : <MessageSquare className="absolute left-3 w-4 h-4 text-amber-400 pointer-events-none" />
           }
           <input
             ref={inputRef}
@@ -113,11 +113,11 @@ export function AISearchPanel() {
                 ? "Search across all notebooks…"
                 : "Ask a question about your notes…"
             }
-            className="w-full pl-10 pr-20 py-3 border border-neutral-200 dark:border-neutral-700 rounded-xl bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm"
+            className="w-full pl-10 pr-24 py-3 rounded-xl bg-neutral-900/80 border border-neutral-800 text-neutral-50 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm shadow-[0_18px_45px_rgba(0,0,0,0.55)]"
           />
-          <div className="absolute right-2 flex items-center gap-1">
+          <div className="absolute right-2 flex items-center gap-1.5">
             {query && (
-              <button onClick={clear} className="p-1.5 text-neutral-400 hover:text-neutral-600">
+              <button onClick={clear} className="p-1.5 text-neutral-500 hover:text-neutral-300">
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
@@ -125,7 +125,7 @@ export function AISearchPanel() {
               onClick={handleSearch}
               disabled={!query.trim() || loading}
               size="sm"
-              className="bg-amber-500 hover:bg-amber-600 text-white px-3"
+              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white px-3 rounded-full shadow-lg shadow-amber-500/40"
             >
               {loading
                 ? <Loader2 className="w-3.5 h-3.5 animate-spin" />

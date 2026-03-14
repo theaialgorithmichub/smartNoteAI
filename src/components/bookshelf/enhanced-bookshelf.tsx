@@ -51,6 +51,7 @@ export function EnhancedBookshelf({ userId }: EnhancedBookshelfProps) {
   const [activeTab, setActiveTab] = useState<'my-notebooks' | 'shared' | 'friends' | 'notifications'>('my-notebooks')
   const [showClearDialog, setShowClearDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [showFilters, setShowFilters] = useState(true)
 
   // Sharing hooks
   const { friends, removeFriend } = useFriends()
@@ -140,68 +141,90 @@ export function EnhancedBookshelf({ userId }: EnhancedBookshelfProps) {
   return (
     <div className="space-y-6">
       {/* Main Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-neutral-200 dark:border-neutral-700">
-        {tabs.map((tab) => {
-          const Icon = tab.icon
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap relative ${
-                activeTab === tab.id
-                  ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
-                  : "text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {tab.label}
-              {tab.badge && tab.badge > 0 && (
-                <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                  activeTab === tab.id 
-                    ? 'bg-white text-amber-600' 
-                    : 'bg-red-500 text-white'
-                }`}>
-                  {tab.badge}
-                </span>
-              )}
-            </button>
-          )
-        })}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="inline-flex items-center gap-2 rounded-full bg-neutral-900/70 border border-neutral-800 px-1 py-1 backdrop-blur-xl shadow-[0_0_0_1px_rgba(255,255,255,0.04)]">
+          {tabs.map((tab) => {
+            const Icon = tab.icon
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`relative flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap ${
+                  isActive
+                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25"
+                    : "text-neutral-300 hover:text-white hover:bg-neutral-800/80"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {tab.label}
+                {tab.badge && tab.badge > 0 && (
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      isActive ? "bg-white text-amber-600" : "bg-red-500 text-white"
+                    }`}
+                  >
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowFilters((prev) => !prev)}
+          className="rounded-full border border-neutral-800 bg-neutral-900/70 hover:bg-neutral-800/80 text-xs sm:text-sm text-neutral-300 flex items-center gap-2 px-3 py-1.5"
+        >
+          <Filter className="h-3.5 w-3.5 text-amber-400" />
+          <span>{showFilters ? "Hide filters" : "Show filters"}</span>
+        </Button>
       </div>
 
       {/* My Notebooks Tab */}
       {activeTab === 'my-notebooks' && (
         <div className="space-y-6">
           {/* Filter Bar */}
-          <div className="flex items-center justify-between gap-4 overflow-x-auto pb-2">
-            <div className="flex items-center gap-4 overflow-x-auto">
-              <Filter className="h-5 w-5 text-amber-500 flex-shrink-0" />
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setFilter(cat)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
-                    filter === cat
-                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25"
-                      : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 border border-neutral-300 dark:border-neutral-700"
-                  }`}
-                >
-                  {cat === "all" ? "All Notebooks" : cat}
-                </button>
-              ))}
-            </div>
-            
-            {/* Clear All Button */}
-            {notebooks.length > 0 && (
-              <button
-                onClick={() => setShowClearDialog(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-red-500 hover:bg-red-600 text-white transition-all whitespace-nowrap shadow-lg shadow-red-500/25"
-              >
-                <Trash2 className="h-4 w-4" />
-                Clear All
-              </button>
-            )}
-          </div>
+          {showFilters && (
+            <Card className="bg-neutral-950/70 border-neutral-800/80 backdrop-blur-xl px-4 sm:px-6 py-3 rounded-2xl shadow-lg shadow-black/40">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3 overflow-x-auto pb-1">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 px-3 py-1">
+                    <Filter className="h-4 w-4 text-amber-400 flex-shrink-0" />
+                    <span className="text-xs font-medium text-amber-200 uppercase tracking-wide">
+                      Filters
+                    </span>
+                  </div>
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setFilter(cat)}
+                      className={`px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all whitespace-nowrap border ${
+                        filter === cat
+                          ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-lg shadow-amber-500/25"
+                          : "bg-neutral-900/60 text-neutral-300 border-neutral-700 hover:border-amber-500/70 hover:text-white"
+                      }`}
+                    >
+                      {cat === "all" ? "All Notebooks" : cat}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Clear All Button */}
+                {notebooks.length > 0 && (
+                  <button
+                    onClick={() => setShowClearDialog(true)}
+                    className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-red-500/90 hover:bg-red-600 text-white transition-all whitespace-nowrap shadow-lg shadow-red-500/30"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Clear All
+                  </button>
+                )}
+              </div>
+            </Card>
+          )}
 
           {/* Bookshelf Grid */}
           <div className="relative">
