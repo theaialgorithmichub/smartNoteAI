@@ -1,3 +1,4 @@
+import 'react-native-gesture-handler';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -29,6 +30,8 @@ import FriendsScreen from '../screens/friends/FriendsScreen';
 import NotificationsScreen from '../screens/notifications/NotificationsScreen';
 import SharedNotebooksScreen from '../screens/dashboard/SharedNotebooksScreen';
 import EditNotebookScreen from '../screens/dashboard/EditNotebookScreen';
+import MarketplaceScreen from '../screens/marketplace/MarketplaceScreen';
+import SharedViewScreen from '../screens/share/SharedViewScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -56,10 +59,20 @@ function DashboardStack() {
       <Stack.Screen name="Analytics" component={AnalyticsScreen} />
       <Stack.Screen name="Settings" component={AccountScreen} />
       <Stack.Screen name="Pricing" component={PricingScreen} />
+      <Stack.Screen name="Marketplace" component={MarketplaceScreen} />
       <Stack.Screen name="Friends" component={FriendsScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="SharedNotebooks" component={SharedNotebooksScreen} />
       <Stack.Screen name="AIChat" component={AIChatScreen} />
+    </Stack.Navigator>
+  );
+}
+
+function TemplatesStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="TemplatesHome" component={TemplatesScreen} />
+      <Stack.Screen name="CreateNotebook" component={CreateNotebookScreen} />
     </Stack.Navigator>
   );
 }
@@ -71,22 +84,17 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarShowLabel: true,
         tabBarStyle: {
           backgroundColor: isDark ? '#1c1917' : '#ffffff',
           borderTopColor: isDark ? '#292524' : '#e7e5e4',
           borderTopWidth: 1,
           paddingTop: 4,
-          paddingBottom: 4,
-          height: 60,
+          paddingBottom: 6,
+          height: 62,
         },
         tabBarActiveTintColor: '#f59e0b',
         tabBarInactiveTintColor: isDark ? '#78716c' : '#9ca3af',
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
-          marginTop: 2,
-        },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600', marginTop: 2 },
         tabBarIcon: ({ focused, color, size }) => {
           const icons: Record<string, { active: keyof typeof Ionicons.glyphMap; inactive: keyof typeof Ionicons.glyphMap }> = {
             Dashboard: { active: 'home', inactive: 'home-outline' },
@@ -96,22 +104,37 @@ function MainTabs() {
           };
           const icon = icons[route.name];
           if (!icon) return null;
-          const iconName = focused ? icon.active : icon.inactive;
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return <Ionicons name={focused ? icon.active : icon.inactive} size={size} color={color} />;
         },
       })}
     >
       <Tab.Screen name="Dashboard" component={DashboardStack} options={{ tabBarLabel: 'Home' }} />
-      <Tab.Screen name="Templates" component={TemplatesScreen} options={{ tabBarLabel: 'Templates' }} />
+      <Tab.Screen name="Templates" component={TemplatesStack} options={{ tabBarLabel: 'Templates' }} />
       <Tab.Screen name="SearchTab" component={SearchScreen} options={{ tabBarLabel: 'Search' }} />
       <Tab.Screen name="AccountTab" component={AccountScreen} options={{ tabBarLabel: 'Account' }} />
     </Tab.Navigator>
   );
 }
 
+function RootStack() {
+  const { isSignedIn } = useAuth();
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {isSignedIn ? (
+        <>
+          <Stack.Screen name="Main" component={MainTabs} />
+          <Stack.Screen name="SharedView" component={SharedViewScreen} />
+        </>
+      ) : (
+        <Stack.Screen name="Auth" component={AuthStack} />
+      )}
+    </Stack.Navigator>
+  );
+}
+
 export default function AppNavigator() {
-  const { isLoaded, isSignedIn } = useAuth();
-  const { colors, isDark } = useTheme();
+  const { isLoaded } = useAuth();
+  const { isDark } = useTheme();
 
   if (!isLoaded) {
     return (
@@ -127,7 +150,7 @@ export default function AppNavigator() {
 
   return (
     <NavigationContainer>
-      {isSignedIn ? <MainTabs /> : <AuthStack />}
+      <RootStack />
     </NavigationContainer>
   );
 }

@@ -7,15 +7,18 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Dimensions,
+  Share,
+  Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../hooks/useTheme';
 import { useNotebookStore } from '../../store/notebookStore';
-import { NotebooksAPI, PagesAPI } from '../../services/api';
+import { NotebooksAPI, PagesAPI, AIAPI } from '../../services/api';
 import { DashboardStackParamList } from '../../navigation/types';
+
+// Templates
 import { SimpleTemplate } from '../../components/templates/SimpleTemplate';
 import { DiaryTemplate } from '../../components/templates/DiaryTemplate';
 import { PlannerTemplate } from '../../components/templates/PlannerTemplate';
@@ -24,14 +27,17 @@ import { TodoTemplate } from '../../components/templates/TodoTemplate';
 import { HabitTrackerTemplate } from '../../components/templates/HabitTrackerTemplate';
 import { ExpenseTemplate } from '../../components/templates/ExpenseTemplate';
 import { JournalTemplate } from '../../components/templates/JournalTemplate';
+import { RecipeTemplate } from '../../components/templates/RecipeTemplate';
+import { FlashcardTemplate } from '../../components/templates/FlashcardTemplate';
+import { CodeNotebookTemplate } from '../../components/templates/CodeNotebookTemplate';
+import { GoalTrackerTemplate } from '../../components/templates/GoalTrackerTemplate';
+import { BudgetPlannerTemplate } from '../../components/templates/BudgetPlannerTemplate';
 import { GenericTemplate } from '../../components/templates/GenericTemplate';
-
-const { width } = Dimensions.get('window');
 
 type NotebookViewerRouteProp = RouteProp<DashboardStackParamList, 'NotebookViewer'>;
 
 export default function NotebookViewerScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const route = useRoute<NotebookViewerRouteProp>();
   const { notebookId } = route.params;
   const { colors, isDark } = useTheme();
@@ -42,11 +48,14 @@ export default function NotebookViewerScreen() {
     setCurrentNotebook,
     setCurrentPages,
     setCurrentPage,
+    addPage,
   } = useNotebookStore();
 
   const [loading, setLoading] = useState(true);
   const [showAIPanel, setShowAIPanel] = useState(false);
+  const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [pageIndex, setPageIndex] = useState(0);
+  const [addingPage, setAddingPage] = useState(false);
 
   const loadNotebook = useCallback(async () => {
     try {
@@ -59,9 +68,7 @@ export default function NotebookViewerScreen() {
       const pages = pagesRes.data.pages || pagesRes.data || [];
       setCurrentNotebook(nb);
       setCurrentPages(pages);
-      if (pages.length > 0) {
-        setCurrentPage(pages[0]);
-      }
+      if (pages.length > 0) setCurrentPage(pages[0]);
     } catch (err) {
       Alert.alert('Error', 'Could not load notebook');
       navigation.goBack();
@@ -80,13 +87,52 @@ export default function NotebookViewerScreen() {
   }, []);
 
   const handlePageChange = (index: number) => {
+    if (index < 0 || index >= currentPages.length) return;
     setPageIndex(index);
     setCurrentPage(currentPages[index]);
   };
 
+  const handleAddPage = async () => {
+    if (!currentNotebook || addingPage) return;
+    setAddingPage(true);
+    try {
+      const res = await PagesAPI.create(currentNotebook._id, {
+        title: `Page ${currentPages.length + 1}`,
+        content: '',
+      });
+      const newPage = res.data.page || res.data;
+      addPage(newPage);
+      const newIndex = currentPages.length;
+      setPageIndex(newIndex);
+      setCurrentPage(newPage);
+    } catch {
+      Alert.alert('Error', 'Could not add page');
+    } finally {
+      setAddingPage(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!currentNotebook) return;
+    try {
+      await Share.share({
+        title: currentNotebook.title,
+        message: `Check out my notebook "${currentNotebook.title}" on SmartNote AI`,
+      });
+    } catch {}
+  };
+
+  const handleAIAction = (action: string) => {
+    setShowAIPanel(false);
+    if (action === 'chat') {
+      navigation.navigate('AIChat', { notebookId: currentNotebook?._id });
+    } else {
+      navigation.navigate('AIChat', { notebookId: currentNotebook?._id });
+    }
+  };
+
   const renderTemplate = () => {
     if (!currentNotebook) return null;
-    const template = currentNotebook.template;
     const props = {
       notebook: currentNotebook,
       pages: currentPages,
@@ -95,25 +141,21 @@ export default function NotebookViewerScreen() {
       onPageChange: handlePageChange,
     };
 
-    switch (template) {
-      case 'simple':
-        return <SimpleTemplate {...props} />;
-      case 'diary':
-        return <DiaryTemplate {...props} />;
-      case 'planner':
-        return <PlannerTemplate {...props} />;
-      case 'meeting-notes':
-        return <MeetingNotesTemplate {...props} />;
-      case 'todo':
-        return <TodoTemplate {...props} />;
-      case 'habit-tracker':
-        return <HabitTrackerTemplate {...props} />;
-      case 'expense':
-        return <ExpenseTemplate {...props} />;
-      case 'journal':
-        return <JournalTemplate {...props} />;
-      default:
-        return <GenericTemplate {...props} />;
+    switch (currentNotebook.template) {
+      case 'simple': return <SimpleTemplate {...props} />;
+      case 'diary': return <DiaryTemplate {...props} />;
+      case 'planner': return <PlannerTemplate {...props} />;
+      case 'meeting-notes': return <MeetingNotesTemplate {...props} />;
+      case 'todo': return <TodoTemplate {...props} />;
+      case 'habit-tracker': return <HabitTrackerTemplate {...props} />;
+      case 'expense': return <ExpenseTemplate {...props} />;
+      case 'journal': return <JournalTemplate {...props} />;
+      case 'recipe': return <RecipeTemplate {...props} />;
+      case 'flashcard': return <FlashcardTemplate {...props} />;
+      case 'code-notebook': return <CodeNotebookTemplate {...props} />;
+      case 'goal-tracker': return <GoalTrackerTemplate {...props} />;
+      case 'budget-planner': return <BudgetPlannerTemplate {...props} />;
+      default: return <GenericTemplate {...props} />;
     }
   };
 
@@ -121,9 +163,7 @@ export default function NotebookViewerScreen() {
     return (
       <View style={[styles.loading, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color="#f59e0b" />
-        <Text style={[styles.loadingText, { color: colors.mutedForeground }]}>
-          Opening notebook...
-        </Text>
+        <Text style={[styles.loadingText, { color: colors.mutedForeground }]}>Opening notebook...</Text>
       </View>
     );
   }
@@ -133,128 +173,90 @@ export default function NotebookViewerScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Notebook Header */}
-      <View
-        style={[
-          styles.header,
-          {
-            backgroundColor: isDark ? 'rgba(28,25,23,0.98)' : 'rgba(255,255,255,0.98)',
-            borderBottomColor: colors.border,
-          },
-        ]}
-      >
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backBtn}
-        >
+      <View style={[styles.header, {
+        backgroundColor: isDark ? 'rgba(28,25,23,0.98)' : 'rgba(255,255,255,0.98)',
+        borderBottomColor: colors.border,
+      }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={colors.foreground} />
         </TouchableOpacity>
-
         <View style={styles.headerCenter}>
           <View style={[styles.headerSpine, { backgroundColor: themeColor }]} />
           <Text style={[styles.headerTitle, { color: colors.foreground }]} numberOfLines={1}>
             {currentNotebook?.title}
           </Text>
         </View>
-
         <View style={styles.headerActions}>
           <TouchableOpacity onPress={() => setShowAIPanel(!showAIPanel)} style={styles.headerBtn}>
-            <Ionicons
-              name="flash"
-              size={20}
-              color={showAIPanel ? '#f59e0b' : colors.foreground}
-            />
+            <Ionicons name="flash" size={20} color={showAIPanel ? '#f59e0b' : colors.foreground} />
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {/* Share */}}
-            style={styles.headerBtn}
-          >
+          <TouchableOpacity onPress={handleShare} style={styles.headerBtn}>
             <Ionicons name="share-outline" size={20} color={colors.foreground} />
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {/* Options */}}
-            style={styles.headerBtn}
-          >
+          <TouchableOpacity onPress={() => setShowOptionsModal(true)} style={styles.headerBtn}>
             <Ionicons name="ellipsis-horizontal" size={20} color={colors.foreground} />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Page navigation tabs */}
-      {currentPages.length > 1 && (
+      {currentPages.length > 0 && (
         <View style={[styles.pageTabs, { backgroundColor: isDark ? '#1c1917' : '#fafaf9', borderBottomColor: colors.border }]}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pageTabsScroll}>
             {currentPages.map((page, i) => (
               <TouchableOpacity
                 key={page._id}
                 onPress={() => handlePageChange(i)}
-                style={[
-                  styles.pageTab,
-                  {
-                    borderBottomColor: i === pageIndex ? themeColor : 'transparent',
-                    borderBottomWidth: 2,
-                  },
-                ]}
+                style={[styles.pageTab, { borderBottomColor: i === pageIndex ? themeColor : 'transparent', borderBottomWidth: 2 }]}
               >
-                <Text
-                  style={[
-                    styles.pageTabText,
-                    { color: i === pageIndex ? themeColor : colors.mutedForeground },
-                  ]}
-                  numberOfLines={1}
-                >
+                <Text style={[styles.pageTabText, { color: i === pageIndex ? themeColor : colors.mutedForeground }]} numberOfLines={1}>
                   {page.title || `Page ${i + 1}`}
                 </Text>
               </TouchableOpacity>
             ))}
-
-            {/* Add page button */}
-            <TouchableOpacity style={styles.addPageTab} onPress={() => {/* Add page */}}>
-              <Ionicons name="add" size={18} color={colors.mutedForeground} />
+            <TouchableOpacity
+              style={styles.addPageTab}
+              onPress={handleAddPage}
+              disabled={addingPage}
+            >
+              {addingPage
+                ? <ActivityIndicator size="small" color={colors.mutedForeground} />
+                : <Ionicons name="add" size={18} color={colors.mutedForeground} />}
             </TouchableOpacity>
           </ScrollView>
         </View>
       )}
 
       {/* Template Content */}
-      <View style={styles.content}>
-        {renderTemplate()}
-      </View>
+      <View style={styles.content}>{renderTemplate()}</View>
 
       {/* AI Quick Panel */}
       {showAIPanel && (
-        <View
-          style={[
-            styles.aiPanel,
-            { backgroundColor: isDark ? '#1c1917' : '#fff', borderTopColor: colors.border },
-          ]}
-        >
+        <View style={[styles.aiPanel, { backgroundColor: isDark ? '#1c1917' : '#fff', borderTopColor: colors.border }]}>
           <View style={styles.aiPanelHeader}>
             <View style={styles.aiPanelTitle}>
               <LinearGradient colors={['#f59e0b', '#f97316']} style={styles.aiPanelIcon}>
                 <Ionicons name="flash" size={14} color="#fff" />
               </LinearGradient>
-              <Text style={[styles.aiPanelTitleText, { color: colors.foreground }]}>
-                AI Assistant
-              </Text>
+              <Text style={[styles.aiPanelTitleText, { color: colors.foreground }]}>AI Assistant</Text>
             </View>
             <TouchableOpacity onPress={() => setShowAIPanel(false)}>
               <Ionicons name="close" size={20} color={colors.mutedForeground} />
             </TouchableOpacity>
           </View>
-
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.aiActions}>
             {[
-              { icon: 'sparkles', label: 'Complete', color: '#f59e0b' },
-              { icon: 'create', label: 'Improve', color: '#3b82f6' },
-              { icon: 'list', label: 'Outline', color: '#10b981' },
-              { icon: 'help-circle', label: 'Ask AI', color: '#a855f7' },
-              { icon: 'image', label: 'Generate Image', color: '#ec4899' },
-              { icon: 'chatbubbles', label: 'Chat', color: '#06b6d4' },
+              { icon: 'sparkles', label: 'Complete', color: '#f59e0b', action: 'complete' },
+              { icon: 'create', label: 'Improve', color: '#3b82f6', action: 'improve' },
+              { icon: 'list', label: 'Outline', color: '#10b981', action: 'outline' },
+              { icon: 'help-circle', label: 'Ask AI', color: '#a855f7', action: 'ask' },
+              { icon: 'image', label: 'Generate Image', color: '#ec4899', action: 'image' },
+              { icon: 'chatbubbles', label: 'Chat', color: '#06b6d4', action: 'chat' },
             ].map((action) => (
               <TouchableOpacity
                 key={action.label}
                 style={[styles.aiAction, { backgroundColor: `${action.color}15`, borderColor: `${action.color}30` }]}
-                onPress={() => {/* Navigate to AI screen */}}
+                onPress={() => handleAIAction(action.action)}
               >
                 <Ionicons name={action.icon as keyof typeof Ionicons.glyphMap} size={18} color={action.color} />
                 <Text style={[styles.aiActionText, { color: colors.foreground }]}>{action.label}</Text>
@@ -263,132 +265,74 @@ export default function NotebookViewerScreen() {
           </ScrollView>
         </View>
       )}
+
+      {/* Options Modal */}
+      <Modal visible={showOptionsModal} transparent animationType="slide">
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowOptionsModal(false)}
+        >
+          <View style={[styles.optionsSheet, { backgroundColor: isDark ? '#1c1917' : '#fff' }]}>
+            <View style={[styles.optionsHandle, { backgroundColor: colors.border }]} />
+            <Text style={[styles.optionsTitle, { color: colors.foreground }]}>Notebook Options</Text>
+            {[
+              { icon: 'pencil', label: 'Edit Notebook', color: '#f59e0b', action: () => { setShowOptionsModal(false); navigation.navigate('EditNotebook', { notebookId }); } },
+              { icon: 'share-social', label: 'Share', color: '#3b82f6', action: () => { setShowOptionsModal(false); handleShare(); } },
+              { icon: 'chatbubbles', label: 'AI Chat', color: '#a855f7', action: () => { setShowOptionsModal(false); navigation.navigate('AIChat', { notebookId }); } },
+              { icon: 'analytics', label: 'Analytics', color: '#10b981', action: () => { setShowOptionsModal(false); navigation.navigate('Analytics'); } },
+              { icon: 'trash', label: 'Move to Trash', color: '#ef4444', action: async () => { setShowOptionsModal(false); await NotebooksAPI.delete(notebookId); navigation.goBack(); } },
+            ].map((opt) => (
+              <TouchableOpacity key={opt.label} onPress={opt.action} style={styles.optionItem}>
+                <View style={[styles.optionIcon, { backgroundColor: `${opt.color}20` }]}>
+                  <Ionicons name={opt.icon as keyof typeof Ionicons.glyphMap} size={18} color={opt.color} />
+                </View>
+                <Text style={[styles.optionLabel, { color: opt.color === '#ef4444' ? '#ef4444' : colors.foreground }]}>
+                  {opt.label}
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color={colors.mutedForeground} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 12,
-  },
+  loading: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
   loadingText: { fontSize: 14 },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingTop: 52,
-    paddingBottom: 10,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    gap: 8,
+    flexDirection: 'row', alignItems: 'center', paddingTop: 52, paddingBottom: 10,
+    paddingHorizontal: 12, borderBottomWidth: 1, gap: 8,
   },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerCenter: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    overflow: 'hidden',
-  },
-  headerSpine: {
-    width: 4,
-    height: 24,
-    borderRadius: 2,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    flex: 1,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    gap: 2,
-  },
-  headerBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  pageTabs: {
-    borderBottomWidth: 1,
-  },
-  pageTabsScroll: {
-    flexDirection: 'row',
-    paddingHorizontal: 12,
-  },
-  pageTab: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginRight: 4,
-    minWidth: 80,
-  },
-  pageTabText: {
-    fontSize: 13,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  addPageTab: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    justifyContent: 'center',
-  },
-  content: {
-    flex: 1,
-  },
-  aiPanel: {
-    borderTopWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  aiPanelHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  aiPanelTitle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  aiPanelIcon: {
-    width: 26,
-    height: 26,
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  aiPanelTitleText: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  aiActions: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingBottom: 4,
-  },
-  aiAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  aiActionText: {
-    fontSize: 13,
-    fontWeight: '500',
-  },
+  backBtn: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
+  headerCenter: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, overflow: 'hidden' },
+  headerSpine: { width: 4, height: 24, borderRadius: 2 },
+  headerTitle: { fontSize: 16, fontWeight: '700', flex: 1 },
+  headerActions: { flexDirection: 'row', gap: 2 },
+  headerBtn: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
+  pageTabs: { borderBottomWidth: 1 },
+  pageTabsScroll: { flexDirection: 'row', paddingHorizontal: 12 },
+  pageTab: { paddingHorizontal: 12, paddingVertical: 10, marginRight: 4, minWidth: 80 },
+  pageTabText: { fontSize: 13, fontWeight: '500', textAlign: 'center' },
+  addPageTab: { paddingHorizontal: 12, paddingVertical: 10, justifyContent: 'center' },
+  content: { flex: 1 },
+  aiPanel: { borderTopWidth: 1, paddingHorizontal: 16, paddingVertical: 12 },
+  aiPanelHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  aiPanelTitle: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  aiPanelIcon: { width: 26, height: 26, borderRadius: 6, justifyContent: 'center', alignItems: 'center' },
+  aiPanelTitleText: { fontSize: 15, fontWeight: '700' },
+  aiActions: { flexDirection: 'row', gap: 8, paddingBottom: 4 },
+  aiAction: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
+  aiActionText: { fontSize: 13, fontWeight: '500' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  optionsSheet: { borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, paddingBottom: 40 },
+  optionsHandle: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 16 },
+  optionsTitle: { fontSize: 18, fontWeight: '700', marginBottom: 16 },
+  optionItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: 12 },
+  optionIcon: { width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  optionLabel: { flex: 1, fontSize: 15, fontWeight: '500' },
 });

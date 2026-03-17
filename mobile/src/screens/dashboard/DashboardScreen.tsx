@@ -175,6 +175,7 @@ export default function DashboardScreen() {
             { icon: 'trash', label: 'Trash', color: '#ef4444', onPress: () => navigation.navigate('Trash') },
             { icon: 'share-social', label: 'Shared', color: '#10b981', onPress: () => navigation.navigate('SharedNotebooks') },
             { icon: 'chatbubbles', label: 'AI Chat', color: '#a855f7', onPress: () => navigation.navigate('AIChat', {}) },
+            { icon: 'storefront', label: 'Marketplace', color: '#06b6d4', onPress: () => navigation.navigate('Marketplace') },
           ].map((action) => (
             <TouchableOpacity
               key={action.label}

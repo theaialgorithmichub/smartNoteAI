@@ -35,7 +35,7 @@ export default function TemplatesScreen() {
   });
 
   const handleSelectTemplate = (template: TemplateConfig) => {
-    navigation.navigate('CreateNotebook');
+    (navigation as any).navigate('CreateNotebook', { templateId: template.id });
   };
 
   return (

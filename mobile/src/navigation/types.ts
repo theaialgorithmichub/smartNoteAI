@@ -1,7 +1,6 @@
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
-  NotebookViewer: { notebookId: string };
   SharedView: { shareId: string };
 };
 
@@ -30,7 +29,7 @@ export type DashboardStackParamList = {
   Marketplace: undefined;
   Friends: undefined;
   Notifications: undefined;
-  CreateNotebook: undefined;
+  CreateNotebook: { templateId?: string } | undefined;
   EditNotebook: { notebookId: string };
   SharedNotebooks: undefined;
   AIChat: { notebookId?: string };

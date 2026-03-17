@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRoute } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -27,13 +28,15 @@ const CATEGORIES = ['Personal', 'Work', 'School', 'Research'];
 
 export default function CreateNotebookScreen() {
   const navigation = useNavigation();
+  const route = useRoute();
+  const params = (route.params || {}) as { templateId?: string };
   const { colors, isDark } = useTheme();
   const { addNotebook } = useNotebookStore();
 
-  const [step, setStep] = useState(0); // 0: details, 1: template, 2: appearance
+  const [step, setStep] = useState(params.templateId ? 0 : 0);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('Personal');
-  const [selectedTemplate, setSelectedTemplate] = useState('simple');
+  const [selectedTemplate, setSelectedTemplate] = useState(params.templateId || 'simple');
   const [themeColor, setThemeColor] = useState('#8B4513');
   const [templateCategory, setTemplateCategory] = useState('All');
   const [loading, setLoading] = useState(false);
