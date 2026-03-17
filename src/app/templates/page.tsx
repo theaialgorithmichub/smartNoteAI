@@ -51,6 +51,20 @@ import { GoalTrackerTemplate } from "@/components/notebook-templates/goal-tracke
 import { AIPromptStudioTemplate } from "@/components/notebook-templates/ai-prompt-studio-template";
 import { PianoNotesTemplate } from "@/components/notebook-templates/piano-notes-template";
 import { VocabularyTemplate } from "@/components/notebook-templates/vocabulary-template";
+import {
+  CarromCoachTemplate,
+  CinematicStoryboarderTemplate,
+  DevFlowArchitectTemplate,
+  LanguageBridgeTemplate,
+  MeetingStrategistTemplate,
+  NarrativeStoryboardTemplate,
+  PianoVirtuosoTemplate,
+  ProjectBuilderTemplate,
+  ResearchSynthesizerTemplate,
+  SecondBrainDailyLogTemplate,
+  StockPulseTemplate,
+  WorkflowAutomatorTemplate,
+} from "@/components/notebook-templates/next-gen-ai-templates";
 import { NotebookTemplateType } from "@/types/notebook-templates";
 
 export default function TemplatesPage() {
@@ -149,6 +163,30 @@ export default function TemplatesPage() {
         return <GoalTrackerTemplate title="Goal Tracker" />;
       case 'ai-prompt-studio':
         return <AIPromptStudioTemplate title="AI Prompt Studio" />;
+      case 'project-builder':
+        return <ProjectBuilderTemplate title="The Project Builder Template" />;
+      case 'second-brain-daily-log':
+        return <SecondBrainDailyLogTemplate title='The "Second Brain" Daily Log' />;
+      case 'narrative-storyboard':
+        return <NarrativeStoryboardTemplate title="Narrative Storyboard Template" />;
+      case 'piano-virtuoso':
+        return <PianoVirtuosoTemplate title="The Piano Virtuoso" />;
+      case 'dev-flow-architect':
+        return <DevFlowArchitectTemplate title="The Dev-Flow Architect" />;
+      case 'cinematic-storyboarder':
+        return <CinematicStoryboarderTemplate title="The Cinematic Storyboarder" />;
+      case 'meeting-strategist':
+        return <MeetingStrategistTemplate title="The Meeting Strategist" />;
+      case 'research-synthesizer':
+        return <ResearchSynthesizerTemplate title="The Research Synthesizer" />;
+      case 'workflow-automator':
+        return <WorkflowAutomatorTemplate title="The Workflow Automator" />;
+      case 'stock-pulse':
+        return <StockPulseTemplate title="The Stock Pulse" />;
+      case 'language-bridge':
+        return <LanguageBridgeTemplate title="The Language Bridge" />;
+      case 'carrom-coach':
+        return <CarromCoachTemplate title='The Smart "Carrom" Coach' />;
       case 'piano-notes':
         return <PianoNotesTemplate title="Piano Notes" />;
       case 'vocabulary':

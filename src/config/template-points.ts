@@ -253,6 +253,66 @@ export const TEMPLATE_POINTS: Record<NotebookTemplateType, TemplatePointsConfig>
     points: 8,
     tier: 'elite',
   },
+  'project-builder': {
+    templateId: 'project-builder',
+    points: 7,
+    tier: 'elite',
+  },
+  'second-brain-daily-log': {
+    templateId: 'second-brain-daily-log',
+    points: 4,
+    tier: 'standard',
+  },
+  'narrative-storyboard': {
+    templateId: 'narrative-storyboard',
+    points: 6,
+    tier: 'premium',
+  },
+  'piano-virtuoso': {
+    templateId: 'piano-virtuoso',
+    points: 7,
+    tier: 'elite',
+  },
+  'dev-flow-architect': {
+    templateId: 'dev-flow-architect',
+    points: 6,
+    tier: 'premium',
+  },
+  'cinematic-storyboarder': {
+    templateId: 'cinematic-storyboarder',
+    points: 8,
+    tier: 'elite',
+  },
+  'meeting-strategist': {
+    templateId: 'meeting-strategist',
+    points: 6,
+    tier: 'premium',
+  },
+  'research-synthesizer': {
+    templateId: 'research-synthesizer',
+    points: 7,
+    tier: 'elite',
+  },
+  'workflow-automator': {
+    templateId: 'workflow-automator',
+    points: 6,
+    tier: 'premium',
+  },
+  'stock-pulse': {
+    templateId: 'stock-pulse',
+    points: 8,
+    tier: 'elite',
+  },
+  'language-bridge': {
+    templateId: 'language-bridge',
+    points: 5,
+    tier: 'premium',
+  },
+  'carrom-coach': {
+    templateId: 'carrom-coach',
+    points: 6,
+    tier: 'premium',
+  },
   'piano-notes': {
     templateId: 'piano-notes',
     points: 3,
