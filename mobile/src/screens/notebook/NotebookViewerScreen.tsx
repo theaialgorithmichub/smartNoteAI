@@ -55,6 +55,13 @@ import {
   PromptDiaryTemplate,
   ImportantURLsTemplate,
 } from '../../components/templates/RemainingTemplates';
+import {
+  TutorialLearnTemplate,
+  AIPromptStudioTemplate,
+  ProjectTemplate,
+  LoopTemplate,
+  MultiPurposeTemplate,
+} from '../../components/templates/FinalTemplates';
 import { GenericTemplate } from '../../components/templates/GenericTemplate';
 
 type NotebookViewerRouteProp = RouteProp<DashboardStackParamList, 'NotebookViewer'>;
@@ -200,6 +207,21 @@ export default function NotebookViewerScreen() {
       case 'sticker-book': return <StickerBookTemplate {...props} />;
       case 'prompt-diary': return <PromptDiaryTemplate {...props} />;
       case 'important-urls': return <ImportantURLsTemplate {...props} />;
+      case 'tutorial-learn': return <TutorialLearnTemplate {...props} />;
+      case 'ai-prompt-studio': return <AIPromptStudioTemplate {...props} />;
+      case 'project': return <ProjectTemplate {...props} />;
+      case 'loop': return <LoopTemplate {...props} />;
+      case 'doodle': return <WhiteboardTemplate {...props} />;
+      case 'n8n':
+      case 'image-prompt':
+      case 'video-prompt':
+      case 'sound-box':
+      case 'research-builder':
+      case 'piano-notes':
+      case 'custom':
+      case 'document':
+      case 'dashboard':
+        return <MultiPurposeTemplate {...props} templateId={currentNotebook!.template} />;
       default: return <GenericTemplate {...props} />;
     }
   };
