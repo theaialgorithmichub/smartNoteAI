@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
+import { motion } from "framer-motion"
 import { Trash2, Clock, BookOpen, AlertCircle, Share2, Users, X, ImageIcon } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 import { EditCoverDialog } from "./edit-cover-dialog"
@@ -98,8 +99,16 @@ export function NotebookCard({ notebook, onUpdate }: NotebookCardProps) {
     Research: "from-purple-500 to-violet-600",
   }
 
+  const MotionDiv = motion.div
+
   return (
-    <div className="relative group">
+    <MotionDiv
+      className="relative group"
+      initial={{ opacity: 0, y: 20, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      whileHover={{ y: -6, scale: 1.02 }}
+      transition={{ duration: 0.35, ease: [0.22, 0.61, 0.36, 1] }}
+    >
       {/* Action buttons */}
       <div className="absolute top-2 right-2 z-50 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
         {/* Share button */}
@@ -200,68 +209,86 @@ export function NotebookCard({ notebook, onUpdate }: NotebookCardProps) {
       />
 
       <div onClick={handleOpen} className="cursor-pointer">
-        <GlareCard className="relative">
-          {/* Background with cover image or theme color */}
-          {notebook.appearance.coverImageUrl ? (
-            <Image
-              src={notebook.appearance.coverImageUrl}
-              alt={notebook.title}
-              fill
-              className="object-cover"
+        {/* Outer glow to match floating-card-gallery style */}
+        <div className="relative group">
+          <motion.div
+            className="absolute -inset-0.5 rounded-xl opacity-0 group-hover:opacity-100"
+            animate={{
+              opacity: 0.5,
+              boxShadow: "0 0 40px 2px rgba(139,92,246,0.5)",
+            }}
+            transition={{ duration: 0.4 }}
+            style={{
+              background: "linear-gradient(135deg, rgba(139,92,246,0.7), transparent 80%)",
+            }}
+          />
+
+          {/* Main card frame */}
+          <div className="relative rounded-xl bg-slate-800/80 backdrop-blur-sm border border-slate-700 p-4 h-full flex flex-col overflow-hidden">
+            {/* Floating blob */}
+            <div
+              className="absolute -right-4 -top-4 w-24 h-24 rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 opacity-50 blur-xl"
             />
-          ) : (
-            <div 
-              className="absolute inset-0"
-              style={{
-                background: `linear-gradient(135deg, ${notebook.appearance.themeColor} 0%, ${notebook.appearance.themeColor}cc 100%)`,
-              }}
-            />
-          )}
-          
-          {/* Book spine effect */}
-          <div className="absolute left-0 top-0 bottom-0 w-3 bg-black/30" />
-          
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/10" />
-          
-          {/* Content */}
-          <div className="relative h-full p-4 flex flex-col justify-between">
-            {/* Top section */}
-            <div className="flex items-start">
-              {/* Category badge */}
-              <span className={`px-2 py-1 rounded-md text-[10px] font-medium bg-gradient-to-r ${categoryColors[notebook.category] || "from-gray-500 to-gray-600"} text-white shadow-lg`}>
-                {notebook.category}
-              </span>
+
+            {/* Cover image or theme color */}
+            <div className="w-full h-36 mb-4 overflow-hidden rounded-lg">
+              {notebook.appearance.coverImageUrl ? (
+                <Image
+                  src={notebook.appearance.coverImageUrl}
+                  alt={notebook.title}
+                  fill={false}
+                  width={400}
+                  height={200}
+                  className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                />
+              ) : (
+                <div
+                  className="w-full h-full"
+                  style={{
+                    background: `radial-gradient(circle at top, ${notebook.appearance.themeColor}55 0%, transparent 50%), linear-gradient(135deg, ${notebook.appearance.themeColor} 0%, ${notebook.appearance.themeColor}dd 100%)`,
+                  }}
+                />
+              )}
             </div>
 
-            {/* Bottom section */}
-            <div className="space-y-2">
-              {/* Icon */}
-              <div className="w-10 h-10 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center">
-                <BookOpen className="h-5 w-5 text-white" />
+            {/* Content area */}
+            <div className="relative space-y-3">
+              <div className="flex items-center justify-between">
+                <span
+                  className={`px-2 py-1 rounded-md text-[10px] font-medium bg-gradient-to-r ${
+                    categoryColors[notebook.category] || "from-gray-500 to-gray-600"
+                  } text-white shadow-lg`}
+                >
+                  {notebook.category}
+                </span>
+
+                <motion.div
+                  className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/10"
+                  whileHover={{ rotate: -5, scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 260, damping: 18 }}
+                >
+                  <BookOpen className="h-4 w-4 text-white" />
+                </motion.div>
               </div>
-              
-              {/* Title */}
-              <h3 className="text-white font-bold text-sm line-clamp-2 drop-shadow-lg">
+
+              <h3 className="text-white font-semibold text-sm line-clamp-2">
                 {notebook.title}
               </h3>
-              
-              {/* Meta info */}
-              <div className="flex items-center justify-between text-white/70 text-xs">
+
+              <div className="flex items-center justify-between text-slate-200 text-xs">
                 <span>{notebook.pageCount} pages</span>
                 <div className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
                   <span>{formatDate(notebook.updatedAt)}</span>
                 </div>
               </div>
-              
-              {/* Sharing info */}
+
               {isShared && (
-                <div 
+                <div
                   className="mt-2 flex items-center justify-between"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="flex items-center gap-1 text-white/90 text-xs bg-white/10 backdrop-blur-sm px-2 py-1 rounded">
+                  <div className="flex items-center gap-1 text-slate-100 text-xs bg-slate-700/80 backdrop-blur-sm px-2 py-1 rounded">
                     {notebook.isPublic ? (
                       <>
                         <Share2 className="h-3 w-3" />
@@ -270,7 +297,9 @@ export function NotebookCard({ notebook, onUpdate }: NotebookCardProps) {
                     ) : (
                       <>
                         <Users className="h-3 w-3" />
-                        <span>Shared with {sharedCount} friend{sharedCount !== 1 ? 's' : ''}</span>
+                        <span>
+                          Shared with {sharedCount} friend{sharedCount !== 1 ? "s" : ""}
+                        </span>
                       </>
                     )}
                   </div>
@@ -285,8 +314,8 @@ export function NotebookCard({ notebook, onUpdate }: NotebookCardProps) {
               )}
             </div>
           </div>
-        </GlareCard>
+        </div>
       </div>
-    </div>
+    </MotionDiv>
   )
 }

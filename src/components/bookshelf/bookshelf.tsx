@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Plus, Filter, Sparkles } from "lucide-react"
 import { NotebookCard } from "./notebook-card"
@@ -31,10 +31,26 @@ export function Bookshelf({ userId }: BookshelfProps) {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>("all")
   const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const containerRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     fetchNotebooks()
   }, [filter])
+
+  // Track mouse movement for floating gallery-style perspective
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return
+      const rect = containerRef.current.getBoundingClientRect()
+      const x = (e.clientX - rect.left - rect.width / 2) / 25
+      const y = (e.clientY - rect.top - rect.height / 2) / 25
+      setMousePosition({ x, y })
+    }
+
+    window.addEventListener("mousemove", handleMouseMove)
+    return () => window.removeEventListener("mousemove", handleMouseMove)
+  }, [])
 
   const fetchNotebooks = async () => {
     try {
@@ -72,8 +88,18 @@ export function Bookshelf({ userId }: BookshelfProps) {
       </div>
 
       {/* Bookshelf Grid */}
-      <div className="relative">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 p-4">
+      <div
+        ref={containerRef}
+        className="relative"
+        style={{ perspective: "1500px" }}
+      >
+        <motion.div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 p-4"
+          style={{
+            transform: `rotateX(${-mousePosition.y}deg) rotateY(${mousePosition.x}deg)`,
+            transformStyle: "preserve-3d",
+          }}
+        >
           {/* Create New Notebook Card */}
           <motion.button
             whileHover={{ scale: 1.02, y: -5 }}
@@ -102,16 +128,35 @@ export function Bookshelf({ userId }: BookshelfProps) {
               notebooks.map((notebook, index) => (
                 <motion.div
                   key={notebook._id}
-                  initial={{ opacity: 0, y: 20 }}
+                  className="relative group"
+                  initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ delay: index * 0.05 }}
+                  transition={{ delay: index * 0.06, duration: 0.6, type: "spring", stiffness: 120 }}
+                  whileHover={{
+                    y: -6,
+                    scale: 1.03,
+                    transition: { duration: 0.25 },
+                  }}
+                  style={{ transformStyle: "preserve-3d" }}
                 >
-                  <NotebookCard notebook={notebook} onUpdate={fetchNotebooks} />
+                  <div className="pointer-events-none absolute -inset-1 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div
+                      className="h-full w-full rounded-2xl"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, rgba(139,92,246,0.7), transparent 70%)",
+                        boxShadow: "0 0 40px 2px rgba(139,92,246,0.45)",
+                      }}
+                    />
+                  </div>
+                  <div style={{ transform: "translateZ(35px)", transformStyle: "preserve-3d" }}>
+                    <NotebookCard notebook={notebook} onUpdate={fetchNotebooks} />
+                  </div>
                 </motion.div>
               ))}
           </AnimatePresence>
-        </div>
+        </motion.div>
 
         {/* Empty State */}
         {!loading && notebooks.length === 0 && (
