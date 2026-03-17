@@ -32,6 +32,29 @@ import { FlashcardTemplate } from '../../components/templates/FlashcardTemplate'
 import { CodeNotebookTemplate } from '../../components/templates/CodeNotebookTemplate';
 import { GoalTrackerTemplate } from '../../components/templates/GoalTrackerTemplate';
 import { BudgetPlannerTemplate } from '../../components/templates/BudgetPlannerTemplate';
+import { SaveTheDateTemplate } from '../../components/templates/SaveTheDateTemplate';
+import { TripTemplate } from '../../components/templates/TripTemplate';
+import { ProjectPipelineTemplate } from '../../components/templates/ProjectPipelineTemplate';
+import { MindMapTemplate } from '../../components/templates/MindMapTemplate';
+import { WhiteboardTemplate } from '../../components/templates/WhiteboardTemplate';
+import { StoryTemplate } from '../../components/templates/StoryTemplate';
+import { TypewriterTemplate } from '../../components/templates/TypewriterTemplate';
+import { StudyBookTemplate } from '../../components/templates/StudyBookTemplate';
+import { GroceryListTemplate } from '../../components/templates/GroceryListTemplate';
+import { WorkoutLogTemplate } from '../../components/templates/WorkoutLogTemplate';
+import { VocabularyTemplate } from '../../components/templates/VocabularyTemplate';
+import { AIResearchTemplate } from '../../components/templates/AIResearchTemplate';
+import {
+  BookNotesTemplate,
+  ClassNotesTemplate,
+  LinkTemplate,
+  GamesScorecardTemplate,
+  ExpenseSharerTemplate,
+  MealsPlannerTemplate,
+  StickerBookTemplate,
+  PromptDiaryTemplate,
+  ImportantURLsTemplate,
+} from '../../components/templates/RemainingTemplates';
 import { GenericTemplate } from '../../components/templates/GenericTemplate';
 
 type NotebookViewerRouteProp = RouteProp<DashboardStackParamList, 'NotebookViewer'>;
@@ -155,6 +178,28 @@ export default function NotebookViewerScreen() {
       case 'code-notebook': return <CodeNotebookTemplate {...props} />;
       case 'goal-tracker': return <GoalTrackerTemplate {...props} />;
       case 'budget-planner': return <BudgetPlannerTemplate {...props} />;
+      case 'save-the-date': return <SaveTheDateTemplate {...props} />;
+      case 'trip': return <TripTemplate {...props} />;
+      case 'project-pipeline': return <ProjectPipelineTemplate {...props} />;
+      case 'mind-map': return <MindMapTemplate {...props} />;
+      case 'whiteboard': return <WhiteboardTemplate {...props} />;
+      case 'story': return <StoryTemplate {...props} />;
+      case 'storytelling': return <StoryTemplate {...props} />;
+      case 'typewriter': return <TypewriterTemplate {...props} />;
+      case 'studybook': return <StudyBookTemplate {...props} />;
+      case 'grocery-list': return <GroceryListTemplate {...props} />;
+      case 'workout-log': return <WorkoutLogTemplate {...props} />;
+      case 'vocabulary': return <VocabularyTemplate {...props} />;
+      case 'ai-research': return <AIResearchTemplate {...props} />;
+      case 'book-notes': return <BookNotesTemplate {...props} />;
+      case 'class-notes': return <ClassNotesTemplate {...props} />;
+      case 'link': return <LinkTemplate {...props} />;
+      case 'games-scorecard': return <GamesScorecardTemplate {...props} />;
+      case 'expense-sharer': return <ExpenseSharerTemplate {...props} />;
+      case 'meals-planner': return <MealsPlannerTemplate {...props} />;
+      case 'sticker-book': return <StickerBookTemplate {...props} />;
+      case 'prompt-diary': return <PromptDiaryTemplate {...props} />;
+      case 'important-urls': return <ImportantURLsTemplate {...props} />;
       default: return <GenericTemplate {...props} />;
     }
   };
