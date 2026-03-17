@@ -29,7 +29,7 @@ const navigation = {
       id: "product",
       name: "Product",
       items: [
-        { name: "Features", href: "#features" },
+        { name: "Features", href: "/features" },
         { name: "Pricing", href: "#pricing" },
         { name: "Dashboard", href: "/dashboard" },
       ],

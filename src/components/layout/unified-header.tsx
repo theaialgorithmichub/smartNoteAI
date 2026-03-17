@@ -2,6 +2,7 @@
 
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import {
@@ -41,7 +42,7 @@ interface UnifiedHeaderProps {
 const navItems = [
   { icon: Home, label: "Home", href: "/", iconColor: "text-blue-500", gradient: "radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%)" },
   { icon: Layers, label: "Templates", href: "/templates", iconColor: "text-purple-500", gradient: "radial-gradient(circle, rgba(168,85,247,0.15) 0%, transparent 70%)" },
-  { icon: Sparkles, label: "Features", href: "#features", iconColor: "text-green-500", gradient: "radial-gradient(circle, rgba(34,197,94,0.15) 0%, transparent 70%)" },
+  { icon: Sparkles, label: "Features", href: "/features", iconColor: "text-green-500", gradient: "radial-gradient(circle, rgba(34,197,94,0.15) 0%, transparent 70%)" },
   { icon: DollarSign, label: "Pricing", href: "/pricing", iconColor: "text-orange-500", gradient: "radial-gradient(circle, rgba(249,115,22,0.15) 0%, transparent 70%)" },
 ];
 
@@ -52,6 +53,7 @@ export function UnifiedHeader({
   forceLoggedOut,
   fixed = false,
 }: UnifiedHeaderProps) {
+  const pathname = usePathname();
   const { isSignedIn } = useUser();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -60,6 +62,12 @@ export function UnifiedHeader({
   const [loggedInMobileOpen, setLoggedInMobileOpen] = useState(false);
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    const item = navItems.find((i) => i.href !== "/" && pathname?.startsWith(i.href));
+    if (item) setActiveNav(item.label);
+    else if (pathname === "/") setActiveNav("Home");
+  }, [pathname]);
 
   const showLoggedIn = forceLoggedIn ?? (isSignedIn && !forceLoggedOut);
   const showLoggedOut = !showLoggedIn;

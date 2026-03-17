@@ -5,8 +5,7 @@ import { Sparkles } from 'lucide-react'
 import { SplineScene } from '@/components/ui/splite'
 import { Card } from '@/components/ui/card'
 import { Spotlight } from '@/components/ui/spotlight'
-import { StardustButton } from '@/components/ui/stardust-button'
-import { LiquidButton } from '@/components/ui/liquid-button'
+import { ShinyButton } from '@/components/ui/shiny-button'
 
 export function HeroSection() {
   return (
@@ -39,10 +38,12 @@ export function HeroSection() {
             
             <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-4 sm:gap-6 items-stretch sm:items-center">
               <Link href="/sign-up">
-                <StardustButton>Get Started Free</StardustButton>
+                <ShinyButton>Get Started Free</ShinyButton>
               </Link>
               <Link href="/sign-in">
-                <LiquidButton>Sign In</LiquidButton>
+                <ShinyButton className="!bg-black !text-white !border-neutral-700">
+                  Sign In
+                </ShinyButton>
               </Link>
             </div>
             

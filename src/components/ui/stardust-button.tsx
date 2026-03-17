@@ -135,23 +135,24 @@ const StardustLiquid: React.FC<{ isHovered: boolean; colors: Colors }> = ({ isHo
 };
 
 const STARDUST_COLORS: Colors = {
-  color1: '#FFFFFF',
-  color2: '#78350f',
-  color3: '#fbbf24',
-  color4: '#FCFCFE',
-  color5: '#F9F9FD',
-  color6: '#fcd34d',
-  color7: '#b45309',
-  color8: '#d97706',
-  color9: '#f59e0b',
-  color10: '#fbbf24',
-  color11: '#92400e',
-  color12: '#fef3c7',
-  color13: '#b45309',
-  color14: '#fde68a',
-  color15: '#fef3c7',
-  color16: '#78350f',
-  color17: '#d97706',
+  // Futuristic neon spectrum
+  color1: '#ffffff',
+  color2: '#a855f7', // violet
+  color3: '#22c1c3', // teal
+  color4: '#4f46e5', // indigo
+  color5: '#0ea5e9', // sky
+  color6: '#22c55e', // emerald
+  color7: '#f97316', // orange
+  color8: '#06b6d4', // cyan
+  color9: '#e11d48', // rose
+  color10: '#6366f1', // indigo
+  color11: '#020617', // deep slate
+  color12: '#f5f3ff', // soft violet
+  color13: '#1d4ed8', // blue
+  color14: '#a5b4fc', // light indigo
+  color15: '#f9a8d4', // pink
+  color16: '#5b21b6', // deep purple
+  color17: '#22d3ee', // bright cyan
 };
 
 interface StardustButtonProps {
@@ -168,24 +169,30 @@ export const StardustButton: React.FC<StardustButtonProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   
   return (
-    <div className={cn("relative inline-block w-52 h-[2.7em] group", className)}>
-      <div className="absolute w-[112.81%] h-[128.57%] top-[8.57%] left-1/2 -translate-x-1/2 filter blur-[19px] opacity-70">
-        <span className="absolute inset-0 rounded-full bg-[#d9d9d9] filter blur-[6.5px]"></span>
+    <div className={cn("relative inline-block w-52 h-[2.8em] group", className)}>
+      {/* Outer glow */}
+      <div className="pointer-events-none absolute -inset-[3px] rounded-full bg-[conic-gradient(from_140deg_at_50%_0%,#22d3ee,#6366f1,#e11d48,#22c55e,#22d3ee)] opacity-60 blur-xl transition-opacity duration-300 group-hover:opacity-90" />
+
+      {/* Soft under-glow */}
+      <div className="absolute w-[115%] h-[135%] top-[10%] left-1/2 -translate-x-1/2 filter blur-[26px] opacity-80">
+        <span className="absolute inset-0 rounded-full bg-[#020617] filter blur-[10px]"></span>
         <div className="relative w-full h-full overflow-hidden rounded-full">
           <StardustLiquid isHovered={isHovered} colors={STARDUST_COLORS} />
         </div>
       </div>
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[40%] w-[92.23%] h-[112.85%] rounded-full bg-[#1a0a00] filter blur-[7.3px]"></div>
-      <div className="relative w-full h-full overflow-hidden rounded-full border-2 border-amber-900/50">
-        <span className="absolute inset-0 rounded-full bg-[#1a0a00]"></span>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[40%] w-[92.23%] h-[112.85%] rounded-full bg-[#020617] filter blur-[8px]"></div>
+      <div className="relative w-full h-full overflow-hidden rounded-full border border-cyan-400/40 shadow-[0_0_25px_rgba(56,189,248,0.6)] group-hover:shadow-[0_0_45px_rgba(129,140,248,0.9)] transition-shadow duration-300">
+        <span className="absolute inset-0 rounded-full bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950"></span>
         <StardustLiquid isHovered={isHovered} colors={STARDUST_COLORS} />
         {[1, 2, 3, 4, 5].map((i) => (
           <span
             key={i}
-            className={`absolute inset-0 rounded-full border-solid border-[3px] border-gradient-to-b from-transparent to-amber-500/30 mix-blend-overlay filter ${i <= 2 ? 'blur-[3px]' : i === 3 ? 'blur-[5px]' : 'blur-[4px]'}`}
+            className={`absolute inset-0 rounded-full border-solid border-[2px] border-transparent bg-[conic-gradient(from_180deg_at_50%_0%,rgba(56,189,248,0.2),rgba(129,140,248,0.35),rgba(244,114,182,0.2),transparent)] mix-blend-screen filter ${
+              i <= 2 ? 'blur-[3px]' : i === 3 ? 'blur-[5px]' : 'blur-[7px]'
+            }`}
           ></span>
         ))}
-        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[40%] w-[70.8%] h-[42.85%] rounded-full filter blur-[15px] bg-[#331a00]"></span>
+        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[40%] w-[70.8%] h-[42.85%] rounded-full filter blur-[18px] bg-gradient-to-r from-sky-500/40 via-indigo-500/35 to-fuchsia-500/40"></span>
       </div>
       <button
         className="absolute inset-0 rounded-full bg-transparent cursor-pointer"
@@ -194,8 +201,8 @@ export const StardustButton: React.FC<StardustButtonProps> = ({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <span className="flex items-center justify-center gap-2 rounded-full text-amber-200 group-hover:text-amber-400 text-lg font-semibold tracking-wide whitespace-nowrap transition-colors">
-          <span className="text-amber-400">✧</span>
+        <span className="flex items-center justify-center gap-2 rounded-full text-sky-100 group-hover:text-cyan-200 text-lg font-semibold tracking-wide whitespace-nowrap transition-colors">
+          <span className="text-cyan-300 group-hover:animate-pulse">✧</span>
           {children}
         </span>
       </button>
