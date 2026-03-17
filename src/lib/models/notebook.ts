@@ -50,6 +50,18 @@ export type NotebookTemplateType =
   | 'goal-tracker'
   | 'ai-prompt-studio'
   | 'tutorial-learn'
+  | 'project-builder'
+  | 'second-brain-daily-log'
+  | 'narrative-storyboard'
+  | 'piano-virtuoso'
+  | 'dev-flow-architect'
+  | 'cinematic-storyboarder'
+  | 'meeting-strategist'
+  | 'research-synthesizer'
+  | 'workflow-automator'
+  | 'stock-pulse'
+  | 'language-bridge'
+  | 'carrom-coach'
   | 'piano-notes'
   | 'vocabulary'
 
@@ -96,7 +108,7 @@ const NotebookSchema = new Schema<INotebook>(
     },
     template: {
       type: String,
-      enum: ['simple', 'meeting-notes', 'document', 'dashboard', 'code-notebook', 'planner', 'ai-research', 'diary', 'journal', 'custom', 'doodle', 'project', 'loop', 'story', 'storytelling', 'typewriter', 'n8n', 'image-prompt', 'video-prompt', 'link', 'studybook', 'flashcard', 'whiteboard', 'recipe', 'expense', 'trip', 'todo', 'sound-box', 'book-notes', 'habit-tracker', 'workout-log', 'budget-planner', 'class-notes', 'research-builder', 'grocery-list', 'expense-sharer', 'project-pipeline', 'prompt-diary', 'save-the-date', 'important-urls', 'language-translator', 'dictionary', 'meals-planner', 'games-scorecard', 'sticker-book', 'mind-map', 'goal-tracker', 'ai-prompt-studio', 'tutorial-learn', 'piano-notes', 'vocabulary'],
+      enum: ['simple', 'meeting-notes', 'document', 'dashboard', 'code-notebook', 'planner', 'ai-research', 'diary', 'journal', 'custom', 'doodle', 'project', 'loop', 'story', 'storytelling', 'typewriter', 'n8n', 'image-prompt', 'video-prompt', 'link', 'studybook', 'flashcard', 'whiteboard', 'recipe', 'expense', 'trip', 'todo', 'sound-box', 'book-notes', 'habit-tracker', 'workout-log', 'budget-planner', 'class-notes', 'research-builder', 'grocery-list', 'expense-sharer', 'project-pipeline', 'prompt-diary', 'save-the-date', 'important-urls', 'language-translator', 'dictionary', 'meals-planner', 'games-scorecard', 'sticker-book', 'mind-map', 'goal-tracker', 'ai-prompt-studio', 'tutorial-learn', 'project-builder', 'second-brain-daily-log', 'narrative-storyboard', 'piano-virtuoso', 'dev-flow-architect', 'cinematic-storyboarder', 'meeting-strategist', 'research-synthesizer', 'workflow-automator', 'stock-pulse', 'language-bridge', 'carrom-coach', 'piano-notes', 'vocabulary'],
       default: 'simple',
     },
     appearance: {

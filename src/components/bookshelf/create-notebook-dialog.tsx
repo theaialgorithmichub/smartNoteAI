@@ -73,6 +73,18 @@ const templates = [
   { id: "goal-tracker", name: "Goal Tracker", icon: Target, color: "from-blue-500 to-indigo-600" },
   { id: "ai-prompt-studio", name: "AI Prompt Studio", icon: Zap, color: "from-yellow-500 to-orange-600" },
   { id: "tutorial-learn", name: "Tutorial Learn", icon: GraduationCap, color: "from-indigo-500 to-blue-600" },
+  { id: "project-builder", name: "Project Builder", icon: FolderKanban, color: "from-indigo-500 to-violet-600" },
+  { id: "second-brain-daily-log", name: "Second Brain Daily Log", icon: CalendarDays, color: "from-cyan-500 to-blue-600" },
+  { id: "narrative-storyboard", name: "Narrative Storyboard", icon: Film, color: "from-violet-500 to-fuchsia-600" },
+  { id: "piano-virtuoso", name: "Piano Virtuoso", icon: Music, color: "from-slate-500 to-zinc-700" },
+  { id: "dev-flow-architect", name: "Dev-Flow Architect", icon: Code, color: "from-blue-500 to-indigo-600" },
+  { id: "cinematic-storyboarder", name: "Cinematic Storyboarder", icon: ImageIcon, color: "from-rose-500 to-orange-500" },
+  { id: "meeting-strategist", name: "Meeting Strategist", icon: Mic, color: "from-emerald-500 to-teal-600" },
+  { id: "research-synthesizer", name: "Research Synthesizer", icon: Search, color: "from-violet-500 to-purple-600" },
+  { id: "workflow-automator", name: "Workflow Automator", icon: Workflow, color: "from-teal-500 to-cyan-600" },
+  { id: "stock-pulse", name: "Stock Pulse", icon: Zap, color: "from-lime-500 to-green-600" },
+  { id: "language-bridge", name: "Language Bridge", icon: Languages, color: "from-sky-500 to-indigo-600" },
+  { id: "carrom-coach", name: "Smart Carrom Coach", icon: Target, color: "from-amber-500 to-orange-600" },
 ]
 
 const themeColors = [

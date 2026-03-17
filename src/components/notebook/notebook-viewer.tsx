@@ -75,6 +75,20 @@ import { GoalTrackerTemplate } from "@/components/notebook-templates/goal-tracke
 import { AIPromptStudioTemplate } from "@/components/notebook-templates/ai-prompt-studio-template"
 import { PianoNotesTemplate } from "@/components/notebook-templates/piano-notes-template"
 import { VocabularyTemplate } from "@/components/notebook-templates/vocabulary-template"
+import {
+  CarromCoachTemplate,
+  CinematicStoryboarderTemplate,
+  DevFlowArchitectTemplate,
+  LanguageBridgeTemplate,
+  MeetingStrategistTemplate,
+  NarrativeStoryboardTemplate,
+  PianoVirtuosoTemplate,
+  ProjectBuilderTemplate,
+  ResearchSynthesizerTemplate,
+  SecondBrainDailyLogTemplate,
+  StockPulseTemplate,
+  WorkflowAutomatorTemplate,
+} from "@/components/notebook-templates/next-gen-ai-templates"
 import { LoadingCubes } from "@/components/ui/loading-cubes"
 import LoadingBottle from "@/components/ui/loading-bottle"
 import { SimpleTemplate } from "@/components/notebook-templates/simple-template"
@@ -154,6 +168,18 @@ type NotebookTemplateType =
   | 'mind-map'
   | 'goal-tracker'
   | 'ai-prompt-studio'
+  | 'project-builder'
+  | 'second-brain-daily-log'
+  | 'narrative-storyboard'
+  | 'piano-virtuoso'
+  | 'dev-flow-architect'
+  | 'cinematic-storyboarder'
+  | 'meeting-strategist'
+  | 'research-synthesizer'
+  | 'workflow-automator'
+  | 'stock-pulse'
+  | 'language-bridge'
+  | 'carrom-coach'
   | 'piano-notes'
   | 'vocabulary'
 
@@ -634,6 +660,30 @@ export function NotebookViewer({ notebookId, userId, initialPage }: NotebookView
           return <GoalTrackerTemplate title={notebook.title} notebookId={notebookId} />
         case 'ai-prompt-studio':
           return <AIPromptStudioTemplate title={notebook.title} notebookId={notebookId} />
+        case 'project-builder':
+          return <ProjectBuilderTemplate title={notebook.title} notebookId={notebookId} />
+        case 'second-brain-daily-log':
+          return <SecondBrainDailyLogTemplate title={notebook.title} notebookId={notebookId} />
+        case 'narrative-storyboard':
+          return <NarrativeStoryboardTemplate title={notebook.title} notebookId={notebookId} />
+        case 'piano-virtuoso':
+          return <PianoVirtuosoTemplate title={notebook.title} notebookId={notebookId} />
+        case 'dev-flow-architect':
+          return <DevFlowArchitectTemplate title={notebook.title} notebookId={notebookId} />
+        case 'cinematic-storyboarder':
+          return <CinematicStoryboarderTemplate title={notebook.title} notebookId={notebookId} />
+        case 'meeting-strategist':
+          return <MeetingStrategistTemplate title={notebook.title} notebookId={notebookId} />
+        case 'research-synthesizer':
+          return <ResearchSynthesizerTemplate title={notebook.title} notebookId={notebookId} />
+        case 'workflow-automator':
+          return <WorkflowAutomatorTemplate title={notebook.title} notebookId={notebookId} />
+        case 'stock-pulse':
+          return <StockPulseTemplate title={notebook.title} notebookId={notebookId} />
+        case 'language-bridge':
+          return <LanguageBridgeTemplate title={notebook.title} notebookId={notebookId} />
+        case 'carrom-coach':
+          return <CarromCoachTemplate title={notebook.title} notebookId={notebookId} />
         case 'piano-notes':
           return <PianoNotesTemplate title={notebook.title} notebookId={notebookId} />
         case 'vocabulary':
