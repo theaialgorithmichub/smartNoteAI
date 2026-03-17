@@ -48,6 +48,18 @@ export type NotebookTemplateType =
   | 'mind-map'
   | 'goal-tracker'
   | 'ai-prompt-studio'
+  | 'project-builder'
+  | 'second-brain-daily-log'
+  | 'narrative-storyboard'
+  | 'piano-virtuoso'
+  | 'dev-flow-architect'
+  | 'cinematic-storyboarder'
+  | 'meeting-strategist'
+  | 'research-synthesizer'
+  | 'workflow-automator'
+  | 'stock-pulse'
+  | 'language-bridge'
+  | 'carrom-coach'
   | 'piano-notes'
   | 'vocabulary';
 
@@ -412,6 +424,102 @@ export const NOTEBOOK_TEMPLATES: NotebookTemplate[] = [
     icon: 'Brain',
     color: 'violet',
     features: ['Version control', 'Multi-model support', 'Test automation', 'Performance metrics', 'Cost tracking', 'Prompt optimization'],
+  },
+  {
+    id: 'project-builder',
+    name: 'Project Builder',
+    description: 'Move from product vision to stack, requirements, and user stories with AI',
+    icon: 'Brain',
+    color: 'indigo',
+    features: ['Vision to stack', 'AI requirements', 'User stories', 'Parking lot', 'PDF export'],
+  },
+  {
+    id: 'second-brain-daily-log',
+    name: 'Second Brain Daily Log',
+    description: 'Morning brain dump, Big Three planning, and date-based daily wins',
+    icon: 'Calendar',
+    color: 'cyan',
+    features: ['Brain dump', 'Big Three', 'Interstitial logs', 'Daily win', 'Calendar save'],
+  },
+  {
+    id: 'narrative-storyboard',
+    name: 'Narrative Storyboard',
+    description: 'Director-focused storyboard with scene metadata, frame and production notes',
+    icon: 'FileText',
+    color: 'purple',
+    features: ['Scene metadata', 'Shot design', 'Action/dialogue', 'Audio/lighting', 'Production checklist'],
+  },
+  {
+    id: 'piano-virtuoso',
+    name: 'Piano Virtuoso',
+    description: 'Convert YouTube performances into draft notation and MIDI practice assets',
+    icon: 'Music',
+    color: 'slate',
+    features: ['YouTube input', 'Audio-to-MIDI draft', 'Sheet view', 'MIDI download', 'Practice mode tips'],
+  },
+  {
+    id: 'dev-flow-architect',
+    name: 'Dev-Flow Architect',
+    description: 'Analyze code snippets and visualize data flow with Mermaid diagrams',
+    icon: 'Code',
+    color: 'blue',
+    features: ['Code analysis', 'Mermaid flowchart', 'Plain English logic', 'React/Hybris support'],
+  },
+  {
+    id: 'cinematic-storyboarder',
+    name: 'Cinematic Storyboarder',
+    description: 'Generate a 9-panel visual storyboard with AI prompts and camera angles',
+    icon: 'Brain',
+    color: 'rose',
+    features: ['Scene prompt', '9 panels', 'AI images', 'Camera angle suggestions'],
+  },
+  {
+    id: 'meeting-strategist',
+    name: 'Meeting Strategist',
+    description: 'Convert voice/transcript meetings into actions, decisions, and sentiment insights',
+    icon: 'Mic',
+    color: 'emerald',
+    features: ['Diarized transcript', 'Action items', 'Key decisions', 'Sentiment analysis'],
+  },
+  {
+    id: 'research-synthesizer',
+    name: 'Research Synthesizer',
+    description: 'Transform uploaded docs or web text into summary, FAQ, and cited facts',
+    icon: 'BookOpen',
+    color: 'violet',
+    features: ['Long-context synthesis', 'FAQ generator', '1-page summary', 'Cited facts'],
+  },
+  {
+    id: 'workflow-automator',
+    name: 'Workflow Automator',
+    description: 'Turn plain-language tasks into importable n8n workflow JSON',
+    icon: 'Code',
+    color: 'teal',
+    features: ['Idea to workflow', 'AI JSON generation', 'n8n export'],
+  },
+  {
+    id: 'stock-pulse',
+    name: 'Stock Pulse',
+    description: 'Track bullish vs bearish sentiment from recent market news',
+    icon: 'Brain',
+    color: 'green',
+    features: ['Ticker input', '24h news summary', 'Bullish vs bearish view', 'Source links'],
+  },
+  {
+    id: 'language-bridge',
+    name: 'Language Bridge',
+    description: 'Convert Malayalam ideas into structured English screenplay drafts',
+    icon: 'Mic',
+    color: 'sky',
+    features: ['Malayalam transcript', 'Translation', 'Screenplay formatting', 'Dual pane notes'],
+  },
+  {
+    id: 'carrom-coach',
+    name: 'Smart Carrom Coach',
+    description: 'Analyze carrom strike videos for angle, path prediction, and tips',
+    icon: 'Brain',
+    color: 'orange',
+    features: ['Video context', 'Strike angle estimate', 'Path prediction', 'AI improvement tips'],
   },
   {
     id: 'piano-notes',
