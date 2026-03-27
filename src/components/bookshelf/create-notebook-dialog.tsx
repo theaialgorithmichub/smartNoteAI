@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import {
   Dialog,
@@ -151,6 +151,7 @@ export function CreateNotebookDialog({
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
+  const [templatesLoading, setTemplatesLoading] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
   const [limitReached, setLimitReached] = useState(false)
   const [limitInfo, setLimitInfo] = useState<{ planType: string; maxNotebooks: number } | null>(null)
@@ -161,6 +162,41 @@ export function CreateNotebookDialog({
   const [paperPattern, setPaperPattern] = useState("lined")
   const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null)
   const [selectedTemplate, setSelectedTemplate] = useState("simple")
+  const [enabledTemplateIds, setEnabledTemplateIds] = useState<string[] | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+
+    const fetchEnabledTemplates = async () => {
+      try {
+        setTemplatesLoading(true)
+        const res = await fetch("/api/notebook-templates/enabled")
+        if (!res.ok) throw new Error("Failed to fetch enabled templates")
+        const data = await res.json()
+        const ids: string[] = Array.isArray(data?.enabledTemplateIds)
+          ? data.enabledTemplateIds
+          : []
+
+        setEnabledTemplateIds(ids)
+      } catch (err) {
+        console.error("[Templates] Failed to load enabled templates:", err)
+        // Fallback: show all templates if endpoint fails
+        setEnabledTemplateIds(null)
+      } finally {
+        setTemplatesLoading(false)
+      }
+    }
+
+    fetchEnabledTemplates()
+  }, [open])
+
+  useEffect(() => {
+    if (!enabledTemplateIds) return
+    if (enabledTemplateIds.length === 0) return
+    if (!enabledTemplateIds.includes(selectedTemplate)) {
+      setSelectedTemplate(enabledTemplateIds[0])
+    }
+  }, [enabledTemplateIds, selectedTemplate])
 
   const handleCreate = async () => {
     if (!title.trim()) return
@@ -314,7 +350,11 @@ export function CreateNotebookDialog({
           </div>
         )}
 
-        <div className={`space-y-8 py-6 ${limitReached ? "opacity-30 pointer-events-none" : ""}`}>
+        <div
+          className={`space-y-8 py-6 ${
+            limitReached ? "opacity-30 pointer-events-none" : ""
+          } ${templatesLoading ? "opacity-80" : ""}`}
+        >
           {/* Template Selection */}
           <div className="space-y-4">
             <label className="text-base font-bold text-cyan-300 flex items-center gap-2 uppercase tracking-wider">
@@ -322,7 +362,29 @@ export function CreateNotebookDialog({
               Choose Template
             </label>
             <div className="grid grid-cols-5 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-              {templates.map((template) => {
+              {(() => {
+                const list =
+                  enabledTemplateIds === null
+                    ? templates
+                    : templates.filter((t) => enabledTemplateIds.includes(t.id))
+
+                if (templatesLoading) {
+                  return (
+                    <div className="col-span-5 text-center text-sm text-cyan-300/70 py-6">
+                      Loading templates...
+                    </div>
+                  )
+                }
+
+                if (list.length === 0) {
+                  return (
+                    <div className="col-span-5 text-center text-sm text-amber-200 py-6">
+                      No templates are currently enabled.
+                    </div>
+                  )
+                }
+
+                return list.map((template) => {
                 const Icon = template.icon
                 return (
                   <motion.button
@@ -347,7 +409,8 @@ export function CreateNotebookDialog({
                     <span className="text-xs text-slate-300 group-hover:text-cyan-300 text-center leading-tight font-medium transition-colors">{template.name}</span>
                   </motion.button>
                 )
-              })}
+              })
+              })()}
             </div>
           </div>
 
@@ -556,7 +619,12 @@ export function CreateNotebookDialog({
           </Button>
           <Button 
             onClick={handleCreate} 
-            disabled={loading || !title.trim()}
+            disabled={
+              loading ||
+              !title.trim() ||
+              templatesLoading ||
+              (enabledTemplateIds ? !enabledTemplateIds.includes(selectedTemplate) : false)
+            }
             className="flex-1 px-6 py-3 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] disabled:opacity-30 disabled:cursor-not-allowed rounded-xl font-black text-base transition-all duration-300 border-2 border-cyan-400/50"
           >
             {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
