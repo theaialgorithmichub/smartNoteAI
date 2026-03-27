@@ -26,7 +26,7 @@ export async function POST(
 
   try {
     await connectDB()
-    const doc = await NotebookTemplateSetting.findOneAndUpdate(
+    const raw = await NotebookTemplateSetting.findOneAndUpdate(
       { templateId },
       {
         $set: {
@@ -37,6 +37,9 @@ export async function POST(
       },
       { upsert: true, new: true }
     ).lean()
+
+    // Mongoose lean() typings can include an array branch; normalize to a single doc.
+    const doc = (Array.isArray(raw) ? raw[0] : raw) as { isEnabled?: boolean } | null | undefined
 
     return NextResponse.json({
       templateId,
