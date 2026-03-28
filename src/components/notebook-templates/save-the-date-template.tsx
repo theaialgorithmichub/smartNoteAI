@@ -2,11 +2,18 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Plus, Bell, Trash2, X, Info, BellRing, AlertCircle, CalendarDays, Clock, MapPin, Check, Search } from 'lucide-react';
+import { Calendar, Plus, Bell, Trash2, X, Info, BellRing, AlertCircle, CalendarDays, Clock, MapPin, Check, Search, Layers2, Settings2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { TemplateFooter } from './template-footer';
 import { Button } from '@/components/ui/button';
 import AnimatedCardStack, { AnimatedCardItem } from '@/components/ui/animate-card-animation';
+
+export interface SaveTheDateProfile {
+  id: string;
+  name: string;
+  /** Keys with entries in ACCENT_CLASSES */
+  accent: string;
+}
 
 export interface SaveTheDateEvent {
   id: number;
@@ -19,7 +26,132 @@ export interface SaveTheDateEvent {
   url?: string;
   reminder: boolean;
   daysUntil: number;
+  /** Kept in sync with profile name for older filters / exports */
   category: string;
+  /** Workspace / lane for this event (Personal, Official, AI Film, …) */
+  profileId: string;
+}
+
+const ACCENT_CLASSES: Record<string, { card: string; badge: string }> = {
+  purple: {
+    card: 'bg-gradient-to-r from-purple-50 to-fuchsia-50 dark:from-purple-900/20 dark:to-fuchsia-900/10 border-2 border-purple-200 dark:border-purple-800',
+    badge: 'bg-purple-200 dark:bg-purple-900/40 text-purple-800 dark:text-purple-200',
+  },
+  blue: {
+    card: 'bg-gradient-to-r from-blue-50 to-sky-50 dark:from-blue-900/20 dark:to-sky-900/10 border-2 border-blue-200 dark:border-blue-800',
+    badge: 'bg-blue-200 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200',
+  },
+  cyan: {
+    card: 'bg-gradient-to-r from-cyan-50 to-teal-50 dark:from-cyan-900/20 dark:to-teal-900/10 border-2 border-cyan-200 dark:border-cyan-800',
+    badge: 'bg-cyan-200 dark:bg-cyan-900/40 text-cyan-800 dark:text-cyan-200',
+  },
+  amber: {
+    card: 'bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/10 border-2 border-amber-200 dark:border-amber-800',
+    badge: 'bg-amber-200 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200',
+  },
+  indigo: {
+    card: 'bg-gradient-to-r from-indigo-50 to-violet-50 dark:from-indigo-900/20 dark:to-violet-900/10 border-2 border-indigo-200 dark:border-indigo-800',
+    badge: 'bg-indigo-200 dark:bg-indigo-900/40 text-indigo-800 dark:text-indigo-200',
+  },
+  pink: {
+    card: 'bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-900/20 dark:to-rose-900/10 border-2 border-pink-200 dark:border-pink-800',
+    badge: 'bg-pink-200 dark:bg-pink-900/40 text-pink-800 dark:text-pink-200',
+  },
+  green: {
+    card: 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/10 border-2 border-green-200 dark:border-green-800',
+    badge: 'bg-green-200 dark:bg-green-900/40 text-green-800 dark:text-green-200',
+  },
+  neutral: {
+    card: 'bg-gradient-to-r from-neutral-50 to-neutral-100 dark:from-neutral-900/30 dark:to-neutral-800/20 border-2 border-neutral-200 dark:border-neutral-700',
+    badge: 'bg-neutral-200 dark:bg-neutral-700 text-neutral-800 dark:text-neutral-200',
+  },
+};
+
+export const SAVE_THE_DATE_DEFAULT_PROFILES: SaveTheDateProfile[] = [
+  { id: 'personal', name: 'Personal', accent: 'purple' },
+  { id: 'official', name: 'Official', accent: 'blue' },
+  { id: 'ai-film', name: 'AI Film', accent: 'cyan' },
+  { id: 'ai-ads', name: 'AI Ads', accent: 'amber' },
+  { id: 'work', name: 'Work', accent: 'indigo' },
+  { id: 'social', name: 'Social', accent: 'pink' },
+];
+
+function slugifyProfileId(name: string) {
+  const base = name
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '');
+  return `${base || 'profile'}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+/** Migrate legacy `{ events }` to `{ profiles, events }` and assign profileId + category. */
+export function normalizeSaveTheDatePayload(
+  raw: Record<string, unknown> | null | undefined,
+  seedProfiles?: SaveTheDateProfile[]
+): { profiles: SaveTheDateProfile[]; events: SaveTheDateEvent[] } {
+  const seed = seedProfiles?.length ? seedProfiles : SAVE_THE_DATE_DEFAULT_PROFILES;
+  let profiles: SaveTheDateProfile[] =
+    Array.isArray(raw?.profiles) && (raw!.profiles as unknown[]).length > 0
+      ? (raw!.profiles as SaveTheDateProfile[]).map((p) => ({
+          id: String(p.id || slugifyProfileId(String(p.name || 'profile'))),
+          name: String(p.name || 'Profile'),
+          accent: typeof p.accent === 'string' && ACCENT_CLASSES[p.accent] ? p.accent : 'neutral',
+        }))
+      : seed.map((p) => ({ ...p }));
+
+  const list = Array.isArray(raw?.events) ? (raw!.events as Record<string, unknown>[]) : [];
+  const profileById = new Map(profiles.map((p) => [p.id, p]));
+
+  const resolveProfileIdForLegacy = (category: string, existingId: unknown): string => {
+    if (typeof existingId === 'string' && profileById.has(existingId)) return existingId;
+    const cat = category.trim();
+    if (cat) {
+      const byName = profiles.find((p) => p.name.toLowerCase() === cat.toLowerCase());
+      if (byName) return byName.id;
+      const migrated: SaveTheDateProfile = {
+        id: slugifyProfileId(cat),
+        name: cat,
+        accent: 'neutral',
+      };
+      profiles = [...profiles, migrated];
+      profileById.set(migrated.id, migrated);
+      return migrated.id;
+    }
+    const fallback = profiles.find((p) => p.id === 'personal') || profiles[0];
+    return fallback?.id ?? 'personal';
+  };
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const events: SaveTheDateEvent[] = list.map((e) => {
+    const rawDate = String(e.rawDate || e.date || '');
+    const eventDate = new Date(rawDate);
+    eventDate.setHours(0, 0, 0, 0);
+    const diffDays = Number.isFinite(eventDate.getTime())
+      ? Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+      : 0;
+    const category = String(e.category || 'Personal');
+    const profileId = resolveProfileIdForLegacy(category, e.profileId);
+    const prof = profileById.get(profileId);
+    return {
+      id: typeof e.id === 'number' ? e.id : Number(e.id) || Date.now() + Math.floor(Math.random() * 1000),
+      title: String(e.title || ''),
+      date: String(e.date || ''),
+      rawDate,
+      time: String(e.time || ''),
+      location: e.location != null ? String(e.location) : undefined,
+      description: e.description != null ? String(e.description) : undefined,
+      url: e.url != null ? String(e.url) : undefined,
+      reminder: Boolean(e.reminder),
+      daysUntil: typeof e.daysUntil === 'number' ? e.daysUntil : diffDays,
+      category: prof?.name || category,
+      profileId,
+    };
+  });
+
+  return { profiles, events };
 }
 
 interface SaveTheDateTemplateProps {
@@ -29,18 +161,40 @@ interface SaveTheDateTemplateProps {
   readOnly?: boolean;
   /** Pre-loaded events when in read-only mode (e.g. from shared page) */
   initialEvents?: SaveTheDateEvent[];
+  /** Pre-loaded profiles from shared JSON (optional) */
+  initialProfiles?: SaveTheDateProfile[];
 }
 
 type Event = SaveTheDateEvent;
 
-export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents }: SaveTheDateTemplateProps) {
-  const [events, setEvents] = useState<Event[]>(readOnly && initialEvents ? initialEvents : []);
+const ACCENT_ROTATE = ['purple', 'cyan', 'amber', 'indigo', 'pink', 'green', 'blue', 'neutral'] as const;
+
+export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents, initialProfiles }: SaveTheDateTemplateProps) {
+  const readonlyNormalized = React.useMemo(() => {
+    if (!readOnly) return null;
+    return normalizeSaveTheDatePayload(
+      { events: (initialEvents ?? []) as unknown as Record<string, unknown>[], profiles: initialProfiles as unknown[] },
+      initialProfiles
+    );
+  }, [readOnly, initialEvents, initialProfiles]);
+
+  const [profiles, setProfiles] = useState<SaveTheDateProfile[]>(
+    () => readonlyNormalized?.profiles ?? SAVE_THE_DATE_DEFAULT_PROFILES.map((p) => ({ ...p }))
+  );
+  const [events, setEvents] = useState<Event[]>(() => readonlyNormalized?.events ?? []);
+  const [selectedProfileFilter, setSelectedProfileFilter] = useState<string>('all');
+  const [showProfileManager, setShowProfileManager] = useState(false);
+  const [newProfileName, setNewProfileName] = useState('');
+  const [bulkAssignProfileId, setBulkAssignProfileId] = useState<string>('');
+  const [reassignPick, setReassignPick] = useState<Record<string, string>>({});
+  const defaultProfileId = profiles.find((p) => p.id === 'personal')?.id ?? profiles[0]?.id ?? 'personal';
   const [newEvent, setNewEvent] = useState({
     title: '',
     date: '',
     time: '',
     location: '',
     category: 'Personal',
+    profileId: defaultProfileId,
     description: '',
     url: '',
   });
@@ -85,7 +239,13 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
     const cr = await fetch(`/api/notebooks/${notebookId}/pages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: TEMPLATE_PAGE_TITLE, content: JSON.stringify({ events: [] }) }),
+      body: JSON.stringify({
+        title: TEMPLATE_PAGE_TITLE,
+        content: JSON.stringify({
+          profiles: SAVE_THE_DATE_DEFAULT_PROFILES.map((p) => ({ ...p })),
+          events: [],
+        }),
+      }),
     });
     if (!cr.ok) return null;
     const created = await cr.json();
@@ -94,9 +254,9 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
     return id;
   }, [notebookId]);
 
-  // Load from DB on mount (skip when readOnly with initialEvents)
+  // Load from DB on mount (skip when readOnly — data comes from props)
   useEffect(() => {
-    if (readOnly && initialEvents) {
+    if (readOnly) {
       setLoadDone(true);
       return;
     }
@@ -120,13 +280,11 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
           const id = typeof existing._id === 'string' ? existing._id : String(existing._id);
           pageIdRef.current = id;
           try {
-            const data = typeof existing.content === 'string' ? JSON.parse(existing.content || '{}') : existing.content || {};
-            const list = Array.isArray(data.events) ? data.events : (data.events ? [] : []);
-            const loaded: Event[] = list.map((e: any) => ({
-              ...e,
-              rawDate: e.rawDate || e.date,
-            }));
-            setEvents(loaded);
+            const data =
+              typeof existing.content === 'string' ? JSON.parse(existing.content || '{}') : existing.content || {};
+            const { profiles: loadedProfiles, events: loadedEvents } = normalizeSaveTheDatePayload(data);
+            setProfiles(loadedProfiles);
+            setEvents(loadedEvents);
           } catch {
             await fetch(`/api/notebooks/${notebookId}/pages/${existing._id}`, { method: 'DELETE' });
           }
@@ -134,7 +292,13 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
           const cr = await fetch(`/api/notebooks/${notebookId}/pages`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title: TEMPLATE_PAGE_TITLE, content: JSON.stringify({ events: [] }) }),
+            body: JSON.stringify({
+              title: TEMPLATE_PAGE_TITLE,
+              content: JSON.stringify({
+                profiles: SAVE_THE_DATE_DEFAULT_PROFILES.map((p) => ({ ...p })),
+                events: [],
+              }),
+            }),
           });
           if (!cr.ok) {
             setLoadDone(true);
@@ -143,7 +307,11 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
           const created = await cr.json();
           const page = created.page ?? created;
           const id = page?._id != null ? String(page._id) : null;
-          if (!cancelled) pageIdRef.current = id;
+          if (!cancelled) {
+            pageIdRef.current = id;
+            setProfiles(SAVE_THE_DATE_DEFAULT_PROFILES.map((p) => ({ ...p })));
+            setEvents([]);
+          }
         }
       } catch (err) {
         console.error('Save the Date load failed:', err);
@@ -152,7 +320,7 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
       }
     })();
     return () => { cancelled = true; };
-  }, [notebookId]);
+  }, [notebookId, readOnly]);
 
   const persistToDb = useCallback(() => {
     if (!notebookId) return;
@@ -173,7 +341,7 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
         const res = await fetch(`/api/notebooks/${notebookId}/pages/${pageId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: TEMPLATE_PAGE_TITLE, content: JSON.stringify({ events }) }),
+          body: JSON.stringify({ title: TEMPLATE_PAGE_TITLE, content: JSON.stringify({ profiles, events }) }),
         });
         if (res.status === 404) {
           pageIdRef.current = null;
@@ -183,7 +351,7 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
             await fetch(`/api/notebooks/${notebookId}/pages/${newId}`, {
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ title: TEMPLATE_PAGE_TITLE, content: JSON.stringify({ events }) }),
+              body: JSON.stringify({ title: TEMPLATE_PAGE_TITLE, content: JSON.stringify({ profiles, events }) }),
             });
           }
         }
@@ -193,12 +361,12 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
         setSaving(false);
       }
     }, 500);
-  }, [notebookId, events, ensureTemplatePage]);
+  }, [notebookId, events, profiles, ensureTemplatePage]);
 
   useEffect(() => {
     if (readOnly) return;
     if (loadDone) persistToDb();
-  }, [events, loadDone, persistToDb, readOnly]);
+  }, [events, profiles, loadDone, persistToDb, readOnly]);
 
   // Calculate days until event
   const calculateDaysUntil = (eventDate: string) => {
@@ -228,11 +396,19 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
     return () => clearInterval(interval);
   }, []);
 
-  // Check for upcoming events with reminders
+  const eventsInView =
+    selectedProfileFilter === 'all' ? events : events.filter((e) => e.profileId === selectedProfileFilter);
+
+  // Check for upcoming events with reminders (scoped to selected profile)
   useEffect(() => {
-    const alerts = events.filter(e => e.reminder && e.daysUntil >= 0 && e.daysUntil <= 3);
+    const alerts = eventsInView.filter((e) => e.reminder && e.daysUntil >= 0 && e.daysUntil <= 3);
     setUpcomingAlerts(alerts);
-  }, [events]);
+  }, [eventsInView]);
+
+  const profileLabel = useCallback(
+    (profileId: string) => profiles.find((p) => p.id === profileId)?.name ?? 'Profile',
+    [profiles]
+  );
 
   const handleSaveEvent = () => {
     if (!newEvent.title || !newEvent.date || !newEvent.time) return;
@@ -243,6 +419,8 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
       year: 'numeric',
     });
     const safeUrl = normalizeUrl(newEvent.url || '');
+    const prof = profiles.find((p) => p.id === newEvent.profileId);
+    const categoryLabel = prof?.name ?? newEvent.category;
 
     const event: Event = {
       id: editingEventId ?? Date.now(),
@@ -255,26 +433,66 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
       url: safeUrl,
       reminder: true,
       daysUntil: calculateDaysUntil(newEvent.date),
-      category: newEvent.category,
+      category: categoryLabel,
+      profileId: newEvent.profileId,
     };
 
     if (editingEventId) {
-      setEvents(events.map(e => (e.id === editingEventId ? event : e)));
+      setEvents(events.map((e) => (e.id === editingEventId ? event : e)));
     } else {
       setEvents([...events, event]);
     }
 
     setEditingEventId(null);
+    const nextProfile =
+      selectedProfileFilter !== 'all' ? selectedProfileFilter : defaultProfileId;
     setNewEvent({
       title: '',
       date: '',
       time: '',
       location: '',
-      category: 'Personal',
+      category: profileLabel(nextProfile),
+      profileId: nextProfile,
       description: '',
       url: '',
     });
     setShowAddEventPopup(false);
+  };
+
+  const addCustomProfile = () => {
+    const name = newProfileName.trim();
+    if (!name) return;
+    if (profiles.some((p) => p.name.toLowerCase() === name.toLowerCase())) return;
+    const accent = ACCENT_ROTATE[profiles.length % ACCENT_ROTATE.length];
+    setProfiles((prev) => [...prev, { id: slugifyProfileId(name), name, accent }]);
+    setNewProfileName('');
+  };
+
+  const deleteProfile = (id: string, reassignToId: string) => {
+    if (profiles.length <= 1) return;
+    if (id === reassignToId) return;
+    const target = profiles.find((p) => p.id === reassignToId);
+    setEvents((ev) =>
+      ev.map((e) =>
+        e.profileId === id
+          ? { ...e, profileId: reassignToId, category: target?.name ?? e.category }
+          : e
+      )
+    );
+    setProfiles((p) => p.filter((x) => x.id !== id));
+    if (selectedProfileFilter === id) setSelectedProfileFilter('all');
+  };
+
+  const applyBulkAssign = () => {
+    if (!bulkAssignProfileId || !profiles.some((p) => p.id === bulkAssignProfileId)) return;
+    const label = profileLabel(bulkAssignProfileId);
+    setEvents((ev) => ev.map((e) => ({ ...e, profileId: bulkAssignProfileId, category: label })));
+    setBulkAssignProfileId('');
+  };
+
+  const getReassignDefault = (profileId: string) => {
+    const other = profiles.find((x) => x.id !== profileId);
+    return other?.id ?? '';
   };
 
   const toggleReminder = (id: number) => {
@@ -296,22 +514,15 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
     setDeleteConfirm({ show: false, eventId: null, eventTitle: '' });
   };
 
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'Work': return 'blue';
-      case 'Personal': return 'purple';
-      case 'Health': return 'green';
-      case 'Social': return 'neutral';
-      case 'AI Film': return 'cyan';
-      case 'Short Film': return 'amber';
-      default: return 'neutral';
-    }
-  };
-
-  // Filter events: title, date, category
-  const filteredEvents = events.filter(event => {
-    const matchesTitle = !searchEventTitle || event.title.toLowerCase().includes(searchEventTitle.toLowerCase());
-    const matchesDate = !searchDate || event.date.includes(new Date(searchDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
+  // Filter events: profile (header), title, date, category (legacy)
+  const filteredEvents = eventsInView.filter((event) => {
+    const matchesTitle =
+      !searchEventTitle || event.title.toLowerCase().includes(searchEventTitle.toLowerCase());
+    const matchesDate =
+      !searchDate ||
+      event.date.includes(
+        new Date(searchDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      );
     const matchesCategory = filterCategory === 'All' || event.category === filterCategory;
     return matchesTitle && matchesDate && matchesCategory;
   });
@@ -324,14 +535,14 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
   });
 
   // This Week: only future/current (0 <= daysUntil <= 7), exclude past
-  const thisWeekCount = events.filter(e => e.daysUntil >= 0 && e.daysUntil <= 7).length;
+  const thisWeekCount = eventsInView.filter((e) => e.daysUntil >= 0 && e.daysUntil <= 7).length;
 
   // Upcoming events for animated cards (only events with valid URLs and in the future)
-  const upcomingEventsForCards = events
-    .filter(e => e.daysUntil >= 0 && isSafeUrl(e.url))
+  const upcomingEventsForCards = eventsInView
+    .filter((e) => e.daysUntil >= 0 && isSafeUrl(e.url))
     .sort((a, b) => a.daysUntil - b.daysUntil);
 
-  const upcomingCardItems: AnimatedCardItem[] = upcomingEventsForCards.map(e => ({
+  const upcomingCardItems: AnimatedCardItem[] = upcomingEventsForCards.map((e) => ({
     id: e.id,
     title: e.title,
     description: `${e.date}${e.time ? ` • ${e.time}` : ''}${e.category ? ` • ${e.category}` : ''}`,
@@ -368,6 +579,47 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
           <p className="text-neutral-600 dark:text-neutral-400">Never miss an important date</p>
         </div>
 
+        <Card className="p-4 md:p-5 bg-white/75 dark:bg-neutral-800/85 backdrop-blur-md border border-rose-200/70 dark:border-rose-900/50 shadow-lg shadow-rose-500/10">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+            <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300 shrink-0">
+              <Layers2 className="h-5 w-5" />
+              <span className="font-semibold text-sm uppercase tracking-wide">Profile</span>
+            </div>
+            <div className="flex flex-col sm:flex-row flex-1 gap-3 w-full">
+              <select
+                value={selectedProfileFilter}
+                onChange={(e) => setSelectedProfileFilter(e.target.value)}
+                className="flex-1 min-w-[220px] px-4 py-2.5 rounded-xl border border-neutral-200 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:outline-none"
+                aria-label="Filter events by profile"
+              >
+                <option value="all">All profiles ({events.length})</option>
+                {profiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} ({events.filter((e) => e.profileId === p.id).length})
+                  </option>
+                ))}
+              </select>
+              {!readOnly && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-rose-300 dark:border-rose-700 text-rose-700 dark:text-rose-300 shrink-0"
+                  onClick={() => setShowProfileManager(true)}
+                >
+                  <Settings2 className="h-4 w-4 mr-2" />
+                  Manage profiles
+                </Button>
+              )}
+            </div>
+          </div>
+          {selectedProfileFilter !== 'all' && (
+            <p className="mt-3 text-xs text-neutral-600 dark:text-neutral-400">
+              Showing dates for <strong>{profileLabel(selectedProfileFilter)}</strong>. Stats, reminders, and the list below
+              follow this profile; switch to <strong>All profiles</strong> for the full notebook.
+            </p>
+          )}
+        </Card>
+
         {/* Reminder Alerts */}
         {upcomingAlerts.length > 0 && (
           <Card className="p-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-2 border-amber-600">
@@ -394,7 +646,10 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
         <div className="grid sm:grid-cols-3 gap-4">
           <Card className="p-4 bg-gradient-to-br from-rose-500 to-pink-500 text-white">
             <p className="text-sm opacity-90 mb-1">Total Events</p>
-            <p className="text-3xl font-bold">{events.length}</p>
+            <p className="text-3xl font-bold">{eventsInView.length}</p>
+            {selectedProfileFilter !== 'all' && (
+              <p className="text-xs opacity-80 mt-1">in this profile</p>
+            )}
           </Card>
           <Card className="p-4 bg-gradient-to-br from-amber-500 to-orange-500 text-white">
             <p className="text-sm opacity-90 mb-1">This Week</p>
@@ -402,7 +657,7 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
           </Card>
           <Card className="p-4 bg-gradient-to-br from-purple-500 to-pink-500 text-white">
             <p className="text-sm opacity-90 mb-1">Reminders Set</p>
-            <p className="text-3xl font-bold">{events.filter(e => e.reminder).length}</p>
+            <p className="text-3xl font-bold">{eventsInView.filter((e) => e.reminder).length}</p>
           </Card>
         </div>
 
@@ -446,7 +701,21 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
         {!readOnly && (
         <div className="flex flex-wrap gap-3">
           <Button
-            onClick={() => { setEditingEventId(null); setNewEvent({ title: '', date: '', time: '', location: '', category: 'Personal', description: '', url: '' }); setShowAddEventPopup(true); }}
+            onClick={() => {
+              setEditingEventId(null);
+              const pid = selectedProfileFilter !== 'all' ? selectedProfileFilter : defaultProfileId;
+              setNewEvent({
+                title: '',
+                date: '',
+                time: '',
+                location: '',
+                category: profileLabel(pid),
+                profileId: pid,
+                description: '',
+                url: '',
+              });
+              setShowAddEventPopup(true);
+            }}
             className="bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:opacity-90"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -469,6 +738,15 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
             <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">No Events Yet</h3>
             <p className="text-neutral-600 dark:text-neutral-400">Add your first event to start tracking important dates</p>
           </Card>
+        ) : eventsInView.length === 0 && selectedProfileFilter !== 'all' ? (
+          <Card className="p-12 bg-white dark:bg-neutral-800 text-center border-2 border-dashed border-rose-200 dark:border-rose-900/50">
+            <Layers2 className="h-16 w-16 text-rose-300 dark:text-rose-700 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">No dates in this profile</h3>
+            <p className="text-neutral-600 dark:text-neutral-400 max-w-md mx-auto">
+              <strong>{profileLabel(selectedProfileFilter)}</strong> does not have any events yet. Switch to another profile,
+              choose <strong>All profiles</strong>, or create a new event while this profile is selected.
+            </p>
+          </Card>
         ) : filteredEvents.length === 0 ? (
           <Card className="p-12 bg-white dark:bg-neutral-800 text-center">
             <CalendarDays className="h-16 w-16 text-neutral-400 mx-auto mb-4" />
@@ -477,11 +755,16 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
           </Card>
         ) : (
           <div className="space-y-3">
-            {sortedFilteredEvents.map(event => {
-              const color = getCategoryColor(event.category);
+            {sortedFilteredEvents.map((event) => {
+              const eventProfile = profiles.find((p) => p.id === event.profileId);
+              const accentKey =
+                eventProfile?.accent && ACCENT_CLASSES[eventProfile.accent]
+                  ? eventProfile.accent
+                  : 'neutral';
+              const look = ACCENT_CLASSES[accentKey] ?? ACCENT_CLASSES.neutral;
               const isPast = event.daysUntil < 0;
               return (
-                <Card key={event.id} className={`p-5 bg-gradient-to-r from-${color}-50 to-${color}-100 dark:from-${color}-900/20 dark:to-${color}-900/10 border-2 border-${color}-200 dark:border-${color}-800 ${isPast ? 'opacity-60' : ''}`}>
+                <Card key={event.id} className={`p-5 ${look.card} ${isPast ? 'opacity-60' : ''}`}>
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
@@ -497,6 +780,7 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
                                   time: event.time,
                                   location: event.location || '',
                                   category: event.category,
+                                  profileId: event.profileId,
                                   description: event.description || '',
                                   url: event.url || '',
                                 });
@@ -520,8 +804,8 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
                             </button>
                           </>
                         )}
-                        <span className={`px-2 py-1 bg-${color}-200 dark:bg-${color}-900/40 text-${color}-700 dark:text-${color}-400 rounded text-xs font-medium`}>
-                          {event.category}
+                        <span className={`px-2 py-1 ${look.badge} rounded text-xs font-medium`}>
+                          {profileLabel(event.profileId)}
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-4 text-sm text-neutral-600 dark:text-neutral-400">
@@ -604,15 +888,53 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white dark:bg-neutral-800">
               <div className="sticky top-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-4 flex items-center justify-between">
-                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Add New Event</h3>
-                <button onClick={() => { setShowAddEventPopup(false); setEditingEventId(null); setNewEvent({ title: '', date: '', time: '', location: '', category: 'Personal', description: '', url: '' }); }} className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg"><X className="h-5 w-5" /></button>
+                <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
+                  {editingEventId ? 'Edit event' : 'Add event'}
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowAddEventPopup(false);
+                    setEditingEventId(null);
+                    setNewEvent({
+                      title: '',
+                      date: '',
+                      time: '',
+                      location: '',
+                      category: profileLabel(defaultProfileId),
+                      profileId: defaultProfileId,
+                      description: '',
+                      url: '',
+                    });
+                  }}
+                  className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg"
+                >
+                  <X className="h-5 w-5" />
+                </button>
               </div>
               <div className="p-4 space-y-3">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <input type="text" placeholder="Event title..." value={newEvent.title} onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })} className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500" />
-                  <select value={newEvent.category} onChange={(e) => setNewEvent({ ...newEvent, category: e.target.value })} className="px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500">
-                    <option value="Personal">Personal</option><option value="Work">Work</option><option value="Health">Health</option><option value="Social">Social</option><option value="AI Film">AI Film</option><option value="Short Film">Short Film</option>
-                  </select>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Profile</label>
+                    <select
+                      value={newEvent.profileId}
+                      onChange={(e) => {
+                        const pid = e.target.value;
+                        setNewEvent({
+                          ...newEvent,
+                          profileId: pid,
+                          category: profileLabel(pid),
+                        });
+                      }}
+                      className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    >
+                      {profiles.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 <textarea placeholder="Description (optional)" value={newEvent.description} onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })} className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none" rows={2} />
                 <input type="url" placeholder="Event website URL (optional)" value={newEvent.url} onChange={(e) => setNewEvent({ ...newEvent, url: e.target.value })} className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500" />
@@ -629,6 +951,149 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
                 <Button onClick={handleSaveEvent} className="w-full bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:opacity-90">
                   <Plus className="h-4 w-4 mr-2" />
                   {editingEventId ? 'Save Changes' : 'Add Event'}
+                </Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Profile manager */}
+        {showProfileManager && !readOnly && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white dark:bg-neutral-800 border border-rose-200 dark:border-rose-900/40 shadow-2xl">
+              <div className="sticky top-0 bg-white dark:bg-neutral-800 border-b border-neutral-200 dark:border-neutral-700 p-4 flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                    <Layers2 className="h-5 w-5 text-rose-600" />
+                    Profiles
+                  </h3>
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+                    Stored in your notebook page JSON alongside events.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowProfileManager(false)}
+                  className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded-lg"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="p-4 space-y-5">
+                <div className="rounded-xl bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/40 dark:to-pink-950/30 border border-rose-200/80 dark:border-rose-900/50 p-4 space-y-2">
+                  <p className="text-sm text-neutral-700 dark:text-neutral-300">
+                    Add lanes like <strong>AI Film</strong>, <strong>Official</strong>, or custom clients. Existing events keep
+                    their labels; use bulk assign to line everything up under one profile.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="text"
+                    placeholder="New profile name…"
+                    value={newProfileName}
+                    onChange={(e) => setNewProfileName(e.target.value)}
+                    className="flex-1 px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomProfile())}
+                  />
+                  <Button
+                    type="button"
+                    onClick={addCustomProfile}
+                    className="bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:opacity-90 shrink-0"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">Your profiles</h4>
+                  <ul className="space-y-2">
+                    {profiles.map((p) => {
+                      const count = events.filter((e) => e.profileId === p.id).length;
+                      const reassignTo = reassignPick[p.id] ?? getReassignDefault(p.id);
+                      return (
+                        <li
+                          key={p.id}
+                          className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 rounded-xl bg-neutral-50 dark:bg-neutral-900/40 border border-neutral-200 dark:border-neutral-700"
+                        >
+                          <div>
+                            <span className="font-medium text-neutral-900 dark:text-white">{p.name}</span>
+                            <span className="text-xs text-neutral-500 dark:text-neutral-400 ml-2">{count} event(s)</span>
+                          </div>
+                          {profiles.length > 1 && (
+                            <div className="flex flex-wrap items-center gap-2">
+                              <select
+                                value={reassignTo}
+                                onChange={(e) =>
+                                  setReassignPick((m) => ({
+                                    ...m,
+                                    [p.id]: e.target.value,
+                                  }))
+                                }
+                                className="text-sm px-2 py-1.5 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800"
+                                aria-label={`Move events from ${p.name} to another profile`}
+                              >
+                                {profiles
+                                  .filter((x) => x.id !== p.id)
+                                  .map((x) => (
+                                    <option key={x.id} value={x.id}>
+                                      Move to: {x.name}
+                                    </option>
+                                  ))}
+                              </select>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="text-red-600 border-red-200 hover:bg-red-50 dark:border-red-900 dark:hover:bg-red-950/40"
+                                onClick={() => {
+                                  const target = reassignPick[p.id] ?? getReassignDefault(p.id);
+                                  if (target) deleteProfile(p.id, target);
+                                }}
+                              >
+                                Remove
+                              </Button>
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+                <div className="rounded-xl border border-dashed border-amber-300 dark:border-amber-800 bg-amber-50/50 dark:bg-amber-950/20 p-4 space-y-2">
+                  <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-200">Bulk assign (existing data)</h4>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-400">
+                    Set every event in this notebook to one profile—handy after turning on profiles or importing old dates.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <select
+                      value={bulkAssignProfileId}
+                      onChange={(e) => setBulkAssignProfileId(e.target.value)}
+                      className="flex-1 px-3 py-2 rounded-lg border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-800 text-sm"
+                    >
+                      <option value="">Choose profile…</option>
+                      {profiles.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-amber-400 text-amber-800 dark:text-amber-300"
+                      disabled={!bulkAssignProfileId}
+                      onClick={applyBulkAssign}
+                    >
+                      Apply to all events
+                    </Button>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  className="w-full bg-neutral-800 dark:bg-neutral-200 text-white dark:text-neutral-900"
+                  onClick={() => setShowProfileManager(false)}
+                >
+                  Done
                 </Button>
               </div>
             </Card>
@@ -654,14 +1119,17 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">Filter by category</label>
-                  <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500">
-                    <option value="All">All Categories</option>
-                    <option value="Personal">Personal</option>
-                    <option value="Work">Work</option>
-                    <option value="Health">Health</option>
-                    <option value="Social">Social</option>
-                    <option value="AI Film">AI Film</option>
-                    <option value="Short Film">Short Film</option>
+                  <select
+                    value={filterCategory}
+                    onChange={(e) => setFilterCategory(e.target.value)}
+                    className="w-full px-4 py-2 bg-neutral-100 dark:bg-neutral-700 border border-neutral-300 dark:border-neutral-600 rounded-lg text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  >
+                    <option value="All">All labels (profile names)</option>
+                    {profiles.map((p) => (
+                      <option key={p.id} value={p.name}>
+                        {p.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <p className="text-xs text-neutral-500 dark:text-neutral-400">Events are ordered with upcoming first, then past. This week counts only future events (0–7 days).</p>

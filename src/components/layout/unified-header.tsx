@@ -7,12 +7,14 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import {
   BookOpen,
+  FileText,
   Trash2,
   Settings,
   CreditCard,
   Users,
   Share2,
   MessageSquare,
+  Mail,
   Sparkles,
   Home,
   Layers,
@@ -44,6 +46,7 @@ const navItems = [
   { icon: Layers, label: "Templates", href: "/templates", iconColor: "text-purple-500", gradient: "radial-gradient(circle, rgba(168,85,247,0.15) 0%, transparent 70%)" },
   { icon: Sparkles, label: "Features", href: "/features", iconColor: "text-green-500", gradient: "radial-gradient(circle, rgba(34,197,94,0.15) 0%, transparent 70%)" },
   { icon: DollarSign, label: "Pricing", href: "/pricing", iconColor: "text-orange-500", gradient: "radial-gradient(circle, rgba(249,115,22,0.15) 0%, transparent 70%)" },
+  { icon: Mail, label: "Contact", href: "/contact", iconColor: "text-rose-500", gradient: "radial-gradient(circle, rgba(244,63,94,0.15) 0%, transparent 70%)" },
 ];
 
 export function UnifiedHeader({
@@ -57,6 +60,7 @@ export function UnifiedHeader({
   const { isSignedIn } = useUser();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [activeNav, setActiveNav] = useState("Home");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loggedInMobileOpen, setLoggedInMobileOpen] = useState(false);
@@ -71,6 +75,55 @@ export function UnifiedHeader({
 
   const showLoggedIn = forceLoggedIn ?? (isSignedIn && !forceLoggedOut);
   const showLoggedOut = !showLoggedIn;
+
+  useEffect(() => {
+    // Wait until mounted so Clerk session cookies are ready in the browser.
+    // Retry a few times because /api/admin/me can transiently return 401 early.
+    if (!showLoggedIn || !mounted) return
+
+    let alive = true
+    let attempts = 0
+    const maxAttempts = 3
+
+    const check = async () => {
+      attempts++
+      try {
+        const res = await fetch("/api/admin/me", {
+          credentials: "include",
+          cache: "no-store",
+        })
+
+        if (!res.ok) {
+          if (res.status === 401 && attempts < maxAttempts) {
+            await new Promise((r) => setTimeout(r, 800))
+            if (!alive) return
+            return check()
+          }
+
+          if (!alive) return
+          setIsAdmin(false)
+          return
+        }
+
+        const data = await res.json()
+        if (!alive) return
+        setIsAdmin(Boolean(data?.isAdmin))
+      } catch {
+        if (!alive) return
+        if (attempts < maxAttempts) {
+          await new Promise((r) => setTimeout(r, 800))
+          if (!alive) return
+          return check()
+        }
+        setIsAdmin(false)
+      }
+    }
+
+    check()
+    return () => {
+      alive = false
+    }
+  }, [showLoggedIn, mounted])
 
   const sharedHeaderClass =
     (fixed ? "fixed top-0 left-0 right-0 " : "sticky top-0 ") +
@@ -242,9 +295,21 @@ export function UnifiedHeader({
             <Link href="/dashboard/settings" className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors" title="Settings">
               <Settings className="h-5 w-5" />
             </Link>
+            {isAdmin && (
+              <Link href="/admin/notebooks" className="p-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition-colors" title="Notebooks">
+                <FileText className="h-5 w-5" />
+              </Link>
+            )}
             <Link href="/account" className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors" title="Account / Subscription">
               <CreditCard className="h-4 w-4" />
               <span>Subscription</span>
+            </Link>
+            <Link
+              href="/contact"
+              className="p-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors"
+              title="Contact & report a glitch"
+            >
+              <Mail className="h-5 w-5" />
             </Link>
             <UserButton afterSignOutUrl="/" />
           </div>
@@ -278,8 +343,16 @@ export function UnifiedHeader({
             <Link href="/dashboard/settings" onClick={() => setLoggedInMobileOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
               <Settings className="w-4 h-4" /> Settings
             </Link>
+            {isAdmin && (
+              <Link href="/admin/notebooks" onClick={() => setLoggedInMobileOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-neutral-700 dark:text-neutral-300 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800">
+                <FileText className="w-4 h-4" /> Notebooks
+              </Link>
+            )}
             <Link href="/account" onClick={() => setLoggedInMobileOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-amber-600 dark:text-amber-400 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20">
               <CreditCard className="w-4 h-4" /> Account / Subscription
+            </Link>
+            <Link href="/contact" onClick={() => setLoggedInMobileOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-rose-600 dark:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/20">
+              <Mail className="w-4 h-4" /> Contact & feedback
             </Link>
             <div className="pt-2 mt-2 border-t border-neutral-200 dark:border-neutral-800">
               <p className="px-3 py-1 text-xs text-neutral-500 dark:text-neutral-400">Sign out using the account icon above</p>
