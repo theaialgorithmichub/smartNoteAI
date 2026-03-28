@@ -4,7 +4,11 @@ import connectDB from '@/lib/db/mongodb';
 import User from '@/lib/models/User';
 import { getOrCreateUser } from '@/lib/utils/syncUser';
 
-export async function requireAdmin() {
+export async function requireAdmin():
+  Promise<
+    | { user: InstanceType<typeof User>; error: null }
+    | { user?: undefined; error: string; status: number }
+  > {
   const { userId } = await auth();
 
   if (!userId) {

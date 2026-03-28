@@ -14,6 +14,7 @@ import {
   Users,
   Share2,
   MessageSquare,
+  Mail,
   Sparkles,
   Home,
   Layers,
@@ -45,6 +46,7 @@ const navItems = [
   { icon: Layers, label: "Templates", href: "/templates", iconColor: "text-purple-500", gradient: "radial-gradient(circle, rgba(168,85,247,0.15) 0%, transparent 70%)" },
   { icon: Sparkles, label: "Features", href: "/features", iconColor: "text-green-500", gradient: "radial-gradient(circle, rgba(34,197,94,0.15) 0%, transparent 70%)" },
   { icon: DollarSign, label: "Pricing", href: "/pricing", iconColor: "text-orange-500", gradient: "radial-gradient(circle, rgba(249,115,22,0.15) 0%, transparent 70%)" },
+  { icon: Mail, label: "Contact", href: "/contact", iconColor: "text-rose-500", gradient: "radial-gradient(circle, rgba(244,63,94,0.15) 0%, transparent 70%)" },
 ];
 
 export function UnifiedHeader({
@@ -302,6 +304,13 @@ export function UnifiedHeader({
               <CreditCard className="h-4 w-4" />
               <span>Subscription</span>
             </Link>
+            <Link
+              href="/contact"
+              className="p-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors"
+              title="Contact & report a glitch"
+            >
+              <Mail className="h-5 w-5" />
+            </Link>
             <UserButton afterSignOutUrl="/" />
           </div>
 
@@ -341,6 +350,9 @@ export function UnifiedHeader({
             )}
             <Link href="/account" onClick={() => setLoggedInMobileOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-amber-600 dark:text-amber-400 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-900/20">
               <CreditCard className="w-4 h-4" /> Account / Subscription
+            </Link>
+            <Link href="/contact" onClick={() => setLoggedInMobileOpen(false)} className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-rose-600 dark:text-rose-400 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/20">
+              <Mail className="w-4 h-4" /> Contact & feedback
             </Link>
             <div className="pt-2 mt-2 border-t border-neutral-200 dark:border-neutral-800">
               <p className="px-3 py-1 text-xs text-neutral-500 dark:text-neutral-400">Sign out using the account icon above</p>

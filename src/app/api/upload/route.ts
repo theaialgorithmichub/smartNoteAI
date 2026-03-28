@@ -31,7 +31,12 @@ export async function POST(req: NextRequest) {
     const dataUri = `data:${file.type};base64,${base64}`
 
     // Upload to Cloudinary
-    const folder = type === "cover" ? "smartnote/covers" : "smartnote/attachments"
+    const folder =
+      type === "cover"
+        ? "smartnote/covers"
+        : type === "feedback"
+          ? "smartnote/feedback"
+          : "smartnote/attachments"
     const result = await cloudinary.uploader.upload(dataUri, {
       folder,
       resource_type: "auto",

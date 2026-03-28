@@ -48,7 +48,7 @@ const navigation = {
       name: "Company",
       items: [
         { name: "About", href: "#" },
-        { name: "Contact", href: "#" },
+        { name: "Contact", href: "/contact" },
         { name: "Careers", href: "#" },
       ],
     },

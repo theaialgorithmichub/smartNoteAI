@@ -1,7 +1,11 @@
 "use client";
 
 import React from "react";
-import { SaveTheDateTemplate, type SaveTheDateEvent } from "@/components/notebook-templates/save-the-date-template";
+import {
+  SaveTheDateTemplate,
+  type SaveTheDateEvent,
+  normalizeSaveTheDatePayload,
+} from "@/components/notebook-templates/save-the-date-template";
 import { TutorialLearnTemplate, type TutorialLearnProject } from "@/components/notebook-templates/tutorial-learn-template";
 import { Card } from "@/components/ui/card";
 import { FileText, CalendarDays, BookOpen, MapPin, FolderKanban } from "lucide-react";
@@ -40,10 +44,10 @@ export function SharedTemplateRenderer({
 
   // Templates with full readOnly support
   if (templateId === "save-the-date") {
-    const events = (Array.isArray(data.events) ? data.events : []) as any[];
+    const normalized = normalizeSaveTheDatePayload(data as Record<string, unknown>);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const parsedEvents: SaveTheDateEvent[] = events.map((e: any) => {
+    const parsedEvents: SaveTheDateEvent[] = normalized.events.map((e) => {
       const rawDate = e.rawDate || e.date;
       const eventDate = new Date(rawDate);
       eventDate.setHours(0, 0, 0, 0);
@@ -57,6 +61,7 @@ export function SharedTemplateRenderer({
         <SaveTheDateTemplate
           title={notebookTitle || "Save the Date"}
           readOnly
+          initialProfiles={normalized.profiles}
           initialEvents={parsedEvents}
         />
       </div>

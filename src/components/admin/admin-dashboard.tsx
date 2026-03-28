@@ -1,16 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { Users, FileText, Settings } from 'lucide-react';
+import { Users, FileText, Settings, MessageSquareWarning } from 'lucide-react';
 import { SyncUsersButton } from './sync-users-button';
 import { UserManagement } from './user-management';
 import { TemplateManagement } from './template-management';
+import { FeedbackManagement } from './feedback-management';
 
 export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('users');
 
   const tabs = [
     { id: 'users', label: 'Users', icon: Users },
+    { id: 'feedback', label: 'Feedback', icon: MessageSquareWarning },
     { id: 'templates', label: 'Templates', icon: FileText },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -48,6 +50,8 @@ export function AdminDashboard() {
             <UserManagement />
           </div>
         )}
+
+        {activeTab === 'feedback' && <FeedbackManagement />}
 
         {activeTab === 'templates' && <TemplateManagement />}
 
