@@ -169,6 +169,62 @@ type Event = SaveTheDateEvent;
 
 const ACCENT_ROTATE = ['purple', 'cyan', 'amber', 'indigo', 'pink', 'green', 'blue', 'neutral'] as const;
 
+const sampleDate = (daysFromNow: number) => {
+  const date = new Date(Date.now() + daysFromNow * 86400000);
+  return date.toISOString().split('T')[0];
+};
+
+const sampleDisplayDate = (rawDate: string) =>
+  new Date(rawDate).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+
+const sampleSaveTheDateEvents: SaveTheDateEvent[] = [
+  {
+    id: 1,
+    title: 'Template QA Review',
+    rawDate: sampleDate(2),
+    date: sampleDisplayDate(sampleDate(2)),
+    time: '10:00',
+    location: 'Product room',
+    description: 'Review the latest preview banners and seeded template examples.',
+    url: 'https://example.com/qa-review',
+    reminder: true,
+    daysUntil: 2,
+    category: 'Work',
+    profileId: 'work',
+  },
+  {
+    id: 2,
+    title: 'Community Template Submission Window',
+    rawDate: sampleDate(9),
+    date: sampleDisplayDate(sampleDate(9)),
+    time: '14:30',
+    location: 'Marketplace',
+    description: 'Collect the first curated templates for review.',
+    url: 'https://example.com/marketplace',
+    reminder: true,
+    daysUntil: 9,
+    category: 'Official',
+    profileId: 'official',
+  },
+  {
+    id: 3,
+    title: 'Personal planning checkpoint',
+    rawDate: sampleDate(14),
+    date: sampleDisplayDate(sampleDate(14)),
+    time: '18:00',
+    location: 'Home',
+    description: 'Review goals, reading notes, and next week tasks.',
+    reminder: false,
+    daysUntil: 14,
+    category: 'Personal',
+    profileId: 'personal',
+  },
+];
+
 export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents, initialProfiles }: SaveTheDateTemplateProps) {
   const readonlyNormalized = React.useMemo(() => {
     if (!readOnly) return null;
@@ -261,6 +317,8 @@ export function SaveTheDateTemplate({ title, notebookId, readOnly, initialEvents
       return;
     }
     if (!notebookId) {
+      setProfiles(SAVE_THE_DATE_DEFAULT_PROFILES.map((p) => ({ ...p })));
+      setEvents(sampleSaveTheDateEvents);
       setLoadDone(true);
       return;
     }

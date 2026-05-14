@@ -28,6 +28,23 @@ interface GroceryData {
   lists: { [date: string]: GroceryItem[] };
 }
 
+const today = new Date().toISOString().split('T')[0];
+const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
+const sampleGroceryLists: { [date: string]: GroceryItem[] } = {
+  [today]: [
+    { id: 1, name: 'Spinach', quantity: '2 bunches', category: 'Vegetables', completed: true },
+    { id: 2, name: 'Greek yogurt', quantity: '1 tub', category: 'Dairy', completed: false },
+    { id: 3, name: 'Sourdough bread', quantity: '1 loaf', category: 'Bakery', completed: false },
+    { id: 4, name: 'Blueberries', quantity: '2 packs', category: 'Fruits', completed: true },
+    { id: 5, name: 'Olive oil', quantity: '1 bottle', category: 'Pantry', completed: false },
+  ],
+  [tomorrow]: [
+    { id: 6, name: 'Coffee beans', quantity: '1 bag', category: 'Beverages', completed: false },
+    { id: 7, name: 'Almonds', quantity: '500g', category: 'Snacks', completed: false },
+  ],
+};
+
 export function GroceryListTemplate({ title, notebookId }: GroceryListTemplateProps) {
   const [allLists, setAllLists] = useState<{ [date: string]: GroceryItem[] }>({});
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -55,7 +72,11 @@ export function GroceryListTemplate({ title, notebookId }: GroceryListTemplatePr
   };
 
   useEffect(() => {
-    if (!notebookId) return;
+    if (!notebookId) {
+      setAllLists(sampleGroceryLists);
+      setSelectedDate(today);
+      return;
+    }
     try {
       const saved = localStorage.getItem(`grocery-list-${notebookId}`);
       if (saved) {

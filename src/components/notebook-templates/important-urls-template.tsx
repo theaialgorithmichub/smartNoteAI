@@ -29,6 +29,40 @@ interface SavedUrl {
   tags?: string[];
 }
 
+const sampleUrls: SavedUrl[] = [
+  {
+    id: 1,
+    title: 'Template preview walkthrough',
+    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    platform: 'YouTube',
+    thumbnail: 'https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg',
+    type: 'Tutorial',
+    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    channel: 'SmartNote Academy',
+    tags: ['templates', 'onboarding'],
+  },
+  {
+    id: 2,
+    title: 'Design inspiration reel',
+    url: 'https://www.instagram.com/example',
+    platform: 'Instagram',
+    type: 'Study',
+    date: new Date(Date.now() - 86400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    channel: 'UX Notes',
+    tags: ['design'],
+  },
+  {
+    id: 3,
+    title: 'Product QA mini-course',
+    url: 'https://www.udemy.com/course/product-qa',
+    platform: 'Udemy',
+    type: 'Tutorial',
+    date: new Date(Date.now() - 2 * 86400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    channel: 'QA Lab',
+    tags: ['qa', 'product'],
+  },
+];
+
 export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTemplateProps) {
   const [urls, setUrls] = useState<SavedUrl[]>([]);
   const [newUrl, setNewUrl] = useState({ title: '', url: '', platform: 'YouTube', type: 'Entertainment', channel: '', tags: '' });
@@ -63,7 +97,10 @@ export function ImportantUrlsTemplate({ title, notebookId }: ImportantUrlsTempla
   };
 
   useEffect(() => {
-    if (!notebookId) return;
+    if (!notebookId) {
+      setUrls(sampleUrls);
+      return;
+    }
     try {
       const saved = localStorage.getItem(`important-urls-${notebookId}`);
       if (saved) {

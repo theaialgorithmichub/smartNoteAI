@@ -20,12 +20,31 @@ interface Translation {
   timestamp: string;
 }
 
+const sampleTranslations: Translation[] = [
+  {
+    id: 1,
+    source: 'Template previews should show realistic examples.',
+    target: 'Las vistas previas de plantillas deben mostrar ejemplos realistas.',
+    from: 'English',
+    to: 'Spanish',
+    timestamp: new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+  },
+  {
+    id: 2,
+    source: 'What is this template best for?',
+    target: 'Para que es mejor esta plantilla?',
+    from: 'English',
+    to: 'Spanish',
+    timestamp: new Date(Date.now() - 86400000).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+  },
+];
+
 export function LanguageTranslatorTemplate({ title }: LanguageTranslatorTemplateProps) {
-  const [sourceText, setSourceText] = useState('');
-  const [translatedText, setTranslatedText] = useState('');
+  const [sourceText, setSourceText] = useState('Template previews should show realistic examples.');
+  const [translatedText, setTranslatedText] = useState('Las vistas previas de plantillas deben mostrar ejemplos realistas.');
   const [sourceLang, setSourceLang] = useState('English');
-  const [targetLang, setTargetLang] = useState('Hindi');
-  const [history, setHistory] = useState<Translation[]>([]);
+  const [targetLang, setTargetLang] = useState('Spanish');
+  const [history, setHistory] = useState<Translation[]>(sampleTranslations);
   const [showDocumentation, setShowDocumentation] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [isRecording, setIsRecording] = useState(false);

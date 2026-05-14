@@ -47,6 +47,22 @@ interface GameData {
   matches: Match[];
 }
 
+const sampleSports: Sport[] = [
+  { id: 'football', name: 'Football', icon: 'F' },
+  { id: 'carrom', name: 'Carrom', icon: 'C' },
+];
+
+const sampleTeams: Team[] = [
+  { id: 'team-alpha', name: 'Alpha Notes', sport: 'football', wins: 2, losses: 0, draws: 1, goalsFor: 8, goalsAgainst: 4, points: 7 },
+  { id: 'team-beta', name: 'Beta Books', sport: 'football', wins: 1, losses: 1, draws: 1, goalsFor: 5, goalsAgainst: 5, points: 4 },
+  { id: 'team-gamma', name: 'Gamma Cards', sport: 'carrom', wins: 3, losses: 1, draws: 0, goalsFor: 62, goalsAgainst: 47, points: 9 },
+];
+
+const sampleMatches: Match[] = [
+  { id: 'sample-match-1', sport: 'football', team1: 'team-alpha', team2: 'team-beta', score1: 3, score2: 1, winner: 'team-alpha', date: new Date().toLocaleDateString() },
+  { id: 'sample-match-2', sport: 'carrom', team1: 'team-gamma', team2: 'team-alpha', score1: 25, score2: 18, winner: 'team-gamma', date: new Date(Date.now() - 86400000).toLocaleDateString() },
+];
+
 export function GamesScoreCardTemplate({ title, notebookId }: GamesScoreCardTemplateProps) {
   const [sports, setSports] = useState<Sport[]>([]);
   const [teams, setTeams] = useState<Team[]>([]);
@@ -87,7 +103,14 @@ export function GamesScoreCardTemplate({ title, notebookId }: GamesScoreCardTemp
   };
 
   useEffect(() => {
-    if (!notebookId) return;
+    if (!notebookId) {
+      setSports(sampleSports);
+      setTeams(sampleTeams);
+      setMatches(sampleMatches);
+      setSelectedTeam1(sampleTeams[0].id);
+      setSelectedTeam2(sampleTeams[1].id);
+      return;
+    }
     try {
       const saved = localStorage.getItem(`games-scorecard-${notebookId}`);
       if (saved) {

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { supportsWebGL } from "@/lib/webgl";
 
 const vertexSmokeySource = `
   attribute vec4 a_position;
@@ -68,6 +69,7 @@ export function SmokeyBackground({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
+  const [canRenderWebGL, setCanRenderWebGL] = useState(true);
 
   const hexToRgb = (hex: string): [number, number, number] => {
     const r = parseInt(hex.substring(1, 3), 16) / 255;
@@ -80,9 +82,14 @@ export function SmokeyBackground({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
+    if (!supportsWebGL()) {
+      setCanRenderWebGL(false);
+      return;
+    }
+
     const gl = canvas.getContext("webgl");
     if (!gl) {
-      console.error("WebGL not supported");
+      setCanRenderWebGL(false);
       return;
     }
 
@@ -177,7 +184,14 @@ export function SmokeyBackground({
 
   return (
     <div className={`absolute inset-0 w-full h-full overflow-hidden ${className}`}>
-      <canvas ref={canvasRef} className="w-full h-full" />
+      {canRenderWebGL ? (
+        <canvas ref={canvasRef} className="w-full h-full" />
+      ) : (
+        <div
+          className="h-full w-full bg-[radial-gradient(circle_at_20%_20%,rgba(180,83,9,0.45),transparent_30%),radial-gradient(circle_at_70%_70%,rgba(251,146,60,0.3),transparent_35%),linear-gradient(135deg,#020617,#111827_45%,#451a03)]"
+          aria-hidden="true"
+        />
+      )}
       <div className={`absolute inset-0 ${finalBlurClass}`}></div>
     </div>
   );

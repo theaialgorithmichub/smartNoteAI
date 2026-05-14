@@ -118,6 +118,87 @@ const blankProject = (name = "My Study Project"): StudyProject => ({
   createdAt: new Date().toISOString(),
 });
 
+const sampleStudyProject: StudyProject = {
+  id: "sample-study-project",
+  name: "Product UX Study Plan",
+  description: "A compact learning plan for improving template activation and preview quality.",
+  createdAt: new Date().toISOString(),
+  playgroundCode: `const templates = ["Dashboard", "Project", "Trip Planner"];\nconst improved = templates.map((name) => ({ name, hasSampleData: true }));\nconsole.log(improved);`,
+  videoNotes: [
+    {
+      id: "sample-video-note",
+      videoId: "sample-video",
+      videoTitle: "Designing Empty States That Teach",
+      videoUrl: "https://example.com/video",
+      thumbnail: "",
+      summary: "Empty states should explain value, show a next action, and reduce uncertainty for new users.",
+      keyPoints: ["Show what good looks like", "Keep the next action obvious", "Use examples instead of blank panels"],
+      timestamps: [
+        { time: "02:10", topic: "Why empty states matter" },
+        { time: "08:45", topic: "Example-driven onboarding" },
+      ],
+      createdAt: new Date().toISOString(),
+    },
+  ],
+  courses: [
+    {
+      id: "sample-course",
+      title: "Template Preview UX Fundamentals",
+      topic: "Template UX",
+      description: "Learn how to make template previews help users understand workflows before creating a notebook.",
+      targetAudience: "Product designers, founders, and template creators",
+      prerequisites: ["Basic product thinking", "Familiarity with user onboarding"],
+      totalHours: 3,
+      createdAt: new Date().toISOString(),
+      chapters: [
+        {
+          id: "sample-chapter-1",
+          title: "Preview Principles",
+          overview: "How sample content, structure, and action cues improve confidence.",
+          level: "beginner",
+          estimatedHours: 1,
+          completed: false,
+          lessons: [
+            {
+              id: "sample-lesson-1",
+              title: "Replace blank states with realistic examples",
+              estimatedMinutes: 18,
+              explanation: "A good preview should show the final shape of a workflow. Users should see sample tasks, notes, metrics, or sources before they commit.",
+              keyPoints: ["Show realistic data", "Keep examples short", "Align examples with the template promise"],
+              examples: [{ title: "Dashboard sample", explanation: "Show metrics, tasks, notes, and upcoming events instead of 'No dashboard selected'." }],
+              exercises: [{ title: "Audit a preview", description: "Find one blank state and write sample data that explains the template." }],
+              resources: ["Template UX audit"],
+              completed: true,
+            },
+            {
+              id: "sample-lesson-2",
+              title: "Make the next action obvious",
+              estimatedMinutes: 22,
+              explanation: "After users understand the preview, give them a clear path to create, customize, or compare templates.",
+              keyPoints: ["Use one primary CTA", "Avoid hidden setup", "Add best-for labels"],
+              examples: [],
+              exercises: [],
+              resources: [],
+              completed: false,
+            },
+          ],
+          projects: [
+            {
+              id: "sample-project",
+              title: "Write a sample preview plan",
+              description: "Create a checklist for one template: sample records, preview banner, and CTA.",
+              difficulty: "Beginner",
+              steps: ["Pick a template", "Write three realistic sample entries", "Define the next action"],
+              skills: ["UX writing", "Product thinking"],
+              completed: false,
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
 //  Main Component 
 
 export function StudyBookTemplate({ title = "Study Book", notebookId }: StudyBookTemplateProps) {
@@ -190,7 +271,19 @@ export function StudyBookTemplate({ title = "Study Book", notebookId }: StudyBoo
 
   //  DB Load 
   useEffect(() => {
-    if (!notebookId) { setLoading(false); return; }
+    if (!notebookId) {
+      projectsRef.current = [sampleStudyProject];
+      activeIdRef.current = sampleStudyProject.id;
+      setProjects([sampleStudyProject]);
+      _setActiveProjectId(sampleStudyProject.id);
+      setSelectedCourseId(sampleStudyProject.courses[0].id);
+      setSelectedChapterId(sampleStudyProject.courses[0].chapters[0].id);
+      setSelectedLessonId(sampleStudyProject.courses[0].chapters[0].lessons[0].id);
+      setExpandedChapters(new Set([sampleStudyProject.courses[0].chapters[0].id]));
+      setSelectedNoteId(sampleStudyProject.videoNotes[0].id);
+      setLoading(false);
+      return;
+    }
     (async () => {
       try {
         const res = await fetch(`/api/notebooks/${notebookId}/pages`);

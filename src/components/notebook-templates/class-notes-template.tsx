@@ -28,6 +28,35 @@ interface ClassNotesTemplateProps {
   notebookId?: string;
 }
 
+const sampleSubjects: Subject[] = [
+  { id: 'product', name: 'Product Strategy', color: 'blue' },
+  { id: 'design', name: 'Design Systems', color: 'purple' },
+  { id: 'research', name: 'User Research', color: 'green' },
+];
+
+const sampleLectures: Lecture[] = [
+  {
+    id: 'sample-lecture-1',
+    subject: 'product',
+    title: 'Activation metrics and onboarding',
+    date: new Date().toISOString().split('T')[0],
+    duration: '45 min',
+    notes: 'Activation should measure the moment a new user experiences core value. Template previews can improve activation by showing complete examples.',
+    keyPoints: ['Define one activation event', 'Remove empty states from previews', 'Measure template-to-create conversion'],
+    color: 'blue',
+  },
+  {
+    id: 'sample-lecture-2',
+    subject: 'design',
+    title: 'Designing helpful empty states',
+    date: new Date(Date.now() - 86400000).toISOString().split('T')[0],
+    duration: '35 min',
+    notes: 'Empty states should educate, reassure, and offer a next action. Public previews should use sample data instead of empty states.',
+    keyPoints: ['Explain the purpose', 'Show examples', 'Offer a clear CTA'],
+    color: 'purple',
+  },
+];
+
 export function ClassNotesTemplate({ title, notebookId }: ClassNotesTemplateProps) {
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [lectures, setLectures] = useState<Lecture[]>([]);
@@ -69,7 +98,13 @@ export function ClassNotesTemplate({ title, notebookId }: ClassNotesTemplateProp
   };
 
   useEffect(() => {
-    if (!notebookId) return;
+    if (!notebookId) {
+      setSubjects(sampleSubjects);
+      setLectures(sampleLectures);
+      setSelectedSubject(sampleSubjects[0].id);
+      setSelectedLecture(sampleLectures[0]);
+      return;
+    }
     try {
       const saved = localStorage.getItem(`class-notes-${notebookId}`);
       if (saved) {

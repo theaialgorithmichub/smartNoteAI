@@ -62,6 +62,59 @@ interface RecipeTemplateProps {
   notebookId?: string;
 }
 
+const sampleRecipes: Recipe[] = [
+  {
+    id: 'sample-recipe-1',
+    title: 'Weeknight Miso Noodles',
+    description: 'A quick, cozy noodle bowl with mushrooms, greens, and a savory miso broth.',
+    image: '',
+    prepTime: '10 min',
+    cookTime: '18 min',
+    servings: 4,
+    difficulty: 'easy',
+    cuisine: 'Japanese',
+    ingredients: [
+      { id: 'sample-ing-1', name: 'Ramen noodles', amount: '12', unit: 'oz', inCart: false },
+      { id: 'sample-ing-2', name: 'White miso paste', amount: '3', unit: 'tbsp', inCart: false },
+      { id: 'sample-ing-3', name: 'Mushrooms', amount: '2', unit: 'cups', inCart: true },
+      { id: 'sample-ing-4', name: 'Baby spinach', amount: '3', unit: 'cups', inCart: false },
+    ],
+    steps: [
+      { id: 'sample-step-1', instruction: 'Simmer broth with miso, ginger, and garlic.', duration: '8 min', completed: true },
+      { id: 'sample-step-2', instruction: 'Add mushrooms and noodles until tender.', duration: '7 min', completed: false },
+      { id: 'sample-step-3', instruction: 'Fold in spinach and serve with sesame oil.', duration: '3 min', completed: false },
+    ],
+    notes: 'Add chili crisp for heat. Works well with tofu or soft-boiled eggs.',
+    isFavorite: true,
+    rating: 5,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'sample-recipe-2',
+    title: 'Mediterranean Lunch Bowls',
+    description: 'Meal-prep bowls with couscous, chickpeas, cucumber, feta, and lemon dressing.',
+    image: '',
+    prepTime: '20 min',
+    cookTime: '10 min',
+    servings: 3,
+    difficulty: 'easy',
+    cuisine: 'Mediterranean',
+    ingredients: [
+      { id: 'sample-ing-5', name: 'Couscous', amount: '1.5', unit: 'cups', inCart: false },
+      { id: 'sample-ing-6', name: 'Chickpeas', amount: '1', unit: 'can', inCart: false },
+      { id: 'sample-ing-7', name: 'Feta', amount: '4', unit: 'oz', inCart: true },
+    ],
+    steps: [
+      { id: 'sample-step-4', instruction: 'Cook couscous and fluff with olive oil.', completed: false },
+      { id: 'sample-step-5', instruction: 'Layer vegetables, chickpeas, feta, and dressing.', completed: false },
+    ],
+    notes: 'Pack dressing separately for best texture.',
+    isFavorite: false,
+    rating: 4,
+    createdAt: new Date().toISOString(),
+  },
+];
+
 export function RecipeTemplate({ title = "Recipe Book", notebookId }: RecipeTemplateProps) {
   const [activeTab, setActiveTab] = useState<'recipes' | 'shopping' | 'generate'>('recipes');
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -99,7 +152,11 @@ export function RecipeTemplate({ title = "Recipe Book", notebookId }: RecipeTemp
   };
 
   useEffect(() => {
-    if (!notebookId) return;
+    if (!notebookId) {
+      setRecipes(sampleRecipes);
+      setSelectedRecipe(sampleRecipes[0]);
+      return;
+    }
     try {
       const saved = localStorage.getItem(`recipe-${notebookId}`);
       if (saved) {

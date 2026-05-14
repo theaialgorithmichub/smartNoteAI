@@ -27,6 +27,32 @@ interface MealEvent {
   createdAt: string;
 }
 
+const sampleMealEvents: MealEvent[] = [
+  {
+    id: 'sample-meal-event',
+    eventName: 'Template Launch Lunch',
+    date: new Date(Date.now() + 2 * 86400000).toISOString().split('T')[0],
+    location: 'Product room / remote',
+    attendees: [
+      { personName: 'Ava', foodItem: 'Mediterranean bowl', dietaryRestrictions: 'Vegetarian', notes: 'No olives' },
+      { personName: 'Leo', foodItem: 'Chicken biryani', notes: 'Extra raita' },
+      { personName: 'Mia', foodItem: 'Sushi set', dietaryRestrictions: 'Gluten-free soy sauce' },
+    ],
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'sample-meal-event-2',
+    eventName: 'QA Review Breakfast',
+    date: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
+    location: 'Cafe Lab',
+    attendees: [
+      { personName: 'Sam', foodItem: 'Oat latte and croissant' },
+      { personName: 'Nora', foodItem: 'Avocado toast', dietaryRestrictions: 'No dairy' },
+    ],
+    createdAt: new Date().toISOString(),
+  },
+];
+
 export function MealsPlannerTemplate({ title, notebookId }: MealsPlannerTemplateProps) {
   const [events, setEvents] = useState<MealEvent[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<string | null>(null);
@@ -56,7 +82,11 @@ export function MealsPlannerTemplate({ title, notebookId }: MealsPlannerTemplate
   };
 
   useEffect(() => {
-    if (!notebookId) return;
+    if (!notebookId) {
+      setEvents(sampleMealEvents);
+      setSelectedEvent(sampleMealEvents[0].id);
+      return;
+    }
     try {
       const saved = localStorage.getItem(`meals-planner-${notebookId}`);
       if (saved) {

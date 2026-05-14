@@ -87,6 +87,69 @@ const STATUS_CONFIG = {
 const DEFAULT_TAGS = ['work', 'personal', 'health', 'learning', 'finance', 'home'];
 const PROJECT_COLORS = ['#3b82f6', '#22c55e', '#f97316', '#8b5cf6', '#ec4899', '#06b6d4', '#eab308', '#ef4444'];
 
+const sampleTodoProjects: Project[] = [
+  { id: 'inbox', name: 'Inbox', color: '#64748b' },
+  { id: 'launch', name: 'Template Launch', color: '#3b82f6' },
+  { id: 'personal', name: 'Personal', color: '#22c55e' },
+];
+
+const sampleTodoTasks: Task[] = [
+  {
+    id: 'sample-task-1',
+    title: 'Review top template previews',
+    description: 'Check the gallery for empty states and prioritize sample data.',
+    priority: 'urgent',
+    status: 'completed',
+    dueDate: new Date().toISOString().split('T')[0],
+    dueTime: '10:00',
+    tags: ['work', 'templates'],
+    project: 'launch',
+    subtasks: [
+      { id: 'sample-subtask-1', title: 'Dashboard', completed: true },
+      { id: 'sample-subtask-2', title: 'Trip Planner', completed: true },
+    ],
+    recurring: 'none',
+    estimatedTime: 45,
+    actualTime: 40,
+    completedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'sample-task-2',
+    title: 'Seed recipe and budget examples',
+    description: 'Add realistic starter content so users see the end state immediately.',
+    priority: 'high',
+    status: 'in-progress',
+    dueDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+    dueTime: '14:30',
+    tags: ['templates'],
+    project: 'launch',
+    subtasks: [{ id: 'sample-subtask-3', title: 'Write sample entries', completed: false }],
+    recurring: 'none',
+    estimatedTime: 60,
+    actualTime: 15,
+    completedAt: null,
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: 'sample-task-3',
+    title: 'Plan weekend reading block',
+    description: 'Reserve time to read and capture notes.',
+    priority: 'medium',
+    status: 'todo',
+    dueDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
+    dueTime: null,
+    tags: ['personal', 'learning'],
+    project: 'personal',
+    subtasks: [],
+    recurring: 'weekly',
+    estimatedTime: 90,
+    actualTime: 0,
+    completedAt: null,
+    createdAt: new Date().toISOString(),
+  },
+];
+
 export function TodoTemplate({ title = "Advanced To-Do", notebookId }: TodoTemplateProps) {
   const [activeTab, setActiveTab] = useState<'tasks' | 'today' | 'upcoming' | 'analytics'>('tasks');
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -147,7 +210,13 @@ export function TodoTemplate({ title = "Advanced To-Do", notebookId }: TodoTempl
   };
 
   useEffect(() => {
-    if (!notebookId) return;
+    if (!notebookId) {
+      setProjects(sampleTodoProjects);
+      setTasks(sampleTodoTasks);
+      setCustomTags(['templates']);
+      setExpandedTasks(new Set(['sample-task-1', 'sample-task-2']));
+      return;
+    }
     try {
       const saved = localStorage.getItem(`todo-${notebookId}`);
       if (saved) {

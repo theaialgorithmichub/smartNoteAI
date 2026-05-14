@@ -45,6 +45,51 @@ interface LinkTemplateProps {
   notebookId?: string;
 }
 
+const sampleLinkProject: LinkProject = {
+  id: "sample-link-project",
+  name: "Product Research Links",
+  description: "A curated library for template UX, onboarding, and product research references.",
+  categories: [
+    { id: "research", name: "Research", color: "#3b82f6", icon: "book" },
+    { id: "design", name: "Design", color: "#8b5cf6", icon: "palette" },
+    { id: "tools", name: "Tools", color: "#10b981", icon: "code" },
+  ],
+  links: [
+    {
+      id: "sample-link-1",
+      url: "https://example.com/template-ux-audit",
+      title: "Template UX Audit",
+      description: "Notes on how realistic sample data improves template previews.",
+      categoryId: "research",
+      isFavorite: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: "sample-link-2",
+      url: "https://example.com/onboarding-patterns",
+      title: "Onboarding Pattern Library",
+      description: "Examples of preview banners, best-for labels, and empty-state copy.",
+      categoryId: "design",
+      isFavorite: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      id: "sample-link-3",
+      url: "https://example.com/qa-checklist",
+      title: "Regression QA Checklist",
+      description: "Checklist for public routes, templates, marketplace, and auth flows.",
+      categoryId: "tools",
+      isFavorite: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  ],
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+};
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function LinkTemplate({ title = "Link Manager", notebookId }: LinkTemplateProps) {
@@ -107,7 +152,13 @@ export function LinkTemplate({ title = "Link Manager", notebookId }: LinkTemplat
   }, [notebookId, activeProjectId]);
 
   useEffect(() => {
-    if (!notebookId) return;
+    if (!notebookId) {
+      setProjects([sampleLinkProject]);
+      projectsRef.current = [sampleLinkProject];
+      setActiveProjectId(sampleLinkProject.id);
+      setActiveTab('links');
+      return;
+    }
     try {
       const saved = localStorage.getItem(`link-${notebookId}`);
       if (saved) {
