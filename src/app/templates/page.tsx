@@ -6,6 +6,7 @@ import Link from "next/link";
 import { BookOpen, ArrowLeft, Eye } from "lucide-react";
 import { UnifiedHeader } from "@/components/layout/unified-header";
 import { TemplateSelector } from "@/components/notebook-templates";
+import { TemplatePreviewIntro } from "@/components/notebook-templates/template-preview-intro";
 import { MeetingNotesTemplate } from "@/components/notebook-templates/meeting-notes-template";
 import { DocumentTemplate } from "@/components/notebook-templates/document-template";
 import { DashboardTemplate } from "@/components/notebook-templates/dashboard-template";
@@ -290,6 +291,7 @@ export default function TemplatesPage() {
                   exit={{ opacity: 0 }}
                   className="min-h-full"
                 >
+                  <TemplatePreviewIntro templateId={previewTemplate} />
                   {renderTemplatePreview(previewTemplate)}
                 </motion.div>
               </AnimatePresence>
