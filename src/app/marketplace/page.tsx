@@ -15,7 +15,9 @@ import {
   Plus,
   Eye,
   Sparkles,
-  Copy
+  Copy,
+  BookOpen,
+  ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -51,6 +53,7 @@ export default function MarketplacePage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<any>(null);
+  const hasActiveFilters = search.trim().length > 0 || category !== 'all';
 
   useEffect(() => {
     fetchTemplates();
@@ -257,11 +260,88 @@ export default function MarketplacePage() {
             <p className="text-slate-600 dark:text-slate-300">Loading templates...</p>
           </div>
         ) : templates.length === 0 ? (
-          <Card className="p-12 text-center bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm">
-            <Filter className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-500 dark:text-slate-400">
-              No templates found. Try adjusting your filters.
-            </p>
+          <Card className="relative overflow-hidden p-8 sm:p-12 text-center bg-white/85 dark:bg-neutral-900/85 backdrop-blur-sm border-purple-100 dark:border-purple-900/40">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(168,85,247,0.18),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(236,72,153,0.16),transparent_40%)]" />
+            <div className="relative max-w-3xl mx-auto">
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25">
+                {hasActiveFilters ? (
+                  <Filter className="w-8 h-8" />
+                ) : (
+                  <Sparkles className="w-8 h-8" />
+                )}
+              </div>
+
+              {hasActiveFilters ? (
+                <>
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
+                    No templates match those filters
+                  </h2>
+                  <p className="text-slate-600 dark:text-slate-300 mb-6">
+                    Try a broader search, switch back to all categories, or clear your filters to browse the full marketplace catalog.
+                  </p>
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <Button
+                      onClick={() => {
+                        setSearch('');
+                        setCategory('all');
+                        setPage(1);
+                      }}
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                    >
+                      Clear Filters
+                    </Button>
+                    <Button variant="outline" onClick={() => router.push('/templates')}>
+                      <BookOpen className="w-4 h-4 mr-2" />
+                      View Built-in Templates
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="inline-flex items-center gap-2 rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 mb-4">
+                    Community marketplace
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-3">
+                    Marketplace templates are coming soon
+                  </h2>
+                  <p className="text-slate-600 dark:text-slate-300 max-w-2xl mx-auto mb-8">
+                    We are preparing curated community templates for SmartNote AI. In the meantime, explore the built-in template library or submit your own workflow for review.
+                  </p>
+
+                  <div className="grid sm:grid-cols-3 gap-4 text-left mb-8">
+                    <div className="rounded-2xl border border-purple-100 bg-white/70 p-4 dark:border-purple-900/40 dark:bg-neutral-950/60">
+                      <Sparkles className="w-5 h-5 text-purple-500 mb-2" />
+                      <h3 className="font-semibold text-slate-900 dark:text-white text-sm">Curated first</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Templates will be reviewed before publishing.</p>
+                    </div>
+                    <div className="rounded-2xl border border-purple-100 bg-white/70 p-4 dark:border-purple-900/40 dark:bg-neutral-950/60">
+                      <Award className="w-5 h-5 text-amber-500 mb-2" />
+                      <h3 className="font-semibold text-slate-900 dark:text-white text-sm">Creator friendly</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Share polished workflows with the community.</p>
+                    </div>
+                    <div className="rounded-2xl border border-purple-100 bg-white/70 p-4 dark:border-purple-900/40 dark:bg-neutral-950/60">
+                      <BookOpen className="w-5 h-5 text-pink-500 mb-2" />
+                      <h3 className="font-semibold text-slate-900 dark:text-white text-sm">Built-ins available</h3>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Use the full built-in gallery today.</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                    <Button
+                      onClick={() => router.push('/templates')}
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                    >
+                      Browse Built-in Templates
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                    <Button variant="outline" onClick={() => router.push('/marketplace/submit')}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Submit a Template
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
           </Card>
         ) : (
           <>
