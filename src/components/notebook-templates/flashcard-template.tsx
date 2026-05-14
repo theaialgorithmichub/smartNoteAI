@@ -55,6 +55,57 @@ interface FlashcardTemplateProps {
   notebookId?: string;
 }
 
+const sampleFlashProject: FlashProject = {
+  id: "sample-flash-project",
+  name: "Product Strategy Basics",
+  decks: [
+    { id: "strategy", name: "Strategy", color: "#3b82f6" },
+    { id: "metrics", name: "Metrics", color: "#10b981" },
+    { id: "research", name: "Research", color: "#8b5cf6" },
+  ],
+  cards: [
+    {
+      id: "sample-card-1",
+      front: "What is an activation metric?",
+      back: "A measurable action that indicates a new user has experienced the product's core value.",
+      deck: "metrics",
+      difficulty: "medium",
+      lastReviewed: "2026-05-14",
+      correctCount: 4,
+      incorrectCount: 1,
+    },
+    {
+      id: "sample-card-2",
+      front: "Name three signals that a template preview is effective.",
+      back: "It shows realistic sample data, explains the intended workflow, and gives a clear next action.",
+      deck: "research",
+      difficulty: "easy",
+      correctCount: 3,
+      incorrectCount: 0,
+    },
+    {
+      id: "sample-card-3",
+      front: "Why group templates into categories?",
+      back: "Categories reduce scanning effort and help users find a workflow by intent instead of memorizing template names.",
+      deck: "strategy",
+      difficulty: "easy",
+      correctCount: 5,
+      incorrectCount: 1,
+    },
+    {
+      id: "sample-card-4",
+      front: "What is the risk of too many empty templates?",
+      back: "Users may think the product is unfinished because they cannot see the expected end state.",
+      deck: "strategy",
+      difficulty: "hard",
+      correctCount: 2,
+      incorrectCount: 2,
+    },
+  ],
+  createdAt: "2026-05-14T00:00:00.000Z",
+  updatedAt: "2026-05-14T00:00:00.000Z",
+};
+
 export function FlashcardTemplate({ title = "Flashcards", notebookId }: FlashcardTemplateProps) {
   const [activeTab, setActiveTab] = useState<'study' | 'manage' | 'stats'>('study');
   const [selectedDeck, setSelectedDeck] = useState<string>('all');
@@ -112,7 +163,12 @@ export function FlashcardTemplate({ title = "Flashcards", notebookId }: Flashcar
   };
 
   useEffect(() => {
-    if (!notebookId) return;
+    if (!notebookId) {
+      setProjects([sampleFlashProject]);
+      projectsRef.current = [sampleFlashProject];
+      setActiveProjectId(sampleFlashProject.id);
+      return;
+    }
     try {
       const saved = localStorage.getItem(`flashcard-${notebookId}`);
       if (saved) {

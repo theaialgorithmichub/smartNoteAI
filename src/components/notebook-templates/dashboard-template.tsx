@@ -38,6 +38,55 @@ const makeDashboard = (name = "My Dashboard"): Dashboard => ({
   createdAt: new Date().toLocaleString(), updatedAt: new Date().toLocaleString(),
 });
 
+const makeSampleDashboard = (): Dashboard => ({
+  id: "sample-dashboard",
+  name: "Launch Command Center",
+  emoji: "",
+  widgets: [
+    {
+      id: "sample-stats",
+      type: "stats",
+      title: "Launch Metrics",
+      stats: [
+        { id: "sample-stat-1", label: "Tasks Done", value: "18/24", trend: "up", change: "+6 this week" },
+        { id: "sample-stat-2", label: "Budget Used", value: "$8.4k", trend: "flat", change: "62% planned" },
+        { id: "sample-stat-3", label: "Beta Users", value: "142", trend: "up", change: "+21%" },
+        { id: "sample-stat-4", label: "Open Risks", value: "3", trend: "down", change: "-2 resolved" },
+      ],
+    },
+    {
+      id: "sample-tasks",
+      type: "tasks",
+      title: "Priority Tasks",
+      tasks: [
+        { id: "sample-task-1", title: "Finalize onboarding copy", dueDate: "May 17, 2026", completed: true, priority: "high", tag: "Content" },
+        { id: "sample-task-2", title: "Review template screenshots", dueDate: "May 18, 2026", completed: false, priority: "medium", tag: "Design" },
+        { id: "sample-task-3", title: "Prepare beta release notes", dueDate: "May 20, 2026", completed: false, priority: "high", tag: "Launch" },
+      ],
+    },
+    {
+      id: "sample-notes",
+      type: "notes",
+      title: "Decision Notes",
+      notes: [
+        { id: "sample-note-1", title: "Positioning", content: "Lead with notebook-first workflows and AI assistance inside every page.", color: "amber" },
+        { id: "sample-note-2", title: "Design", content: "Keep dashboard cards calm; use amber only for primary calls to action.", color: "sky" },
+      ],
+    },
+    {
+      id: "sample-events",
+      type: "events",
+      title: "Upcoming",
+      events: [
+        { id: "sample-event-1", title: "Beta feedback review", date: "May 16, 2026", time: "10:00 AM", color: "blue" },
+        { id: "sample-event-2", title: "Launch readiness check", date: "May 21, 2026", time: "2:30 PM", color: "purple" },
+      ],
+    },
+  ],
+  createdAt: "May 14, 2026",
+  updatedAt: "May 14, 2026",
+});
+
 const makeWidget = (type: WidgetType): Widget => {
   const titles: Record<WidgetType,string> = { notes:"Notes",tasks:"Tasks",events:"Events",stats:"Stats",scratchpad:"Scratch Pad",countdown:"Countdowns" };
   return { id: Date.now().toString(), type, title: titles[type], notes:type==="notes"?[]:undefined, tasks:type==="tasks"?[]:undefined, events:type==="events"?[]:undefined, stats:type==="stats"?[]:undefined, scratchpad:type==="scratchpad"?"":undefined, countdowns:type==="countdown"?[]:undefined };
@@ -323,7 +372,13 @@ export function DashboardTemplate({ title, notebookId }: DashboardTemplateProps)
 
   //  Load from DB 
   useEffect(() => {
-    if (!notebookId) { setLoading(false); return; }
+    if (!notebookId) {
+      const sample = makeSampleDashboard();
+      setDashboards([sample]);
+      setActiveId(sample.id);
+      setLoading(false);
+      return;
+    }
     (async () => {
       try {
         const res = await fetch(`/api/notebooks/${notebookId}/pages`);

@@ -122,6 +122,68 @@ const generateDates = (start: string, end: string): string[] => {
 
 const getCategoryInfo = (id: string) => ACTIVITY_CATEGORIES.find(c => c.id === id) ?? ACTIVITY_CATEGORIES[5];
 
+const sampleTrip: Trip = {
+  id: "sample-trip",
+  name: "Tokyo Product Retreat",
+  destination: "Tokyo, Japan",
+  source: "San Francisco",
+  startDate: "2026-06-08",
+  endDate: "2026-06-11",
+  budget: 6200,
+  currency: "USD",
+  travelers: 4,
+  notes: "Team retreat focused on product strategy, customer research, and food exploration.",
+  itinerary: [
+    {
+      id: "day-2026-06-08",
+      date: "2026-06-08",
+      activities: [
+        { id: "sample-activity-1", time: "09:30", title: "Arrive at Haneda Airport", location: "HND", category: "transport", cost: 120, notes: "Book airport transfer ahead of time.", completed: true, booked: true, url: "" },
+        { id: "sample-activity-2", time: "14:00", title: "Check in and workspace setup", location: "Shibuya", category: "accommodation", cost: 760, notes: "Confirm meeting room access.", completed: false, booked: true, url: "" },
+        { id: "sample-activity-3", time: "19:00", title: "Team ramen dinner", location: "Shinjuku", category: "food", cost: 160, notes: "Capture user interview themes over dinner.", completed: false, booked: false, url: "" },
+      ],
+    },
+    {
+      id: "day-2026-06-09",
+      date: "2026-06-09",
+      activities: [
+        { id: "sample-activity-4", time: "10:00", title: "Customer interview block", location: "Co-working studio", category: "activity", cost: 220, notes: "Record notes in the research notebook.", completed: false, booked: true, url: "" },
+        { id: "sample-activity-5", time: "15:30", title: "Template roadmap workshop", location: "Hotel meeting room", category: "activity", cost: 0, notes: "Prioritize PRD, QA plan, and content calendar templates.", completed: false, booked: true, url: "" },
+      ],
+    },
+  ],
+  packingList: [
+    { id: "sample-pack-1", name: "Passport", category: "Documents", packed: true },
+    { id: "sample-pack-2", name: "Laptop and charger", category: "Electronics", packed: true },
+    { id: "sample-pack-3", name: "Portable microphone", category: "Electronics", packed: false },
+    { id: "sample-pack-4", name: "Comfortable walking shoes", category: "Clothing", packed: false },
+  ],
+  expenses: [
+    { id: "sample-expense-1", category: "transport", description: "Airport transfer", amount: 120, date: "2026-06-08", paid: true },
+    { id: "sample-expense-2", category: "accommodation", description: "Hotel deposit", amount: 1520, date: "2026-06-08", paid: true },
+    { id: "sample-expense-3", category: "food", description: "Team dinner estimate", amount: 160, date: "2026-06-08", paid: false },
+  ],
+  flights: [
+    { airline: "ANA", flightNumber: "NH 107", departure: "SFO 12:20", arrival: "HND 15:30 +1", duration: "11h 10m", stops: 0, price: 1280, class: "Economy", url: "https://example.com/flights", bookingTip: "Book aisle seats for workshop prep time." },
+  ],
+  hotels: [
+    { name: "Shibuya Stream Excel Hotel", stars: 4, area: "Shibuya", pricePerNight: 280, highlights: ["Near station", "Meeting rooms", "Fast Wi-Fi"], rating: 4.6, url: "https://example.com/hotel", description: "Convenient base for interviews and evening team activities." },
+  ],
+  restaurants: [
+    { name: "Afuri Ramen", cuisine: "Ramen", area: "Shinjuku", priceRange: "$$", mustTry: "Yuzu shio ramen", rating: 4.5, url: "https://example.com/restaurant", description: "Casual team dinner option after arrival." },
+  ],
+  trains: [
+    { operator: "JR East", trainName: "Yamanote Line", departure: "Shibuya", arrival: "Tokyo Station", duration: "24m", class: "Standard", price: 2, amenities: ["Frequent service", "IC card support"], url: "https://example.com/train", bookingTip: "Use Suica/PASMO for local travel." },
+  ],
+  checkThis: {
+    importantHotels: [{ name: "Shibuya Stream Excel Hotel", area: "Shibuya", url: "https://example.com/hotel" }],
+    importantRestaurants: [{ name: "Afuri Ramen", cuisine: "Ramen", url: "https://example.com/restaurant" }],
+    importantPlaces: [{ name: "Shibuya Sky", type: "Viewpoint", url: "https://example.com/place" }],
+    airways: [{ airline: "ANA", routes: "SFO to HND", url: "https://example.com/flights" }],
+  },
+  createdAt: "2026-05-14T00:00:00.000Z",
+};
+
 // ── TripForm (top-level to prevent remount on parent re-render) ───────────────
 
 interface TripFormProps {
@@ -270,7 +332,14 @@ export function TripTemplate({ title = "Trip Planner", notebookId }: TripTemplat
 
   //  DB Load 
   useEffect(() => {
-    if (!notebookId) { setLoading(false); return; }
+    if (!notebookId) {
+      setTrips([sampleTrip]);
+      tripsRef.current = [sampleTrip];
+      setActiveId(sampleTrip.id);
+      setExpandedDays(new Set(sampleTrip.itinerary.map(day => day.id)));
+      setLoading(false);
+      return;
+    }
     (async () => {
       try {
         const res = await fetch(`/api/notebooks/${notebookId}/pages`);

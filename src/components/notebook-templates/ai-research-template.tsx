@@ -73,6 +73,70 @@ const makeResearch = (): Research => ({
   createdAt: new Date().toISOString(),
 });
 
+const sampleResearch: Research = {
+  id: "sample-research",
+  title: "AI Note-Taking Market Scan",
+  description: "Compare user needs, core product gaps, and opportunities for a notebook-first AI workspace.",
+  createdAt: "2026-05-14T00:00:00.000Z",
+  sources: [
+    {
+      id: "sample-source-1",
+      title: "User interviews: students and product teams",
+      url: "",
+      type: "text",
+      rawContent: "Interview notes from students, founders, and product teams about research workflows.",
+      summary: "Users want fast capture, reliable organization, and AI summaries that stay grounded in their own notes.",
+      sections: [
+        {
+          heading: "Common pain points",
+          content: "Long notes become hard to revisit, templates often start empty, and users want guidance on what to write next.",
+        },
+        {
+          heading: "Purchase drivers",
+          content: "People pay for polished exports, collaboration, AI summaries, and reusable workflows that save setup time.",
+        },
+      ],
+      keyPoints: [
+        "Sample-filled templates improve activation.",
+        "Search and filters matter once the library grows.",
+        "AI should explain which notebook content it used.",
+      ],
+      selected: true,
+      summarizing: false,
+    },
+    {
+      id: "sample-source-2",
+      title: "Competitive notes: notebook and document tools",
+      url: "https://example.com/research",
+      type: "web",
+      rawContent: "Competitive review notes.",
+      summary: "Most competitors use document lists. SmartNote AI can differentiate with physical notebook navigation plus purpose-built templates.",
+      sections: [],
+      keyPoints: ["Notebook metaphor is memorable.", "Template marketplace can become a growth loop."],
+      selected: true,
+      summarizing: false,
+    },
+  ],
+  notes: [
+    {
+      id: "sample-note-1",
+      title: "Positioning hypothesis",
+      content: "Lead with the emotional hook of a digital notebook shelf, then prove productivity through AI summaries, templates, and sharing.",
+      createdAt: "2026-05-14T00:00:00.000Z",
+    },
+    {
+      id: "sample-note-2",
+      title: "Next research questions",
+      content: "Which templates drive first notebook creation? Which AI actions are applied most often after preview?",
+      createdAt: "2026-05-14T00:00:00.000Z",
+    },
+  ],
+  chat: [
+    { id: "sample-chat-1", role: "user", content: "What are the top opportunities?" },
+    { id: "sample-chat-2", role: "assistant", content: "Improve template previews with realistic sample data, add stronger discovery filters, and make AI outputs cite source notes." },
+  ],
+};
+
 const SOURCE_ICONS: Record<string, any> = { youtube: Youtube, web: Globe, document: FileText, text: FileText };
 const SOURCE_COLORS: Record<string, string> = {
   youtube: "text-red-500 bg-red-50 dark:bg-red-900/20",
@@ -237,7 +301,13 @@ export function AIResearchTemplate({ title, notebookId }: AIResearchTemplateProp
 
   // Load
   useEffect(() => {
-    if (!notebookId) { setLoading(false); return; }
+    if (!notebookId) {
+      setResearches([sampleResearch]);
+      setActiveId(sampleResearch.id);
+      setActiveNoteId(sampleResearch.notes[0]?.id ?? null);
+      setLoading(false);
+      return;
+    }
     (async () => {
       try {
         const res = await fetch(`/api/notebooks/${notebookId}/pages`);

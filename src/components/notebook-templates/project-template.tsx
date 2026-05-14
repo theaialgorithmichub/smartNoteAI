@@ -95,6 +95,125 @@ const blankProject = (): Partial<Project> => ({
   name: "", description: "", key: "", status: "planning", techStack: [], links: [],
 });
 
+const sampleProject: Project = {
+  id: "sample-project",
+  name: "SmartNote Template Refresh",
+  description: "Improve public template discovery and make the first preview experience feel complete.",
+  key: "SNT",
+  status: "in-progress",
+  techStack: ["Next.js", "React", "Tailwind CSS", "Clerk", "MongoDB"],
+  links: [
+    { id: "sample-link-1", title: "Design board", url: "https://example.com/design", type: "figma" },
+    { id: "sample-link-2", title: "Release notes", url: "https://example.com/release", type: "docs" },
+  ],
+  team: [
+    { id: "sample-member-1", name: "Ava Patel", role: "Product", color: MEMBER_COLORS[0] },
+    { id: "sample-member-2", name: "Leo Chen", role: "Design", color: MEMBER_COLORS[1] },
+    { id: "sample-member-3", name: "Mia Jordan", role: "Engineering", color: MEMBER_COLORS[2] },
+  ],
+  sprints: [
+    {
+      id: "sample-sprint-1",
+      projectId: "sample-project",
+      name: "Preview polish sprint",
+      goal: "Ship template search, better sample data, and a safer landing experience.",
+      startDate: "2026-05-14",
+      endDate: "2026-05-21",
+      status: "active",
+      createdAt: "2026-05-14T00:00:00.000Z",
+    },
+  ],
+  tickets: [
+    {
+      id: "sample-ticket-1",
+      title: "Add search and filters to template gallery",
+      description: "Users need a faster way to find templates by goal, category, and feature.",
+      type: "feature",
+      priority: "high",
+      status: "done",
+      assigneeId: "sample-member-3",
+      reporterId: "sample-member-1",
+      sprintId: "sample-sprint-1",
+      projectId: "sample-project",
+      labels: ["templates", "ux"],
+      storyPoints: 5,
+      comments: [
+        { id: "sample-comment-1", authorId: "sample-member-2", authorName: "Leo Chen", text: "Add category chips so mobile users can narrow the list quickly.", createdAt: "2026-05-14T00:00:00.000Z" },
+      ],
+      attachments: [
+        { id: "sample-attachment-1", name: "template-audit.md", url: "https://example.com/template-audit", type: "link", createdAt: "2026-05-14T00:00:00.000Z" },
+      ],
+      createdAt: "2026-05-14T00:00:00.000Z",
+      updatedAt: "2026-05-14T00:00:00.000Z",
+    },
+    {
+      id: "sample-ticket-2",
+      title: "Seed public previews with realistic examples",
+      description: "Replace empty states with sample projects, cards, trips, and research notes.",
+      type: "improvement",
+      priority: "high",
+      status: "in_progress",
+      assigneeId: "sample-member-2",
+      reporterId: "sample-member-1",
+      sprintId: "sample-sprint-1",
+      projectId: "sample-project",
+      labels: ["preview", "activation"],
+      storyPoints: 8,
+      comments: [],
+      attachments: [],
+      createdAt: "2026-05-14T00:00:00.000Z",
+      updatedAt: "2026-05-14T00:00:00.000Z",
+    },
+    {
+      id: "sample-ticket-3",
+      title: "Verify WebGL fallback on low-end browsers",
+      description: "The landing page should never crash if 3D rendering fails.",
+      type: "bug",
+      priority: "critical",
+      status: "review",
+      assigneeId: "sample-member-3",
+      reporterId: "sample-member-1",
+      sprintId: "sample-sprint-1",
+      projectId: "sample-project",
+      labels: ["reliability"],
+      storyPoints: 3,
+      comments: [],
+      attachments: [],
+      createdAt: "2026-05-14T00:00:00.000Z",
+      updatedAt: "2026-05-14T00:00:00.000Z",
+    },
+    {
+      id: "sample-ticket-4",
+      title: "Seed marketplace starter pack",
+      description: "Add curated templates or improve the empty marketplace state.",
+      type: "task",
+      priority: "medium",
+      status: "backlog",
+      assigneeId: null,
+      reporterId: "sample-member-1",
+      sprintId: null,
+      projectId: "sample-project",
+      labels: ["marketplace"],
+      storyPoints: 5,
+      comments: [],
+      attachments: [],
+      createdAt: "2026-05-14T00:00:00.000Z",
+      updatedAt: "2026-05-14T00:00:00.000Z",
+    },
+  ],
+  documents: [
+    {
+      id: "sample-doc-1",
+      title: "Template Preview Standard",
+      type: "spec",
+      content: "Every public preview should show sample data, three outcome bullets, and a clear use case before asking users to create a notebook.",
+      images: [],
+      updatedAt: "2026-05-14T00:00:00.000Z",
+    },
+  ],
+  createdAt: "2026-05-14T00:00:00.000Z",
+};
+
 const avatarInitials = (name: string) => name.split(" ").map(w => w[0]).join("").toUpperCase().slice(0, 2);
 
 function Avatar({ member, size = "sm" }: { member: TeamMember; size?: "xs" | "sm" | "md" }) {
@@ -494,7 +613,13 @@ export function ProjectTemplate({ title = "Project Hub", notebookId }: ProjectTe
 
   //  DB Load 
   useEffect(() => {
-    if (!notebookId) { setLoading(false); return; }
+    if (!notebookId) {
+      setProjects([sampleProject]);
+      projectsRef.current = [sampleProject];
+      setActiveId(sampleProject.id);
+      setLoading(false);
+      return;
+    }
     (async () => {
       try {
         const res = await fetch(`/api/notebooks/${notebookId}/pages`);
