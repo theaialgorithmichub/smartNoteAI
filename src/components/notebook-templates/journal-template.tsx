@@ -42,6 +42,31 @@ interface JournalTemplateProps {
   notebookId?: string;
 }
 
+const sampleJournalEntries: JournalEntry[] = [
+  {
+    id: 'sample-journal-1',
+    title: 'Why sample previews matter',
+    content: 'A template preview should help a new user imagine their own work inside the notebook. Empty states are useful inside a new notebook, but public previews should show a finished example.',
+    tags: ['templates', 'ux'],
+    category: 'Product',
+    mood: 'happy',
+    isFavorite: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: 'sample-journal-2',
+    title: 'Questions for the next QA pass',
+    content: 'Can users find the right template quickly? Do preview banners explain what each template is best for? Are marketplace empty states reassuring instead of confusing?',
+    tags: ['qa', 'planning'],
+    category: 'Work',
+    mood: 'neutral',
+    isFavorite: false,
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+    updatedAt: new Date(Date.now() - 86400000).toISOString(),
+  },
+];
+
 export function JournalTemplate({ title = "My Journal", notebookId }: JournalTemplateProps) {
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
@@ -74,7 +99,11 @@ export function JournalTemplate({ title = "My Journal", notebookId }: JournalTem
   };
 
   useEffect(() => {
-    if (!notebookId) return;
+    if (!notebookId) {
+      setEntries(sampleJournalEntries);
+      setSelectedEntryId(sampleJournalEntries[0].id);
+      return;
+    }
     try {
       const saved = localStorage.getItem(`journal-${notebookId}`);
       if (saved) {

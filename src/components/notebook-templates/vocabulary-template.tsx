@@ -29,6 +29,30 @@ interface VocabularyTemplateProps {
 
 const storageKeyFor = (notebookId: string) => `vocabulary-${notebookId}`;
 
+const sampleVocabularyEntries: VocabEntry[] = [
+  {
+    id: 'sample-vocab-1',
+    word: 'Activation',
+    definition: 'The moment when a new user experiences the core value of a product.',
+    example: 'Adding realistic template previews may improve activation because users understand the workflow faster.',
+    tags: ['product', 'growth'],
+  },
+  {
+    id: 'sample-vocab-2',
+    word: 'Heuristic',
+    definition: 'A practical rule or mental shortcut used to make decisions quickly.',
+    example: 'A best-for label is a helpful heuristic for choosing the right template.',
+    tags: ['design', 'ux'],
+  },
+  {
+    id: 'sample-vocab-3',
+    word: 'Synthesis',
+    definition: 'Combining separate ideas or sources into a clear, useful conclusion.',
+    example: 'The research template helps synthesize notes into recommendations.',
+    tags: ['research'],
+  },
+];
+
 export function VocabularyTemplate({ title, notebookId }: VocabularyTemplateProps) {
   const [entries, setEntries] = useState<VocabEntry[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -48,7 +72,10 @@ export function VocabularyTemplate({ title, notebookId }: VocabularyTemplateProp
   const storageKey = notebookId ? storageKeyFor(notebookId) : null;
 
   useEffect(() => {
-    if (!storageKey) return;
+    if (!storageKey) {
+      setEntries(sampleVocabularyEntries);
+      return;
+    }
     try {
       const saved = localStorage.getItem(storageKey);
       if (saved) {

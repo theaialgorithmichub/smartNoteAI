@@ -103,6 +103,57 @@ const CATEGORIES = {
   ]
 };
 
+const sampleTransactions: Transaction[] = [
+  {
+    id: 'sample-expense-1',
+    type: 'income',
+    amount: 7200,
+    category: 'salary',
+    description: 'Monthly salary',
+    date: new Date().toISOString().split('T')[0],
+  },
+  {
+    id: 'sample-expense-2',
+    type: 'expense',
+    amount: 1850,
+    category: 'housing',
+    description: 'Rent',
+    date: new Date().toISOString().split('T')[0],
+    recurring: true,
+    recurringFrequency: 'monthly',
+  },
+  {
+    id: 'sample-expense-3',
+    type: 'expense',
+    amount: 420,
+    category: 'food',
+    description: 'Groceries and meal prep',
+    date: new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0],
+  },
+  {
+    id: 'sample-expense-4',
+    type: 'expense',
+    amount: 95,
+    category: 'transport',
+    description: 'Transit pass',
+    date: new Date(Date.now() - 4 * 86400000).toISOString().split('T')[0],
+  },
+  {
+    id: 'sample-expense-5',
+    type: 'expense',
+    amount: 180,
+    category: 'other',
+    description: 'Template design course',
+    date: new Date(Date.now() - 6 * 86400000).toISOString().split('T')[0],
+  },
+];
+
+const sampleBudgets: Budget[] = [
+  { id: 'sample-budget-1', category: 'food', limit: 700, spent: 420, period: 'monthly' },
+  { id: 'sample-budget-2', category: 'transport', limit: 250, spent: 95, period: 'monthly' },
+  { id: 'sample-budget-3', category: 'other', limit: 400, spent: 180, period: 'monthly' },
+];
+
 export function ExpenseTemplate({ title = "Expense Manager", notebookId }: ExpenseTemplateProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'transactions' | 'budgets' | 'analytics'>('overview');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -151,7 +202,12 @@ export function ExpenseTemplate({ title = "Expense Manager", notebookId }: Expen
   };
 
   useEffect(() => {
-    if (!notebookId) return;
+    if (!notebookId) {
+      setTransactions(sampleTransactions);
+      setBudgets(sampleBudgets);
+      setCurrency('USD');
+      return;
+    }
     try {
       const saved = localStorage.getItem(`expense-${notebookId}`);
       if (saved) {

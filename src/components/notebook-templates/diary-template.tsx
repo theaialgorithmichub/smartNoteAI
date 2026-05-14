@@ -138,6 +138,33 @@ const blankEntry = (date: string, theme: string): DiaryEntry => ({
   title: "", content: "", gratitude: [], images: [], drawing: "", theme,
 });
 
+const sampleDiaryEntries: DiaryEntry[] = [
+  {
+    id: "sample-diary-today",
+    date: todayStr,
+    mood: "happy",
+    weather: "sunny",
+    title: "A focused product day",
+    content: "Today I reviewed the template gallery and noticed how much more confident I feel when previews show real examples. The best moments were seeing sample research notes, a filled project board, and a trip itinerary that already made sense.",
+    gratitude: ["Clear priorities", "Useful feedback", "A calmer notebook workflow"],
+    images: [],
+    drawing: "",
+    theme: "default",
+  },
+  {
+    id: "sample-diary-yesterday",
+    date: toDateStr(new Date(Date.now() - 86400000)),
+    mood: "neutral",
+    weather: "cloudy",
+    title: "Ideas for tomorrow",
+    content: "I want to keep improving the first-run experience. Search and filters help, but sample content makes the templates feel alive.",
+    gratitude: ["Time to iterate", "Good notes", "Small wins"],
+    images: [],
+    drawing: "",
+    theme: "default",
+  },
+];
+
 function DrawingCanvas({ value, onChange, theme, date }: { value: string; onChange: (v: string) => void; theme: typeof THEMES[string]; date: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
@@ -272,7 +299,14 @@ export function DiaryTemplate({ title = "My Diary", notebookId }: DiaryTemplateP
 
   //  Load 
   useEffect(() => {
-    if (!notebookId) { setLoading(false); return; }
+    if (!notebookId) {
+      setEntries(sampleDiaryEntries);
+      entriesRef.current = sampleDiaryEntries;
+      setGlobalTheme("default");
+      setSelectedDate(todayStr);
+      setLoading(false);
+      return;
+    }
     (async () => {
       try {
         const res = await fetch(`/api/notebooks/${notebookId}/pages`);
