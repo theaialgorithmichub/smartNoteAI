@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   BookOpen, 
@@ -14,7 +14,10 @@ import {
   ArrowRight,
   Sparkles,
   Mic,
-  Music
+  Music,
+  Search,
+  Filter,
+  X
 } from "lucide-react";
 import { NOTEBOOK_TEMPLATES, NotebookTemplateType } from "@/types/notebook-templates";
 import { TEMPLATE_POINTS } from "@/config/template-points";
@@ -130,6 +133,91 @@ const colorMap: Record<string, { bg: string; border: string; text: string; gradi
   },
 };
 
+const templateCategories = [
+  { id: "all", label: "All" },
+  { id: "starter", label: "Starter" },
+  { id: "work", label: "Work" },
+  { id: "education", label: "Education" },
+  { id: "personal", label: "Personal" },
+  { id: "creative", label: "Creative" },
+  { id: "life", label: "Life" },
+  { id: "finance", label: "Finance" },
+  { id: "developer", label: "Developer" },
+  { id: "team", label: "Team" },
+  { id: "ai", label: "AI" },
+] as const;
+
+type TemplateCategory = (typeof templateCategories)[number]["id"];
+
+const categoryByTemplateId: Partial<Record<NotebookTemplateType, TemplateCategory>> = {
+  simple: "starter",
+  document: "starter",
+  custom: "starter",
+  "meeting-notes": "work",
+  dashboard: "work",
+  planner: "work",
+  project: "work",
+  "project-pipeline": "work",
+  "project-builder": "work",
+  "meeting-strategist": "work",
+  studybook: "education",
+  flashcard: "education",
+  "class-notes": "education",
+  "tutorial-learn": "education",
+  vocabulary: "education",
+  dictionary: "education",
+  diary: "personal",
+  journal: "personal",
+  "second-brain-daily-log": "personal",
+  "book-notes": "personal",
+  "goal-tracker": "personal",
+  doodle: "creative",
+  story: "creative",
+  storytelling: "creative",
+  typewriter: "creative",
+  whiteboard: "creative",
+  "mind-map": "creative",
+  "sticker-book": "creative",
+  "narrative-storyboard": "creative",
+  "cinematic-storyboarder": "creative",
+  trip: "life",
+  recipe: "life",
+  "grocery-list": "life",
+  "save-the-date": "life",
+  "meals-planner": "life",
+  "games-scorecard": "life",
+  "habit-tracker": "life",
+  "workout-log": "life",
+  expense: "finance",
+  "budget-planner": "finance",
+  "expense-sharer": "finance",
+  "stock-pulse": "finance",
+  "code-notebook": "developer",
+  n8n: "developer",
+  "dev-flow-architect": "developer",
+  loop: "team",
+  "ai-research": "ai",
+  "research-builder": "ai",
+  "prompt-diary": "ai",
+  "ai-prompt-studio": "ai",
+  "research-synthesizer": "ai",
+  "workflow-automator": "ai",
+  "language-translator": "ai",
+  "language-bridge": "ai",
+  "image-prompt": "ai",
+  "video-prompt": "ai",
+  "sound-box": "ai",
+  "piano-virtuoso": "ai",
+  "piano-notes": "creative",
+  "carrom-coach": "ai",
+  "important-urls": "starter",
+  link: "starter",
+};
+
+const getTemplateCategory = (templateId: NotebookTemplateType): TemplateCategory => {
+  return categoryByTemplateId[templateId] || "starter";
+};
+
 interface TemplateSelectorProps {
   onSelect: (templateId: NotebookTemplateType) => void;
   selectedTemplate?: NotebookTemplateType;
@@ -137,6 +225,53 @@ interface TemplateSelectorProps {
 
 export function TemplateSelector({ onSelect, selectedTemplate }: TemplateSelectorProps) {
   const [hoveredTemplate, setHoveredTemplate] = useState<NotebookTemplateType | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeCategory, setActiveCategory] = useState<TemplateCategory>("all");
+
+  const categoryCounts = useMemo(() => {
+    return NOTEBOOK_TEMPLATES.reduce<Record<TemplateCategory, number>>((counts, template) => {
+      const category = getTemplateCategory(template.id);
+      counts.all += 1;
+      counts[category] += 1;
+      return counts;
+    }, {
+      all: 0,
+      starter: 0,
+      work: 0,
+      education: 0,
+      personal: 0,
+      creative: 0,
+      life: 0,
+      finance: 0,
+      developer: 0,
+      team: 0,
+      ai: 0,
+    });
+  }, []);
+
+  const filteredTemplates = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    return NOTEBOOK_TEMPLATES.filter((template) => {
+      const category = getTemplateCategory(template.id);
+      const matchesCategory = activeCategory === "all" || category === activeCategory;
+      const searchableText = [
+        template.name,
+        template.description,
+        category,
+        ...template.features,
+      ].join(" ").toLowerCase();
+
+      return matchesCategory && (!normalizedSearch || searchableText.includes(normalizedSearch));
+    });
+  }, [activeCategory, searchTerm]);
+
+  const hasActiveFilters = activeCategory !== "all" || searchTerm.trim().length > 0;
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setActiveCategory("all");
+  };
 
   return (
     <div className="w-full max-w-5xl mx-auto p-6">
@@ -149,8 +284,65 @@ export function TemplateSelector({ onSelect, selectedTemplate }: TemplateSelecto
         </p>
       </div>
 
+      <div className="mb-6 rounded-2xl border border-neutral-200 bg-white/80 p-4 shadow-sm backdrop-blur dark:border-neutral-800 dark:bg-neutral-900/80">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Search by use case, template, or feature..."
+                className="w-full rounded-xl border border-neutral-200 bg-white py-3 pl-10 pr-4 text-sm text-neutral-900 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white"
+              />
+            </div>
+            <div className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
+              <Filter className="h-4 w-4 text-amber-500" />
+              <span>
+                Showing {filteredTemplates.length} of {NOTEBOOK_TEMPLATES.length}
+              </span>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="ml-1 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-amber-700 transition hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-900/20"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {templateCategories.map((category) => {
+              const isActive = activeCategory === category.id;
+
+              return (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => setActiveCategory(category.id)}
+                  className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                    isActive
+                      ? "border-amber-400 bg-amber-500 text-white shadow-sm shadow-amber-500/20"
+                      : "border-neutral-200 bg-white text-neutral-600 hover:border-amber-300 hover:text-amber-700 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-300 dark:hover:border-amber-500 dark:hover:text-amber-300"
+                  }`}
+                >
+                  {category.label}
+                  <span className={isActive ? "ml-1 text-white/80" : "ml-1 text-neutral-400"}>
+                    {categoryCounts[category.id]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {NOTEBOOK_TEMPLATES.map((template) => {
+        {filteredTemplates.map((template) => {
           const Icon = iconMap[template.icon];
           const colors = colorMap[template.color] || colorMap.amber; // Fallback to amber if color not found
           const isSelected = selectedTemplate === template.id;
@@ -251,6 +443,27 @@ export function TemplateSelector({ onSelect, selectedTemplate }: TemplateSelecto
         })}
       </div>
 
+      {filteredTemplates.length === 0 && (
+        <div className="mt-6 rounded-2xl border border-dashed border-neutral-300 bg-white p-10 text-center dark:border-neutral-700 dark:bg-neutral-900">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+            <Search className="h-6 w-6 text-amber-600 dark:text-amber-300" />
+          </div>
+          <h3 className="text-lg font-semibold text-neutral-900 dark:text-white">
+            No templates found
+          </h3>
+          <p className="mx-auto mt-2 max-w-md text-sm text-neutral-500 dark:text-neutral-400">
+            Try a different keyword or clear the filters to browse the full template library.
+          </p>
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="mt-5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-2 text-sm font-medium text-white shadow-lg shadow-amber-500/20 transition hover:opacity-90"
+          >
+            Show all templates
+          </button>
+        </div>
+      )}
+
       {/* AI Suggestion */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -270,8 +483,15 @@ export function TemplateSelector({ onSelect, selectedTemplate }: TemplateSelecto
               Describe your use case and let AI suggest the best template for you
             </p>
           </div>
-          <button className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2">
-            Get Suggestion
+          <button
+            type="button"
+            onClick={() => {
+              setActiveCategory("ai");
+              setSearchTerm("");
+            }}
+            className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2"
+          >
+            Show AI templates
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
