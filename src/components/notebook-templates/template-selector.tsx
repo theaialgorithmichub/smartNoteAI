@@ -15,6 +15,11 @@ import {
   Sparkles,
   Mic,
   Music,
+  Image as ImageIcon,
+  Video,
+  Workflow,
+  Film,
+  Blocks,
   Search,
   Filter,
   X
@@ -32,6 +37,11 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Brain,
   Mic,
   Music,
+  ImageIcon,
+  Video,
+  Workflow,
+  Film,
+  Blocks,
 };
 
 const colorMap: Record<string, { bg: string; border: string; text: string; gradient: string }> = {

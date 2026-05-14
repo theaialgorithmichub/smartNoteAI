@@ -13,6 +13,7 @@ import { CodeNotebookTemplate } from "@/components/notebook-templates/code-noteb
 import { PlannerTemplate } from "@/components/notebook-templates/planner-template";
 import { AIResearchTemplate } from "@/components/notebook-templates/ai-research-template";
 import { DiaryTemplate } from "@/components/notebook-templates/diary-template";
+import { CustomTemplate } from "@/components/notebook-templates/custom-template";
 import { DoodleTemplate } from "@/components/notebook-templates/doodle-template";
 import { ExpenseTemplate } from "@/components/notebook-templates/expense-template";
 import { FlashcardTemplate } from "@/components/notebook-templates/flashcard-template";
@@ -22,10 +23,14 @@ import { LoopTemplate } from "@/components/notebook-templates/loop-template";
 import { ProjectTemplate } from "@/components/notebook-templates/project-template";
 import { RecipeTemplate } from "@/components/notebook-templates/recipe-template";
 import { StoryTemplate } from "@/components/notebook-templates/story-template";
+import { StorytellingTemplate } from "@/components/notebook-templates/storytelling-template";
 import { StudyBookTemplate } from "@/components/notebook-templates/studybook-template";
 import { TodoTemplate } from "@/components/notebook-templates/todo-template";
 import { TripTemplate } from "@/components/notebook-templates/trip-template";
 import { TypewriterTemplate } from "@/components/notebook-templates/typewriter-template";
+import { N8nTemplate } from "@/components/notebook-templates/n8n-template";
+import { ImagePromptTemplate } from "@/components/notebook-templates/image-prompt-template";
+import { VideoPromptTemplate } from "@/components/notebook-templates/video-prompt-template";
 import { WhiteboardTemplate } from "@/components/notebook-templates/whiteboard-template";
 import { SoundBox } from "@/components/ui/sound-box";
 import { BookNotesTemplate } from "@/components/notebook-templates/book-notes-template";
@@ -91,6 +96,8 @@ export default function TemplatesPage() {
         return <AIResearchTemplate title="AI Research" />;
       case 'diary':
         return <DiaryTemplate title="My Daily Diary" />;
+      case 'custom':
+        return <CustomTemplate title="Custom Page" />;
       case 'doodle':
         return <DoodleTemplate title="Creative Doodles" />;
       case 'expense':
@@ -109,6 +116,8 @@ export default function TemplatesPage() {
         return <RecipeTemplate title="Recipe Collection" />;
       case 'story':
         return <StoryTemplate title="Story Writing" />;
+      case 'storytelling':
+        return <StorytellingTemplate title="Storytelling Studio" />;
       case 'studybook':
         return <StudyBookTemplate title="Study Notes" />;
       case 'todo':
@@ -117,6 +126,12 @@ export default function TemplatesPage() {
         return <TripTemplate title="Travel Planning" />;
       case 'typewriter':
         return <TypewriterTemplate title="Typewriter Notes" />;
+      case 'n8n':
+        return <N8nTemplate title="n8n Workflows" />;
+      case 'image-prompt':
+        return <ImagePromptTemplate title="Image Prompts" />;
+      case 'video-prompt':
+        return <VideoPromptTemplate title="Video Prompts" />;
       case 'whiteboard':
         return <WhiteboardTemplate title="Whiteboard" />;
       case 'sound-box':
