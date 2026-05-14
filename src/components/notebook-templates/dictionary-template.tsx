@@ -21,11 +21,21 @@ interface WordData {
   translations?: { [key: string]: string };
 }
 
+const sampleWordData: WordData = {
+  word: 'serendipity',
+  pronunciation: '/ser-en-dip-i-tee/',
+  partOfSpeech: 'noun',
+  definition: 'The occurrence of finding valuable or pleasant things by chance.',
+  examples: ['Finding the perfect template while browsing the gallery felt like serendipity.'],
+  synonyms: ['chance', 'fortune', 'luck', 'discovery'],
+  translations: { Hindi: 'saubhagyapurna khoj' },
+};
+
 export function DictionaryTemplate({ title }: DictionaryTemplateProps) {
-  const [searchWord, setSearchWord] = useState('');
+  const [searchWord, setSearchWord] = useState('serendipity');
   const [sourceLang, setSourceLang] = useState('English');
   const [targetLang, setTargetLang] = useState('Hindi');
-  const [wordData, setWordData] = useState<WordData | null>(null);
+  const [wordData, setWordData] = useState<WordData | null>(sampleWordData);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [recentSearches, setRecentSearches] = useState<string[]>(['Serendipity', 'Ephemeral', 'Resilience', 'Eloquent']);
