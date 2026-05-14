@@ -32,11 +32,46 @@ interface FavoriteQuote {
   chapter: string;
 }
 
+const sampleBooks: Book[] = [
+  { id: 1, title: 'Atomic Habits', author: 'James Clear', progress: 68, rating: 5 },
+  { id: 2, title: 'The Design of Everyday Things', author: 'Don Norman', progress: 35, rating: 4 },
+];
+
+const sampleChapterNotes: ChapterNote[] = [
+  {
+    id: 1,
+    bookId: 1,
+    chapter: 'Chapter 4 - The Man Who Did Not Look Right',
+    content: 'Behavior change becomes easier when cues are visible. Design the environment so the right action is obvious.',
+  },
+  {
+    id: 2,
+    bookId: 1,
+    chapter: 'Chapter 11 - Walk Slowly, But Never Backward',
+    content: 'Tiny improvements compound when repeated consistently. Track the habit, not just the outcome.',
+  },
+];
+
+const sampleQuotes: FavoriteQuote[] = [
+  {
+    id: 1,
+    bookId: 1,
+    quote: 'You do not rise to the level of your goals. You fall to the level of your systems.',
+    chapter: 'Chapter 1',
+  },
+  {
+    id: 2,
+    bookId: 2,
+    quote: 'Good design is actually a lot harder to notice than poor design.',
+    chapter: 'Preface',
+  },
+];
+
 export function BookNotesTemplate({ title }: BookNotesTemplateProps) {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [currentBookId, setCurrentBookId] = useState<number | null>(null);
-  const [chapterNotes, setChapterNotes] = useState<ChapterNote[]>([]);
-  const [quotes, setQuotes] = useState<FavoriteQuote[]>([]);
+  const [books, setBooks] = useState<Book[]>(sampleBooks);
+  const [currentBookId, setCurrentBookId] = useState<number | null>(sampleBooks[0].id);
+  const [chapterNotes, setChapterNotes] = useState<ChapterNote[]>(sampleChapterNotes);
+  const [quotes, setQuotes] = useState<FavoriteQuote[]>(sampleQuotes);
   const [showBookForm, setShowBookForm] = useState(false);
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [showQuoteForm, setShowQuoteForm] = useState(false);

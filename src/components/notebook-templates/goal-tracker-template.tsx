@@ -65,6 +65,44 @@ const PRIORITIES = [
   { value: 'high', label: 'High', color: 'text-red-500' },
 ];
 
+const sampleGoals: Goal[] = [
+  {
+    id: 'sample-goal-1',
+    title: 'Launch polished template previews',
+    description: 'Improve the first-time user experience by replacing empty previews with realistic examples.',
+    category: 'career',
+    priority: 'high',
+    startDate: new Date().toISOString().split('T')[0],
+    targetDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0],
+    progress: 68,
+    status: 'in-progress',
+    isExpanded: true,
+    notes: 'Focus on top templates first, then standardize the preview shell.',
+    milestones: [
+      { id: 'sample-milestone-1', title: 'Add search and filters', completed: true, dueDate: new Date().toISOString().split('T')[0] },
+      { id: 'sample-milestone-2', title: 'Seed 15 template previews', completed: false, dueDate: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0] },
+      { id: 'sample-milestone-3', title: 'Run authenticated QA pass', completed: false, dueDate: new Date(Date.now() + 14 * 86400000).toISOString().split('T')[0] },
+    ],
+  },
+  {
+    id: 'sample-goal-2',
+    title: 'Build a weekly learning habit',
+    description: 'Read one product/design chapter and capture notes every weekend.',
+    category: 'learning',
+    priority: 'medium',
+    startDate: new Date().toISOString().split('T')[0],
+    targetDate: new Date(Date.now() + 45 * 86400000).toISOString().split('T')[0],
+    progress: 35,
+    status: 'in-progress',
+    isExpanded: false,
+    notes: 'Use Book Notes and Flashcards templates together.',
+    milestones: [
+      { id: 'sample-milestone-4', title: 'Choose first two books', completed: true, dueDate: new Date().toISOString().split('T')[0] },
+      { id: 'sample-milestone-5', title: 'Create flashcards from chapter notes', completed: false, dueDate: new Date(Date.now() + 10 * 86400000).toISOString().split('T')[0] },
+    ],
+  },
+];
+
 export function GoalTrackerTemplate({ title, notebookId }: GoalTrackerTemplateProps) {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [showAddGoal, setShowAddGoal] = useState(false);
@@ -87,11 +125,14 @@ export function GoalTrackerTemplate({ title, notebookId }: GoalTrackerTemplatePr
   });
 
   useEffect(() => {
-    if (notebookId) {
-      const saved = localStorage.getItem(`goal-tracker-${notebookId}`);
-      if (saved) {
-        setGoals(JSON.parse(saved));
-      }
+    if (!notebookId) {
+      setGoals(sampleGoals);
+      return;
+    }
+
+    const saved = localStorage.getItem(`goal-tracker-${notebookId}`);
+    if (saved) {
+      setGoals(JSON.parse(saved));
     }
   }, [notebookId]);
 

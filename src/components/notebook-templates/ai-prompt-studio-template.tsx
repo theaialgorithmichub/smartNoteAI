@@ -91,6 +91,54 @@ const CATEGORIES = [
   { value: 'other', label: 'Other', icon: Brain, color: 'bg-slate-500' },
 ];
 
+const samplePromptProjects: PromptProject[] = [
+  {
+    id: 'sample-prompt-project',
+    name: 'Template QA Assistant',
+    description: 'Prompts for reviewing template previews and turning findings into action items.',
+    category: 'analysis',
+    model: 'gpt-4-turbo',
+    temperature: 0.4,
+    maxTokens: 1600,
+    systemPrompt: 'You are a product QA assistant. Review template preview notes and return concise findings, risks, and recommended fixes.',
+    versions: [
+      {
+        id: 'sample-version-1',
+        version: 1,
+        prompt: 'Analyze this template preview. Identify empty states, confusing labels, and missing sample content. Return severity and suggested copy.',
+        timestamp: new Date().toISOString(),
+        rating: 4,
+        notes: 'Good for fast triage of template previews.',
+      },
+      {
+        id: 'sample-version-2',
+        version: 2,
+        prompt: 'Act as a first-time user. Review this template preview and explain whether you understand what to do next. Suggest one improvement.',
+        timestamp: new Date().toISOString(),
+        rating: 5,
+        notes: 'More user-centered and easier to score.',
+      },
+    ],
+    testResults: [
+      {
+        id: 'sample-test-1',
+        versionId: 'sample-version-2',
+        input: 'Dashboard preview opens with no dashboard selected.',
+        output: 'Severity: Medium. The preview technically works, but does not communicate value. Seed a sample dashboard with tasks, notes, metrics, and events.',
+        timestamp: new Date().toISOString(),
+        latency: 840,
+        tokens: 126,
+        cost: 0.004,
+        rating: 5,
+      },
+    ],
+    isExpanded: true,
+    tags: ['qa', 'templates', 'ux'],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+];
+
 export function AIPromptStudioTemplate({ title, notebookId }: AIPromptStudioTemplateProps) {
   const [projects, setProjects] = useState<PromptProject[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
@@ -112,11 +160,15 @@ export function AIPromptStudioTemplate({ title, notebookId }: AIPromptStudioTemp
   });
 
   useEffect(() => {
-    if (notebookId) {
-      const saved = localStorage.getItem(`ai-prompt-studio-${notebookId}`);
-      if (saved) {
-        setProjects(JSON.parse(saved));
-      }
+    if (!notebookId) {
+      setProjects(samplePromptProjects);
+      setSelectedProject(samplePromptProjects[0].id);
+      return;
+    }
+
+    const saved = localStorage.getItem(`ai-prompt-studio-${notebookId}`);
+    if (saved) {
+      setProjects(JSON.parse(saved));
     }
   }, [notebookId]);
 

@@ -28,6 +28,34 @@ interface ResearchBuilderTemplateProps {
 
 type Stage = 'planning' | 'execution' | 'report';
 
+const sampleResearchTopics: ResearchTopic[] = [
+  {
+    id: 'sample-topic-1',
+    title: 'Template Preview Quality Study',
+    createdAt: new Date().toISOString(),
+    chapters: [
+      {
+        id: 'sample-chapter-1',
+        title: 'Research Questions',
+        content: 'How does realistic sample content affect template selection and notebook creation? Which template categories are hardest for users to understand?',
+        status: 'completed',
+      },
+      {
+        id: 'sample-chapter-2',
+        title: 'Evidence Collected',
+        content: 'Regression testing showed templates open successfully, but many previews start with empty panels. End-user audit recommends seeded examples and category filters.',
+        status: 'in-progress',
+      },
+      {
+        id: 'sample-chapter-3',
+        title: 'Recommendations',
+        content: 'Add sample-mode data to top templates, group the gallery by use case, and add outcome-focused preview banners.',
+        status: 'pending',
+      },
+    ],
+  },
+];
+
 export function ResearchBuilderTemplate({ title, notebookId }: ResearchBuilderTemplateProps) {
   const [topics, setTopics] = useState<ResearchTopic[]>([]);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
@@ -63,7 +91,20 @@ export function ResearchBuilderTemplate({ title, notebookId }: ResearchBuilderTe
   };
 
   useEffect(() => {
-    if (!notebookId) return;
+    if (!notebookId) {
+      setTopics(sampleResearchTopics);
+      setSelectedTopic(sampleResearchTopics[0].id);
+      setSelectedChapter(sampleResearchTopics[0].chapters[0]);
+      setCurrentStage('execution');
+      setGeneratedSuggestions([
+        'Compare activation before and after sample previews',
+        'Interview new users after their first template selection',
+        'Track searches with zero results in the gallery',
+      ]);
+      setAiAnalysis('Sample data should increase confidence because users can see the expected final notebook structure before committing.');
+      setShowAnalysis(true);
+      return;
+    }
     try {
       const saved = localStorage.getItem(`research-builder-${notebookId}`);
       if (saved) {

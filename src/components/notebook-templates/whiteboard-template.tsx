@@ -47,6 +47,58 @@ const blankBoard = (name = "Untitled Board"): Board => ({
   id: makeId(), name, elements: [], createdAt: new Date().toISOString(),
 });
 
+const sampleWhiteboardElements: DrawElement[] = [
+  {
+    id: "sample-sticky-1",
+    type: "sticky",
+    start: { x: 120, y: 110 },
+    text: "Template previews need realistic sample data",
+    color: "#1a1a1a",
+    strokeWidth: 2,
+    fill: "#fef08a",
+  },
+  {
+    id: "sample-sticky-2",
+    type: "sticky",
+    start: { x: 420, y: 110 },
+    text: "Add filters: Work, Student, AI, Creative",
+    color: "#1a1a1a",
+    strokeWidth: 2,
+    fill: "#bfdbfe",
+  },
+  {
+    id: "sample-rect-1",
+    type: "rectangle",
+    start: { x: 95, y: 85 },
+    end: { x: 680, y: 250 },
+    color: "#3b82f6",
+    strokeWidth: 4,
+  },
+  {
+    id: "sample-arrow-1",
+    type: "arrow",
+    start: { x: 300, y: 310 },
+    end: { x: 520, y: 310 },
+    color: "#f97316",
+    strokeWidth: 4,
+  },
+  {
+    id: "sample-text-1",
+    type: "text",
+    start: { x: 120, y: 330 },
+    text: "Browse -> Preview -> Create notebook",
+    color: "#111827",
+    strokeWidth: 3,
+  },
+];
+
+const sampleWhiteboard: Board = {
+  id: "sample-whiteboard",
+  name: "Template UX Brainstorm",
+  elements: sampleWhiteboardElements,
+  createdAt: new Date().toISOString(),
+};
+
 //  Main Component 
 
 export function WhiteboardTemplate({ title = "Whiteboard", notebookId }: WhiteboardTemplateProps) {
@@ -108,7 +160,16 @@ export function WhiteboardTemplate({ title = "Whiteboard", notebookId }: Whitebo
 
   //  DB Load 
   useEffect(() => {
-    if (!notebookId) { setLoading(false); return; }
+    if (!notebookId) {
+      setBoards([sampleWhiteboard]);
+      boardsRef.current = [sampleWhiteboard];
+      activeIdRef.current = sampleWhiteboard.id;
+      _setActiveId(sampleWhiteboard.id);
+      setHistory([sampleWhiteboard.elements]);
+      setHistoryIndex(0);
+      setLoading(false);
+      return;
+    }
     (async () => {
       try {
         const res = await fetch(`/api/notebooks/${notebookId}/pages`);

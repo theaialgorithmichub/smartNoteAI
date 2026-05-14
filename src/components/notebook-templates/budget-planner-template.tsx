@@ -29,6 +29,23 @@ interface BudgetPlannerTemplateProps {
   notebookId?: string;
 }
 
+const currentBudgetMonth = new Date().toISOString().slice(0, 7);
+const sampleBudgetData: BudgetData = {
+  monthlyBudgets: {
+    [currentBudgetMonth]: {
+      month: currentBudgetMonth,
+      income: 7200,
+      expenseCategories: [
+        { id: 'sample-budget-1', name: 'Rent & utilities', amount: 2300, color: 'blue', percentage: 43 },
+        { id: 'sample-budget-2', name: 'Groceries', amount: 760, color: 'green', percentage: 14 },
+        { id: 'sample-budget-3', name: 'Transport', amount: 420, color: 'orange', percentage: 8 },
+        { id: 'sample-budget-4', name: 'Savings', amount: 1400, color: 'purple', percentage: 26 },
+        { id: 'sample-budget-5', name: 'Learning', amount: 500, color: 'indigo', percentage: 9 },
+      ],
+    },
+  },
+};
+
 export function BudgetPlannerTemplate({ title, notebookId }: BudgetPlannerTemplateProps) {
   const [budgetData, setBudgetData] = useState<BudgetData>({ monthlyBudgets: {} });
   const [currentMonthOffset, setCurrentMonthOffset] = useState(0);
@@ -57,7 +74,10 @@ export function BudgetPlannerTemplate({ title, notebookId }: BudgetPlannerTempla
   };
 
   useEffect(() => {
-    if (!notebookId) return;
+    if (!notebookId) {
+      setBudgetData(sampleBudgetData);
+      return;
+    }
     try {
       const saved = localStorage.getItem(`budget-planner-${notebookId}`);
       if (saved) {
